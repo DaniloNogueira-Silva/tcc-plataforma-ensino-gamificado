@@ -2,6 +2,7 @@ export interface ILessonPlanByRole {
   lessonplan: {
     name: string;
     icon?: string;
+    _id: string;
   };
   progress: number;
   teacher: {

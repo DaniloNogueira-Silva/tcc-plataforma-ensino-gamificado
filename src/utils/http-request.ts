@@ -68,7 +68,57 @@ export class HttpRequest {
       return response.data;
     } catch (error) {
       console.error("Erro ao criar o plano de aula:", error);
-      return null;
+      throw error;
+    }
+  }
+
+  async updateLessonPlan(
+    id: string,
+    name?: string,
+    icon?: string
+  ): Promise<ILessonPlan | null> {
+    try {
+      const token = await this.getToken();
+      const response = await axios.patch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/lesson-plans/${id}`,
+        {
+          name,
+          icon,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Plano de aula atualizado:", response.data);
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar o plano de aula:", error);
+      throw error;
+    }
+  }
+
+  async removeLessonPlan(id: string): Promise<ILessonPlan | null> {
+    try {
+      const token = await this.getToken();
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/lesson-plans/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Plano de aula deletado:", response.data);
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao deletar o plano de aula:", error);
+      throw error;
     }
   }
 }

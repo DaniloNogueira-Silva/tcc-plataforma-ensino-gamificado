@@ -9,12 +9,13 @@ import LessonPlanCard from "./LessonPlanCard";
 export default function LessonPlanList(lessonPlans: any) {
   const [lessonPlan, setLessonPlan] = useState<ILessonPlanByRole[]>([]);
 
+  const fetchData = async () => {
+    const httpRequest = new HttpRequest();
+    const lessonPlans = await httpRequest.getLessonPlansByRole();
+    setLessonPlan(lessonPlans);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      const httpRequest = new HttpRequest();
-      const lessonPlans = await httpRequest.getLessonPlansByRole();
-      setLessonPlan(lessonPlans);
-    };
     fetchData();
   }, []);
 
@@ -30,10 +31,12 @@ export default function LessonPlanList(lessonPlans: any) {
         return (
           <LessonPlanCard
             key={i + 1}
-            imgUrl={imgUrl}  // Passando a URL da imagem
+            imgUrl={imgUrl}
+            lessonPlanId={plan?.lessonplan?._id}
             lessonPlanName={plan?.lessonplan?.name}
             progress={plan.progress}
             teacherName={plan?.teacher?.name}
+            onUpdateSuccess={fetchData}
           />
         );
       })}

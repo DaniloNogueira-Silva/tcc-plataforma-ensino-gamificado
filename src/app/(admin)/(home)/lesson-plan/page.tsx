@@ -9,11 +9,9 @@ import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import LessonPlanList from "@/components/lesson-plan/LessonPlanList";
 import { Modal } from "@/components/ui/modal";
-import { useModal } from "@/hooks/useModal";
 
 export default function LessonPlan() {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [isOpen, setIsOpen] = useState(false); // Estado para controle da modal
+    const [isOpen, setIsOpen] = useState(false);
     const [isImageModalOpen, setImageModalOpen] = useState(false);
     const [images, setImages] = useState<string[]>([]);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -38,7 +36,7 @@ export default function LessonPlan() {
         try {
             const response = await httpRequest.getLessonPlansByRole();
             if (response) {
-                setLessonPlans(response); // Atualiza a lista de planos
+                setLessonPlans(response);
             } else {
                 setError("Erro ao carregar os planos de aula.");
             }
@@ -55,7 +53,7 @@ export default function LessonPlan() {
             const response = await httpRequest.createLessonPlan(name, icon);
             if (response) {
                 console.log("Plano de aula criado:", { name, icon });
-                fetchLessonPlans(); // Atualiza a lista de planos
+                fetchLessonPlans();
             } else {
                 setError("Erro ao criar o plano de aula. Tente novamente.");
             }
@@ -67,24 +65,24 @@ export default function LessonPlan() {
 
     const handleImageSelect = (imagePath: string) => {
         setSelectedImage(imagePath);
-        setImageModalOpen(false); // Fecha a modal de seleção de ícone
+        setImageModalOpen(false); 
     };
 
     const handleSave = () => {
         if (name && selectedImage) {
             const iconName = selectedImage.split("/").pop()?.split(".")[0];
             if (iconName) {
-                createLessonPlan(name, iconName); // Cria o plano de aula
+                createLessonPlan(name, iconName); 
             }
         } else {
             setError("Nome ou ícone não selecionado.");
         }
     };
 
-    // useEffect para carregar as imagens e planos de aula
+
     useEffect(() => {
         loadImages();
-        fetchLessonPlans(); // Carrega os planos de aula ao montar o componente
+        fetchLessonPlans(); 
     }, []);
 
     return (
