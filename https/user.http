@@ -1,0 +1,53 @@
+# Criação do usuário
+POST http://localhost:3002/users
+content-type: application/json
+
+{
+    "name": "admin",
+    "email": "admin@email.com",
+    "password": "123456",
+    "role": "ADMIN"
+}
+
+###
+
+# Requisição de login
+# @name login
+POST http://localhost:3002/auth/login
+content-type: application/json
+
+{
+    "email": "professor@email.com",
+    "password": "123456"
+}
+
+###
+
+@token= {{login.response.body.$.access_token}}
+
+###
+
+GET http://localhost:3002/users
+Authorization: Bearer {{token}}
+
+###
+
+PATCH http://localhost:3002/users/68110e65550adfb07398a6f4
+content-type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name": "admin_updated"
+}
+
+###
+
+GET http://localhost:3002/users/68110e65550adfb07398a6f4
+Authorization: Bearer {{token}}
+
+###
+
+DELETE  http://localhost:3002/users/68110e65550adfb07398a6f4
+Authorization: Bearer {{token}}
+
+###

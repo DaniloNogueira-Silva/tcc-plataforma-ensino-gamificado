@@ -3,6 +3,7 @@ import {
   ILessonPlanByRole,
 } from "./interfaces/lesson-plan.interface";
 
+import { IUser } from "./interfaces/user.interface";
 import axios from "axios";
 
 export class HttpRequest {
@@ -24,9 +25,46 @@ export class HttpRequest {
       }
     );
 
-    localStorage.setItem("token", response.data);
+    localStorage.setItem("token", response.data.access_token);
 
     return response.data;
+  }
+
+  async createUser(
+    email: string,
+    password: string,
+    name: string,
+    role: string
+  ): Promise<void> {
+    try {
+      return await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users`, {
+        name,
+        email,
+        password,
+        role,
+      });
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async getUserByRole(): Promise<IUser> {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/users`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log(response.data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 
   async getLessonPlansByRole(): Promise<ILessonPlanByRole[] | []> {

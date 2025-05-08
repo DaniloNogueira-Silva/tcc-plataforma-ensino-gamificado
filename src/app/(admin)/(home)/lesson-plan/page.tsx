@@ -9,51 +9,34 @@ import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import LessonPlanList from "@/components/lesson-plan/LessonPlanList";
 import { Modal } from "@/components/ui/modal";
+import useAuth from "@/hooks/useAuth";
 
 export default function LessonPlan() {
+    useAuth();
+
     const [isOpen, setIsOpen] = useState(false);
     const [isImageModalOpen, setImageModalOpen] = useState(false);
     const [images, setImages] = useState<string[]>([]);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [name, setName] = useState("");
     const [error, setError] = useState<string | null>(null);
-    const [lessonPlans, setLessonPlans] = useState<any[]>([]);
 
     const loadImages = () => {
-        setImages([
-            "/images/brand/brand-01.svg",
-            "/images/brand/brand-02.svg",
-            "/images/brand/brand-03.svg",
-            "/images/brand/brand-04.svg",
-            "/images/brand/brand-05.svg",
-            "/images/brand/brand-06.svg",
+        setImages([ 
+            "/images/brand/node.svg",
+            "/images/brand/math.svg",
+            "/images/brand/language.svg",
+            "/images/brand/history.svg",
         ]);
     };
 
-    // Função para buscar os planos de aula
-    const fetchLessonPlans = async () => {
-        const httpRequest = new HttpRequest();
-        try {
-            const response = await httpRequest.getLessonPlansByRole();
-            if (response) {
-                setLessonPlans(response);
-            } else {
-                setError("Erro ao carregar os planos de aula.");
-            }
-        } catch (err) {
-            setError("Erro ao carregar os planos de aula.");
-            console.error("Erro ao carregar planos de aula:", err);
-        }
-    };
-
-    // Função para criar um novo plano de aula
     const createLessonPlan = async (name: string, icon: string) => {
         const httpRequest = new HttpRequest();
         try {
             const response = await httpRequest.createLessonPlan(name, icon);
             if (response) {
-                console.log("Plano de aula criado:", { name, icon });
-                fetchLessonPlans();
+                setIsOpen(false); 
+                window.location.reload();
             } else {
                 setError("Erro ao criar o plano de aula. Tente novamente.");
             }
@@ -72,23 +55,21 @@ export default function LessonPlan() {
         if (name && selectedImage) {
             const iconName = selectedImage.split("/").pop()?.split(".")[0];
             if (iconName) {
-                createLessonPlan(name, iconName); 
+                createLessonPlan(name, iconName); // Cria o plano de aula e atualiza a lista
             }
         } else {
             setError("Nome ou ícone não selecionado.");
         }
     };
 
-
     useEffect(() => {
         loadImages();
-        fetchLessonPlans(); 
     }, []);
 
     return (
         <div className="grid grid-cols-12 gap-4 md:gap-6">
             <div className="col-span-12">
-                <LessonPlanList lessonPlans={lessonPlans} />
+                <LessonPlanList />
             </div>
             <div className="col-span-12">
                 <Button size="sm" variant="primary" endIcon={<DocsIcon />} onClick={() => setIsOpen(true)}>

@@ -6,7 +6,7 @@ import { HttpRequest } from "@/utils/http-request";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import LessonPlanCard from "./LessonPlanCard";
 
-export default function LessonPlanList(lessonPlans: any) {
+export default function LessonPlanList() {
   const [lessonPlan, setLessonPlan] = useState<ILessonPlanByRole[]>([]);
 
   const fetchData = async () => {
