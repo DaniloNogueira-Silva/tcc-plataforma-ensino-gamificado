@@ -39,6 +39,16 @@ const navItems: NavItem[] = [
     path: "/lesson-plan",
   },
   {
+    icon: <ListIcon />,
+    name: "Exercícios",
+    path: "/exercise",
+  },
+  {
+    icon: <ListIcon />,
+    name: "Aulas",
+    path: "/lesson",
+  },
+  {
     icon: <GridIcon />,
     name: "Dashboard",
     subItems: [

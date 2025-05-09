@@ -27,7 +27,7 @@ export default function UserDropdown() {
       setUser(getUser);
     }
     getUser()
-  })
+  }, [])
 
   const handleRemoveToken = () => {
     localStorage.removeItem("token");
