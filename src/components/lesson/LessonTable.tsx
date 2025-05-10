@@ -1,5 +1,6 @@
 "use client";
 
+import { FaEdit, FaEye, FaTrashAlt } from "react-icons/fa"; // Importe os ícones
 import React, { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table";
 
@@ -7,10 +8,12 @@ import Button from "../ui/button/Button";
 import { HttpRequest } from "@/utils/http-request";
 import { ILesson } from "@/utils/interfaces/lesson.interface";
 import LessonForm from "./LessonForm";
+import LessonViewModal from "./LessonViewModal"; // Modal para visualização
 
 export default function LessonTable() {
   const [lessons, setLessons] = useState<ILesson[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false); // Controle para a modal de visualização
   const [selectedLesson, setSelectedLesson] = useState<ILesson | null>(null);
 
   useEffect(() => {
@@ -43,10 +46,20 @@ export default function LessonTable() {
     }
   };
 
+  const handleView = (lesson: ILesson) => {
+    setSelectedLesson(lesson); // Atribui a aula selecionada para visualização
+    setIsViewModalOpen(true); // Abre a modal de visualização
+  };
+
   const closeModal = () => {
     setSelectedLesson(null); // Limpa a aula selecionada
     setIsModalOpen(false); // Fecha o modal de edição
     window.location.reload();
+  };
+
+  const closeViewModal = () => {
+    setSelectedLesson(null); // Limpa a aula selecionada
+    setIsViewModalOpen(false); // Fecha a modal de visualização
   };
 
   return (
@@ -75,8 +88,15 @@ export default function LessonTable() {
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">{lesson.points}</TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">{lesson.type}</TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
-                  <Button size="sm" className="mr-2" onClick={() => handleEdit(lesson)}>Editar</Button>
-                  <Button size="sm" variant="outline" onClick={() => handleDelete(lesson._id)}>Deletar</Button>
+                  <Button size="sm" className="mr-2" onClick={() => handleEdit(lesson)}>
+                    <FaEdit /> {/* Ícone de lápis para editar */}
+                  </Button>
+                  <Button size="sm" variant="outline" className="mr-2" onClick={() => handleDelete(lesson._id)}>
+                    <FaTrashAlt /> {/* Ícone de lixeira para deletar */}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleView(lesson)}>
+                    <FaEye /> {/* Ícone de olho para visualizar */}
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -100,7 +120,14 @@ export default function LessonTable() {
           onClose={() => closeModal()}
         />
       )}
+
+      {/* Modal de Visualização */}
+      {isViewModalOpen && selectedLesson && (
+        <LessonViewModal
+          lesson={selectedLesson}
+          onClose={closeViewModal} // Função para fechar a modal
+        />
+      )}
     </div>
   );
 }
-

@@ -1,10 +1,10 @@
-import { IExercise } from "./interfaces/exercise.interface";
 import {
   ILessonPlan,
   ILessonPlanByRole,
 } from "./interfaces/lesson-plan.interface";
-import { ILesson } from "./interfaces/lesson.interface";
 
+import { IExercise } from "./interfaces/exercise.interface";
+import { ILesson } from "./interfaces/lesson.interface";
 import { IUser } from "./interfaces/user.interface";
 import axios from "axios";
 
@@ -160,7 +160,6 @@ export class HttpRequest {
     }
   }
 
-  
   async createLesson(
     name: string,
     due_date: string,
@@ -465,6 +464,29 @@ export class HttpRequest {
       throw new Error(
         "Ocorreu um erro ao atualizar nota do aluno no exercício: " + error
       );
+    }
+  }
+
+  async getUserProgressByLessonPlanAndType(
+    lesson_plan_id: string,
+    type: string
+  ) {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-progress/${lesson_plan_id}/${type}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar progresso do aluno:", error);
+      throw new Error("Ocorreu um erro ao buscar progresso do aluno: " + error);
     }
   }
 }
