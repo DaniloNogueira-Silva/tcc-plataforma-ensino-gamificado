@@ -1,30 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import LessonList from "@/components/lesson/LessonList";
-import { HttpRequest } from "@/utils/http-request";
 import LessonForm from "@/components/lesson/LessonForm";
-import { ILesson } from "@/utils/interfaces/lesson.interface";
+import LessonTable from "@/components/lesson/LessonTable";
 import { Modal } from "@/components/ui/modal";
+import { useState } from "react";
 
 const Lessons = () => {
-  const [lessons, setLessons] = useState<ILesson[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const httpRequest = new HttpRequest();
-
-  useEffect(() => {
-    const fetchAllLessons = async () => {
-      try {
-        const allLessons = await httpRequest.getAllLessons();
-        setLessons(allLessons);
-      } catch (error) {
-        console.error("Erro ao carregar aulas:", error);
-      }
-    };
-
-    fetchAllLessons();
-  }, []);
 
   return (
     <div className="flex w-full flex-col gap-5">
@@ -38,8 +20,10 @@ const Lessons = () => {
         </button>
       </div>
 
-      <LessonList lessonsData={lessons} />
-
+      <div className="space-y-6 mt-5">
+        <LessonTable />
+      </div>
+      
       {isFormOpen && (
         <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)}>
           <div className="max-w-[584px] p-5 lg:p-10 mx-auto">
