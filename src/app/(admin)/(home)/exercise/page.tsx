@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 
-import ExerciseList from "@/components/exercise/ExerciseList";
-import { HttpRequest } from "@/utils/http-request";
 import ExerciseForm from "@/components/exercise/ExerciseForm";
+import ExerciseTable from "@/components/exercise/ExerciseTable";
+import { HttpRequest } from "@/utils/http-request";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
 import { Modal } from "@/components/ui/modal";
 
@@ -38,7 +38,9 @@ const Exercises = () => {
         </button>
       </div>
 
-      <ExerciseList exercisesData={exercises} />
+      <div className="space-y-6 mt-5">
+        <ExerciseTable />
+      </div>
 
       {isFormOpen && (
         <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)}>

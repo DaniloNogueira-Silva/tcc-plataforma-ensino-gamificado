@@ -4,7 +4,7 @@ export interface IExercise {
   type: string;
   answer: string;
   showAnswer: boolean;
-  due_date: Date;
+  due_date: string;
   grade: number;
   points: number;
   lesson_plan_id: string;

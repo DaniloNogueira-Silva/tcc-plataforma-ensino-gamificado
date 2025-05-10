@@ -3,13 +3,15 @@
 import React, { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table";
 
-import Badge from "../ui/badge/Badge";
-import Button from "@/components/ui/button/Button";
+import Button from "../ui/button/Button";
 import { HttpRequest } from "@/utils/http-request";
 import { ILesson } from "@/utils/interfaces/lesson.interface";
+import LessonForm from "./LessonForm";
 
 export default function LessonTable() {
   const [lessons, setLessons] = useState<ILesson[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedLesson, setSelectedLesson] = useState<ILesson | null>(null);
 
   useEffect(() => {
     const fetchLessons = async () => {
@@ -25,6 +27,27 @@ export default function LessonTable() {
     const date = new Date(dateString);
     return date.toLocaleDateString("pt-BR"); // dd/mm/aaaa
   }
+
+  const handleEdit = (lesson: ILesson) => {
+    setSelectedLesson(lesson); // Atribui a aula selecionada
+    setIsModalOpen(true); // Abre o modal de edição
+  };
+
+  const handleDelete = async (lessonId: string) => {
+    try {
+      const httpRequest = new HttpRequest();
+      await httpRequest.removeLesson(lessonId); // Deleta a aula com o id passado
+      setLessons(lessons.filter((lesson) => lesson._id !== lessonId)); // Atualiza a lista de aulas
+    } catch (error) {
+      console.error("Erro ao deletar aula:", error);
+    }
+  };
+
+  const closeModal = () => {
+    setSelectedLesson(null); // Limpa a aula selecionada
+    setIsModalOpen(false); // Fecha o modal de edição
+    window.location.reload();
+  };
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -52,8 +75,8 @@ export default function LessonTable() {
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">{lesson.points}</TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">{lesson.type}</TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
-                  <Button size="sm" className="mr-2">Editar</Button>
-                  <Button size="sm" variant="outline">Deletar</Button>
+                  <Button size="sm" className="mr-2" onClick={() => handleEdit(lesson)}>Editar</Button>
+                  <Button size="sm" variant="outline" onClick={() => handleDelete(lesson._id)}>Deletar</Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -62,14 +85,22 @@ export default function LessonTable() {
       </div>
 
       {/* Modal de Cadastro/Edição */}
-      {/* {isModalOpen && selectedLesson && (
-        <LessonFormModal
-          isOpen={isModalOpen}
-          closeModal={closeModal}
-          lesson={selectedLesson}
-          onSave={handleSave}
+      {isModalOpen && selectedLesson && (
+        <LessonForm
+          initialData={selectedLesson}
+          reloadOnSubmit={false}
+          onCreated={(lessonId) => {
+            setLessons((prevLessons) =>
+              prevLessons.map((lesson) =>
+                lesson._id === lessonId ? { ...lesson, ...selectedLesson } : lesson
+              )
+            ); // Atualiza a lista de aulas com os dados editados
+            setIsModalOpen(false);
+          }}
+          onClose={() => closeModal()}
         />
-      )} */}
+      )}
     </div>
   );
 }
+
