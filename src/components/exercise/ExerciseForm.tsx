@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import Button from "@/components/ui/button/Button";
 import { HttpRequest } from "@/utils/http-request";
+import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import { Modal } from "@/components/ui/modal";
-import Button from "@/components/ui/button/Button";
 import { jwtDecode } from "jwt-decode";
 
 interface TokenPayload {
@@ -41,6 +43,8 @@ const ExerciseForm = ({
   const [showAnswer, setShowAnswer] = useState(false);
   const [loading, setLoading] = useState(false);
   const [teacherId, setTeacherId] = useState<string | null>(null);
+  const [selectedLessonPlan, setSelectedLessonPlan] = useState("");
+  const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
 
   const [options, setOptions] = useState<string[]>(["", "", "", ""]);
   const [trueFalseStatements, setTrueFalseStatements] = useState<TrueFalseStatement[]>(
@@ -55,6 +59,7 @@ const ExerciseForm = ({
       setType(initialData.type || "open");
       setAnswer(initialData.answer || "");
       setShowAnswer(initialData.showAnswer || false);
+      setSelectedLessonPlan(initialData.lesson_plan_id || "");
 
       if (initialData.type === "multiple_choice") {
         if (Array.isArray(initialData.options) && initialData.options.length > 0) {
@@ -73,6 +78,14 @@ const ExerciseForm = ({
           setTrueFalseStatements([{ statement: "", answer: "true" }]);
         }
       }
+
+      const fetchLessonPlans = async () => {
+        const httpRequest = new HttpRequest();
+        const plans = await httpRequest.getLessonPlansByRole();
+        setLessonPlans(plans);
+      };
+
+      fetchLessonPlans();
     }
   }, [initialData]);
 
@@ -138,8 +151,10 @@ const ExerciseForm = ({
           type,
           answer,
           showAnswer,
-          finalOptions
+          finalOptions,
+          selectedLessonPlan
         );
+
       } else {
         createdExercise = await httpRequest.createExercise(
           statement,
@@ -147,7 +162,8 @@ const ExerciseForm = ({
           answer,
           showAnswer,
           teacherId,
-          finalOptions
+          finalOptions,
+          selectedLessonPlan
         );
       }
 
@@ -319,6 +335,22 @@ const ExerciseForm = ({
           </div>
         </div>
 
+        <div className="col-span-1">
+          <Label>Plano de Aula*</Label>
+          <select
+            id="lesson_plan_id"
+            onChange={(e) => setSelectedLessonPlan(e.target.value)}
+            className="mb-3 w-full rounded-md border border-gray-300 p-2 dark:bg-navy-700 dark:text-white"
+          >
+            <option value="">Selecione um plano de aula</option>
+            {lessonPlans.map((plan) => (
+              <option key={plan.lessonplan._id} value={plan.lessonplan._id}>
+                {plan.lessonplan.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="flex items-center justify-end w-full gap-3 mt-6">
           <Button size="sm" variant="outline" onClick={onClose}>
             Fechar
@@ -327,8 +359,8 @@ const ExerciseForm = ({
             {loading
               ? "Salvando..."
               : initialData?._id
-              ? "Editar Exercício"
-              : "Criar Exercício"}
+                ? "Editar Exercício"
+                : "Criar Exercício"}
           </Button>
         </div>
       </form>

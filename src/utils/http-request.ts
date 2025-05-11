@@ -327,7 +327,8 @@ export class HttpRequest {
     answer: string,
     showAnswer: boolean,
     teacher_id: string,
-    options?: any[]
+    options?: any[],
+    lesson_plan_id?: string
   ): Promise<IExercise | null> {
     try {
       const token = await this.getToken();
@@ -341,6 +342,7 @@ export class HttpRequest {
           showAnswer,
           options,
           teacher_id,
+          lesson_plan_id
         },
         {
           headers: {
@@ -362,7 +364,8 @@ export class HttpRequest {
     type: string,
     answer: string,
     showAnswer: boolean,
-    options?: any[]
+    options?: any[],
+    lesson_plan_id?: string
   ): Promise<IExercise | null> {
     try {
       const token = await this.getToken();
@@ -375,6 +378,7 @@ export class HttpRequest {
           answer,
           showAnswer,
           options,
+          lesson_plan_id,
         },
         {
           headers: {

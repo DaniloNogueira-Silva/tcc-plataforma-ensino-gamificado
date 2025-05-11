@@ -1,10 +1,12 @@
 "use client";
 
+import { FaEdit, FaEye, FaTrashAlt } from "react-icons/fa";
 import React, { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table";
 
 import Button from "../ui/button/Button";
 import ExerciseForm from "./ExerciseForm";
+import ExerciseViewModal from "./ExerciseViewModal";
 import { HttpRequest } from "@/utils/http-request";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
 
@@ -12,6 +14,7 @@ export default function ExerciseTable() {
   const [exercises, setExercises] = useState<IExercise[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<IExercise | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false); // Controle para a modal de visualização
 
   useEffect(() => {
     const fetchExercises = async () => {
@@ -48,11 +51,22 @@ export default function ExerciseTable() {
     }
   };
 
+  const handleView = (exercise: IExercise) => {
+    setSelectedExercise(exercise); // Atribui a aula selecionada para visualização
+    setIsViewModalOpen(true); // Abre a modal de visualização
+  };
+
   const closeModal = () => {
-    setSelectedExercise(null); 
+    setSelectedExercise(null);
     setIsModalOpen(false);
     window.location.reload();
   };
+
+  const closeViewModal = () => {
+    setSelectedExercise(null); // Limpa a aula selecionada
+    setIsViewModalOpen(false); // Fecha a modal de visualização
+  };
+
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -80,8 +94,15 @@ export default function ExerciseTable() {
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">{exercise.points}</TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">{exercise.type}</TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
-                  <Button size="sm" className="mr-2" onClick={() => handleEdit(exercise)}>Editar</Button>
-                  <Button size="sm" variant="outline" onClick={() => handleDelete(exercise._id)}>Deletar</Button>
+                  <Button size="sm" className="mr-2" onClick={() => handleEdit(exercise)}>
+                    <FaEdit />
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleDelete(exercise._id)}>
+                    <FaTrashAlt />
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleView(exercise)}>
+                    <FaEye /> {/* Ícone de olho para visualizar */}
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -103,6 +124,14 @@ export default function ExerciseTable() {
             closeModal();
           }}
           onClose={() => setIsModalOpen(false)}
+        />
+      )}
+
+      {/* Modal de Visualização */}
+      {isViewModalOpen && selectedExercise && (
+        <ExerciseViewModal
+          exercise={selectedExercise}
+          onClose={closeViewModal} // Função para fechar a modal
         />
       )}
     </div>

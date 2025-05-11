@@ -1,0 +1,41 @@
+"use client";
+
+import { IUserProgressWithUser } from "@/utils/interfaces/user-progress.interface";
+import Input from "@/components/form/input/InputField";
+import React from "react";
+
+interface ExerciseDetailsProps {
+  userProgress: IUserProgressWithUser | null;
+}
+
+export default function ExerciseDetails({ userProgress }: ExerciseDetailsProps) {
+  if (!userProgress) return <div className="p-5">Nenhum progresso selecionado.</div>;
+
+  return (
+    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] xl:w-3/4">
+      <div className="p-5 space-y-6 xl:space-y-8 xl:p-6">
+        <h3 className="text-xl font-semibold text-gray-800 dark:text-white/90">Progresso do Usuário</h3>
+        <div className="mt-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-white">Nome</label>
+              <Input type="text" defaultValue={userProgress.user?.name || ""} className="mt-1" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-white">Email</label>
+              <Input type="email" defaultValue={userProgress.user?.email || ""} className="mt-1" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-white">Data de Criação</label>
+              <Input type="text" defaultValue={new Date(userProgress.createdAt).toLocaleDateString("pt-BR")} className="mt-1" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-white">Pontos</label>
+              <Input type="number" defaultValue={userProgress.points || 0} className="mt-1" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
