@@ -47,9 +47,9 @@ const ExerciseForm = ({
   const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
 
   const [options, setOptions] = useState<string[]>(["", "", "", ""]);
-  const [trueFalseStatements, setTrueFalseStatements] = useState<TrueFalseStatement[]>(
-    [{ statement: "", answer: "true" }]
-  );
+  const [trueFalseStatements, setTrueFalseStatements] = useState<
+    TrueFalseStatement[]
+  >([{ statement: "", answer: "true" }]);
 
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -62,13 +62,19 @@ const ExerciseForm = ({
       setSelectedLessonPlan(initialData.lesson_plan_id || "");
 
       if (initialData.type === "multiple_choice") {
-        if (Array.isArray(initialData.options) && initialData.options.length > 0) {
+        if (
+          Array.isArray(initialData.options) &&
+          initialData.options.length > 0
+        ) {
           setOptions(initialData.options);
         } else {
           setOptions([""]);
         }
       } else if (initialData.type === "true_false") {
-        if (Array.isArray(initialData.options) && initialData.options.length > 0) {
+        if (
+          Array.isArray(initialData.options) &&
+          initialData.options.length > 0
+        ) {
           const tfArray = initialData.options.map((opt: any) => ({
             statement: opt.statement,
             answer: opt.answer ? "true" : "false",
@@ -78,15 +84,15 @@ const ExerciseForm = ({
           setTrueFalseStatements([{ statement: "", answer: "true" }]);
         }
       }
-
-      const fetchLessonPlans = async () => {
-        const httpRequest = new HttpRequest();
-        const plans = await httpRequest.getLessonPlansByRole();
-        setLessonPlans(plans);
-      };
-
-      fetchLessonPlans();
     }
+    
+    const fetchLessonPlans = async () => {
+      const httpRequest = new HttpRequest();
+      const plans = await httpRequest.getLessonPlansByRole();
+      setLessonPlans(plans);
+    };
+
+    fetchLessonPlans();
   }, [initialData]);
 
   useEffect(() => {
@@ -154,7 +160,6 @@ const ExerciseForm = ({
           finalOptions,
           selectedLessonPlan
         );
-
       } else {
         createdExercise = await httpRequest.createExercise(
           statement,
@@ -182,7 +187,7 @@ const ExerciseForm = ({
       setLoading(false);
     }
   };
-
+  
   return (
     <Modal
       isOpen={true}
@@ -359,8 +364,8 @@ const ExerciseForm = ({
             {loading
               ? "Salvando..."
               : initialData?._id
-                ? "Editar Exercício"
-                : "Criar Exercício"}
+              ? "Editar Exercício"
+              : "Criar Exercício"}
           </Button>
         </div>
       </form>

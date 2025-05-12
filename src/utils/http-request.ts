@@ -301,6 +301,26 @@ export class HttpRequest {
     }
   }
 
+  async findAllExerciseByLessonPlanId(lessonPlanId: string) {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercises/${lessonPlanId}/byLessonPlan`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar exercícios:", error);
+      throw new Error("Ocorreu um erro ao buscar exercícios: " + error);
+    }
+  }
+
   async getExerciseById(id: string) {
     try {
       const token = await this.getToken();
@@ -342,7 +362,7 @@ export class HttpRequest {
           showAnswer,
           options,
           teacher_id,
-          lesson_plan_id
+          lesson_plan_id,
         },
         {
           headers: {
