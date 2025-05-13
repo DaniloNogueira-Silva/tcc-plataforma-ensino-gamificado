@@ -6,7 +6,7 @@ import { IExercise } from "@/utils/interfaces/exercise.interface";
 import ExerciseCard from "./ExerciseCard";
 
 interface ExerciseListProps {
-  lessonPlanId: string; 
+  lessonPlanId: string;
 }
 
 export default function ExerciseList({ lessonPlanId }: ExerciseListProps) {
@@ -31,11 +31,7 @@ export default function ExerciseList({ lessonPlanId }: ExerciseListProps) {
           key={i}
           exerciseId={exercise._id}
           statement={exercise.statement}
-          answer={exercise.answer}
-          showAnswer={exercise.showAnswer}
-          type={exercise.type as any}
-          options={exercise.options}
-          onUpdateSuccess={fetchData}
+          dueDate={exercise.due_date}
         />
       ))}
     </div>

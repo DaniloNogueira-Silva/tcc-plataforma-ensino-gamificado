@@ -9,5 +9,10 @@ export interface IExercise {
   points: number;
   lesson_plan_id: string;
   teacher_id: string;
-  options?: any[];
+  options?: Options[];
+}
+
+interface Options {
+  statement: string;
+  answer: string;
 }

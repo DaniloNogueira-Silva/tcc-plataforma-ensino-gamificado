@@ -454,12 +454,12 @@ export class HttpRequest {
     }
   }
 
-  async submitMultipleChoiceAnswer(exerciseId: string, answer: string) {
+  async submitAnswer(exerciseId: string, answer: string) {
     try {
       const token = await this.getToken();
 
       await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercises/${exerciseId}/multiple-choice`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercises/${exerciseId}/submitAnswer`,
         { answer },
         {
           headers: {
