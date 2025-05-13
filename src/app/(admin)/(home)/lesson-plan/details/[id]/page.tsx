@@ -6,9 +6,9 @@ import ExerciseList from "@/components/exercise/ExerciseList";
 
 export default function DetailsPage() {
   const params = useParams();
-  const id = params.id as string;
+  const lessonPlanId = params.id as string;
 
-  if (!id) {
+  if (!lessonPlanId) {
     return <div>Carregando...</div>;
   }
 
@@ -18,12 +18,12 @@ export default function DetailsPage() {
 
       <section>
         <h2 className="text-xl font-semibold mb-2">Aulas</h2>
-        <LessonList />
+        <LessonList lessonPlanId={lessonPlanId} />
       </section>
 
       <section>
         <h2 className="text-xl font-semibold mb-2">Exercícios</h2>
-        <ExerciseList planId={id} />
+        <ExerciseList lessonPlanId={lessonPlanId} />
       </section>
     </div>
   );

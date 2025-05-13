@@ -2,21 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { HttpRequest } from "@/utils/http-request";
-import { ILesson } from "@/utils/interfaces/lesson.interface"; // Adapte o caminho da interface
-import LessonCard from "./LessonCard"; // Adapte o caminho do card de aula
+import { ILesson } from "@/utils/interfaces/lesson.interface";
+import LessonCard from "./LessonCard";
 
-export default function LessonList() {
+interface LessonListProps {
+  lessonPlanId: string;
+}
+
+export default function LessonList({ lessonPlanId }: LessonListProps) {
   const [lessons, setLessons] = useState<ILesson[]>([]);
 
   const fetchData = async () => {
     const httpRequest = new HttpRequest();
-    const result = await httpRequest.getAllLessons(); // Supondo que essa função existe
+    const result = await httpRequest.getAllLessonsByLessonPlanId(lessonPlanId);
     setLessons(result);
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (lessonPlanId) {
+      fetchData();
+    }
+  }, [lessonPlanId]);
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">

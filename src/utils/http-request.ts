@@ -221,6 +221,26 @@ export class HttpRequest {
     }
   }
 
+  async getAllLessonsByLessonPlanId(lessonPlanId: string) {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/lessons/${lessonPlanId}/byLessonPlan`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar exercícios:", error);
+      throw new Error("Ocorreu um erro ao buscar exercícios: " + error);
+    }
+  }
+
   async updateLesson(
     id: string,
     name: string,
@@ -301,7 +321,7 @@ export class HttpRequest {
     }
   }
 
-  async findAllExerciseByLessonPlanId(lessonPlanId: string) {
+  async getAllExerciseByLessonPlanId(lessonPlanId: string) {
     try {
       const token = await this.getToken();
 

@@ -6,23 +6,23 @@ import { IExercise } from "@/utils/interfaces/exercise.interface";
 import ExerciseCard from "./ExerciseCard";
 
 interface ExerciseListProps {
-  planId: string; 
+  lessonPlanId: string; 
 }
 
-export default function ExerciseList({ planId }: ExerciseListProps) {
+export default function ExerciseList({ lessonPlanId }: ExerciseListProps) {
   const [exercises, setExercises] = useState<IExercise[]>([]);
 
   const fetchData = async () => {
     const httpRequest = new HttpRequest();
-    const result = await httpRequest.findAllExerciseByLessonPlanId(planId);
+    const result = await httpRequest.getAllExerciseByLessonPlanId(lessonPlanId);
     setExercises(result);
   };
 
   useEffect(() => {
-    if (planId) {
+    if (lessonPlanId) {
       fetchData();
     }
-  }, [planId]);
+  }, [lessonPlanId]);
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">
