@@ -55,7 +55,7 @@ export default function LessonPlan() {
         if (name && selectedImage) {
             const iconName = selectedImage.split("/").pop()?.split(".")[0];
             if (iconName) {
-                createLessonPlan(name, iconName); // Cria o plano de aula e atualiza a lista
+                createLessonPlan(name, iconName); 
             }
         } else {
             setError("Nome ou ícone não selecionado.");

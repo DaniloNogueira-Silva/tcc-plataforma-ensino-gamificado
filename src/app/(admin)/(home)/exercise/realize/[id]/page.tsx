@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { HttpRequest } from "@/utils/http-request";
 import { useParams } from "next/navigation";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
+import ComponentCard from "@/components/common/ComponentCard";
+import TextArea from "@/components/form/input/TextArea";
+import Label from "@/components/form/Label";
 
 const ExerciseDetailsPage = () => {
   const params = useParams();
@@ -56,22 +59,21 @@ const ExerciseDetailsPage = () => {
   if (!exercise) return <div>Carregando...</div>;
 
   return (
-    <div className="p-8 max-w-4xl mx-auto bg-white shadow-xl rounded-lg">
-      <h1 className="text-3xl font-semibold text-gray-800 mb-6">
+    <ComponentCard className="p-8 max-w-4xl mx-auto bg-white shadow-xl rounded-lg">
+      <h1 className="text-3xl font-medium text-gray-800 dark:text-white/90">
         {exercise.statement}
       </h1>
 
       <form onSubmit={handleAnswerSubmission}>
-        {/* Exibição para questões de tipo "open" */}
         {exercise.type === "open" && (
           <div className="mt-6">
-            <h2 className="text-2xl font-medium">Sua Resposta</h2>
-            <textarea
+            <h2 className="text-base font-medium text-gray-800 dark:text-white/90">Sua Resposta</h2>
+            <TextArea
               value={selectedAnswer[exerciseId] || ""}
               onChange={(e) =>
                 setSelectedAnswer({
                   ...selectedAnswer,
-                  [exerciseId]: e.target.value,
+                  [exerciseId]: e,
                 })
               }
               className="w-full h-40 mt-2 p-4 border border-gray-300 rounded-md"
@@ -81,10 +83,9 @@ const ExerciseDetailsPage = () => {
           </div>
         )}
 
-        {/* Exibição para questões de tipo "multiple_choice" */}
         {exercise.type === "multiple_choice" && (
           <div className="mt-6">
-            <h2 className="text-2xl font-medium">Alternativas</h2>
+            <h2 className="text-base font-medium text-gray-800 dark:text-white/90">Alternativas</h2>
             <div className="space-y-4 mt-4">
               {exercise.options?.map((option, index) => (
                 <div
@@ -105,25 +106,24 @@ const ExerciseDetailsPage = () => {
                     className="h-5 w-5 text-blue-500 border-gray-300 rounded"
                     required
                   />
-                  <label
+                  <Label
                     htmlFor={`alternative-${index}`}
                     className="text-xl text-gray-700"
                   >
                     {option}
-                  </label>
+                  </Label>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Exibição para questões de tipo "true_false" */}
         {exercise.type === "true_false" && exercise.options && (
           <div className="mt-6">
-            <h2 className="text-2xl font-medium">Proposições</h2>
+            <h2 className="text-base font-medium text-gray-800 dark:text-white/90">Proposições</h2>
             {exercise.options.map((alternative, index) => (
               <div key={alternative._id} className="mt-4">
-                <p className="text-lg text-gray-700">{alternative.statement}</p>
+                <p className="text-lg font-medium text-gray-800 dark:text-white/90">{alternative.statement}</p>
                 <div className="flex items-center space-x-6 mt-4">
                   <input
                     type="radio"
@@ -142,7 +142,7 @@ const ExerciseDetailsPage = () => {
                   />
                   <label
                     htmlFor={`true-${alternative._id}`}
-                    className="text-lg text-gray-700"
+                    className="text-lg font-light text-gray-800 dark:text-white/90"
                   >
                     Verdadeiro
                   </label>
@@ -163,7 +163,7 @@ const ExerciseDetailsPage = () => {
                   />
                   <label
                     htmlFor={`false-${alternative._id}`}
-                    className="text-lg text-gray-700"
+                    className="text-lg font-light text-gray-800 dark:text-white/90"
                   >
                     Falso
                   </label>
@@ -180,7 +180,7 @@ const ExerciseDetailsPage = () => {
           Confirmar Resposta
         </button>
       </form>
-    </div>
+    </ComponentCard>
   );
 };
 

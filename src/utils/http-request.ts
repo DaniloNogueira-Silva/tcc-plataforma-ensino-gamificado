@@ -482,7 +482,8 @@ export class HttpRequest {
   }
 
   async teacherCorretion(
-    id: string,
+    exercise_id: string,
+    user_id: string,
     final_grade: number,
     points: number
   ): Promise<any> {
@@ -490,8 +491,9 @@ export class HttpRequest {
       const token = await this.getToken();
 
       const response = await axios.patch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercises/${id}/teacher-correction`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercises/${exercise_id}/teacher-correction`,
         {
+          user_id,
           final_grade,
           points,
         },
@@ -531,6 +533,26 @@ export class HttpRequest {
     } catch (error) {
       console.error("Erro ao buscar progresso do aluno:", error);
       throw new Error("Ocorreu um erro ao buscar progresso do aluno: " + error);
+    }
+  }
+
+  async findAllStudentsByExerciseId(exerciseId: string) {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-progress/exercise/${exerciseId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar exercício:", error);
+      throw new Error("Ocorreu um erro ao buscar exercício: " + error);
     }
   }
 }
