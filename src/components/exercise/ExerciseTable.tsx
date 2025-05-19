@@ -12,7 +12,6 @@ import {
 
 import Button from "../ui/button/Button";
 import ExerciseForm from "./ExerciseForm";
-import ExerciseViewModal from "./ExerciseViewModal";
 import { HttpRequest } from "@/utils/http-request";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
@@ -23,7 +22,6 @@ export default function ExerciseTable() {
   const [selectedExercise, setSelectedExercise] = useState<IExercise | null>(
     null
   );
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false); // Controle para a modal de visualização
   const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
 
   useEffect(() => {
@@ -64,20 +62,10 @@ export default function ExerciseTable() {
     }
   };
 
-  const handleView = (exercise: IExercise) => {
-    setSelectedExercise(exercise); // Atribui a aula selecionada para visualização
-    setIsViewModalOpen(true); // Abre a modal de visualização
-  };
-
   const closeModal = () => {
     setSelectedExercise(null);
     setIsModalOpen(false);
     window.location.reload();
-  };
-
-  const closeViewModal = () => {
-    setSelectedExercise(null); // Limpa a aula selecionada
-    setIsViewModalOpen(false); // Fecha a modal de visualização
   };
 
   const typeLabels: Record<string, string> = {
@@ -187,13 +175,6 @@ export default function ExerciseTable() {
                   >
                     <FaTrashAlt />
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleView(exercise)}
-                  >
-                    <FaEye /> {/* Ícone de olho para visualizar */}
-                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -220,13 +201,6 @@ export default function ExerciseTable() {
         />
       )}
 
-      {/* Modal de Visualização */}
-      {isViewModalOpen && selectedExercise && (
-        <ExerciseViewModal
-          exercise={selectedExercise}
-          onClose={closeViewModal} // Função para fechar a modal
-        />
-      )}
     </div>
   );
 }

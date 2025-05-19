@@ -555,4 +555,24 @@ export class HttpRequest {
       throw new Error("Ocorreu um erro ao buscar exercício: " + error);
     }
   }
+
+  async getUserStats(){
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/stats`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+  } catch (error) {
+    console.error("Erro ao buscar dados do usuário:", error);
+    throw new Error("Ocorreu um erro ao buscar dados do usuário: " + error);
+  }
+  }
 }

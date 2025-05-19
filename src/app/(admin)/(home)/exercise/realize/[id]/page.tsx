@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { HttpRequest } from "@/utils/http-request";
-import { useParams } from "next/navigation";
-import { IExercise } from "@/utils/interfaces/exercise.interface";
+import { useEffect, useState } from "react";
+
 import ComponentCard from "@/components/common/ComponentCard";
-import TextArea from "@/components/form/input/TextArea";
+import { HttpRequest } from "@/utils/http-request";
+import { IExercise } from "@/utils/interfaces/exercise.interface";
 import Label from "@/components/form/Label";
+import TextArea from "@/components/form/input/TextArea";
+import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 const ExerciseDetailsPage = () => {
   const params = useParams();
