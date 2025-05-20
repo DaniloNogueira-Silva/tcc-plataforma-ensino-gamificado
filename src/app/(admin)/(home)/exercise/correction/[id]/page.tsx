@@ -84,7 +84,7 @@ const ExerciseCorrectionPage = () => {
 
   return (
     <>
-      {showSuccessNotification && (
+      {5 && (
         <div
           className={`fixed top-24 right-5 z-[9999] max-w-xs transition-transform duration-300 ease-in-out ${
             showSuccessNotification
@@ -112,13 +112,13 @@ const ExerciseCorrectionPage = () => {
 
       <div className="flex max-w-7xl mx-auto p-6 gap-6">
         <aside className="w-64 border-r border-gray-300 dark:border-gray-700 overflow-y-auto max-h-[80vh]">
-          <h2 className="text-xl font-semibold mb-4">Alunos</h2>
+          <h2 className="text-xl font-medium text-gray-800 dark:text-white/90">Alunos</h2>
           <ul>
             {studentsAnswers.map((student, idx) => (
               <li
                 key={student.user_id._id}
                 onClick={() => setSelectedStudentIndex(idx)}
-                className={`cursor-pointer p-2 rounded ${
+                className={`cursor-pointer p-2 rounded dark:text-white/90 ${
                   idx === selectedStudentIndex
                     ? "bg-blue-200 dark:bg-blue-700 font-semibold"
                     : "hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -131,10 +131,10 @@ const ExerciseCorrectionPage = () => {
         </aside>
 
         <main className="flex-1 bg-white dark:bg-gray-900 rounded-lg p-6 shadow-lg max-h-[80vh] overflow-y-auto">
-          <h1 className="text-2xl font-semibold mb-4">{exercise.statement}</h1>
+          <h1 className="text-3xl font-medium text-gray-800 dark:text-white/90">{exercise.statement}</h1>
 
           <div className="mb-6">
-            <h3 className="text-lg font-medium mb-2">
+            <h3 className="text-lg font-medium mb-2 dark:text-white/90">
               Resposta de {selectedStudentName}:
             </h3>
 
@@ -142,7 +142,7 @@ const ExerciseCorrectionPage = () => {
               <textarea
                 readOnly
                 value={selectedAnswer}
-                className="w-full h-40 p-3 border border-gray-300 rounded resize-none bg-gray-100 dark:bg-gray-800"
+                className="w-full h-40 p-3 border border-gray-300 rounded resize-none bg-gray-100 dark:bg-gray-800 dark:text-white/90"
               />
             )}
 
@@ -158,7 +158,7 @@ const ExerciseCorrectionPage = () => {
                   return (
                     <div
                       key={typeof option === "string" ? option : option._id}
-                      className={`p-2 rounded mb-1 border ${
+                      className={`p-2 rounded mb-1 border dark:text-white/90 ${
                         isSelected
                           ? "bg-green-300 dark:bg-green-700"
                           : "bg-gray-100 dark:bg-gray-800"
@@ -210,7 +210,7 @@ const ExerciseCorrectionPage = () => {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="grade" className="block font-medium mb-2">
+            <label htmlFor="grade" className="block font-medium mb-2 dark:text-white/90">
               Nota para {selectedStudentName}
             </label>
             <input
@@ -221,7 +221,7 @@ const ExerciseCorrectionPage = () => {
               step={0.1}
               value={grade}
               onChange={(e) => setGrade(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 w-32"
+              className="border border-gray-300 rounded px-3 py-2 w-32 dark:text-white/90"
               placeholder="Ex: 8.5"
               required
             />
@@ -229,7 +229,7 @@ const ExerciseCorrectionPage = () => {
 
           <button
             onClick={handleSubmitGrade}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded "
           >
             Enviar Nota
           </button>

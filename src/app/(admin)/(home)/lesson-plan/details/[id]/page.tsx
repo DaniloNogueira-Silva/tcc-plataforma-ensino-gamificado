@@ -14,15 +14,15 @@ export default function DetailsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Detalhes do Plano de Aula</h1>
+      <h1 className="text-2xl font-bold dark:text-white/90">Detalhes do Plano de Aula</h1>
 
       <section>
-        <h2 className="text-xl font-semibold mb-2">Aulas</h2>
+        <h2 className="text-xl font-semibold mb-2 dark:text-white/90">Aulas</h2>
         <LessonList lessonPlanId={lessonPlanId} />
       </section>
 
       <section>
-        <h2 className="text-xl font-semibold mb-2">Exercícios</h2>
+        <h2 className="text-xl font-semibold mb-2 dark:text-white/90">Exercícios</h2>
         <ExerciseList lessonPlanId={lessonPlanId} />
       </section>
     </div>

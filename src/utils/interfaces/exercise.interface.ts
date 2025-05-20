@@ -1,7 +1,7 @@
 export interface IExercise {
   _id: string;
   statement: string;
-  type: string;
+  type: "open" | "multiple_choice" | "true_false";
   answer: string;
   showAnswer: boolean;
   due_date: string;
@@ -12,7 +12,7 @@ export interface IExercise {
   options?: Options[];
 }
 
-interface Options {
+export interface Options {
   statement: string;
-  answer: string;
+  answer: boolean;
 }

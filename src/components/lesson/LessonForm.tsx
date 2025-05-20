@@ -9,6 +9,9 @@ import Button from "@/components/ui/button/Button";
 import { jwtDecode } from "jwt-decode";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import { ILesson } from "@/utils/interfaces/lesson.interface";
+import { Tooltip } from "../ui/tooltip/Tooltip";
+import { HelpCircle } from "lucide-react";
+
 
 interface TokenPayload {
   _id: string;
@@ -217,7 +220,12 @@ const LessonForm = ({
           </div>
 
           <div className="col-span-1">
-            <Label>Plano de Aula*</Label>
+            <span className="text-sm font-medium text-gray-800 dark:text-white">
+              Plano de Aula*
+            </span>
+            <Tooltip position="right" width="330px" content="Isso define a qual plano de aula o exercício será atribuído. Pode ser deixado em branco, se preferir não vincular a nenhum.">
+              <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
+            </Tooltip>
             <select
               id="lesson_plan_id"
               value={selectedLessonPlan}

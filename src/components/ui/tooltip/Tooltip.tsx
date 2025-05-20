@@ -9,6 +9,7 @@ interface TooltipProps {
   content: string;
   position?: TooltipPosition;
   theme?: TooltipTheme;
+  width?: string;
 }
 
 export const Tooltip: React.FC<TooltipProps> = ({
@@ -16,6 +17,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   content,
   position = "top",
   theme = "light",
+  width,
 }) => {
   const getPositionClasses = (pos: TooltipPosition) => {
     switch (pos) {
@@ -59,12 +61,14 @@ export const Tooltip: React.FC<TooltipProps> = ({
       >
         <div className="relative">
           <div
+            style={{ width: width ?? "220px" }}
             className={`${getThemeClasses(
               theme
-            )} whitespace-nowrap rounded-lg  px-3 py-2 text-xs font-medium text-gray-700 drop-shadow-4xl dark:bg-[#1E2634] dark:text-white`}
+            )} break-words rounded-lg px-3 py-2 text-xs font-medium text-gray-700 drop-shadow-4xl dark:bg-[#1E2634] dark:text-white`}
           >
             {content}
           </div>
+
           <div
             className={`absolute h-3 w-4 rotate-45 ${getThemeClasses(
               theme
