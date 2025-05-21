@@ -5,11 +5,13 @@ import { useParams } from "next/navigation";
 import { HttpRequest } from "@/utils/http-request";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
 import Notification from "@/components/ui/notification/Notification";
+import Input from "@/components/form/input/InputField";
 
 type StudentAnswer = {
   user_id: { _id: string; name: string };
   answer: string;
   _id: string;
+  final_grade?: number; // Assumindo que essa seja a nota já salva
 };
 
 const ExerciseCorrectionPage = () => {
@@ -20,6 +22,7 @@ const ExerciseCorrectionPage = () => {
   const [selectedStudentIndex, setSelectedStudentIndex] = useState<number>(0);
   const [exercise, setExercise] = useState<IExercise | null>(null);
   const [grade, setGrade] = useState<string>("");
+  const [isEditing, setIsEditing] = useState<boolean>(false);
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [showErrorNotification, setShowErrorNotification] = useState(false);
 
@@ -43,6 +46,24 @@ const ExerciseCorrectionPage = () => {
     }
     fetchExercise();
   }, [exerciseId]);
+
+  // Atualiza a nota e bloqueia input ao mudar aluno
+  useEffect(() => {
+    if (studentsAnswers.length === 0) return;
+
+    const currentStudent = studentsAnswers[selectedStudentIndex];
+    if (!currentStudent) return;
+
+    const existingGrade = currentStudent.final_grade;
+
+    if (existingGrade !== undefined && existingGrade !== null) {
+      setGrade(existingGrade.toString());
+      setIsEditing(false);
+    } else {
+      setGrade("");
+      setIsEditing(true);
+    }
+  }, [selectedStudentIndex, studentsAnswers]);
 
   if (!exercise || studentsAnswers.length === 0) {
     return <div>Nenhum aluno respondeu</div>;
@@ -75,6 +96,16 @@ const ExerciseCorrectionPage = () => {
         numericGrade,
         100
       );
+
+      // Atualiza nota localmente
+      const updatedStudents = [...studentsAnswers];
+      updatedStudents[selectedStudentIndex] = {
+        ...updatedStudents[selectedStudentIndex],
+        final_grade: numericGrade,
+      };
+      setStudentsAnswers(updatedStudents);
+
+      setIsEditing(false);
       setShowSuccessNotification(true);
       setTimeout(() => setShowSuccessNotification(false), 3000);
     } catch (err) {
@@ -82,9 +113,13 @@ const ExerciseCorrectionPage = () => {
     }
   };
 
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
   return (
     <>
-      {5 && (
+      {showSuccessNotification && (
         <div
           className={`fixed top-24 right-5 z-[9999] max-w-xs transition-transform duration-300 ease-in-out ${
             showSuccessNotification
@@ -112,26 +147,42 @@ const ExerciseCorrectionPage = () => {
 
       <div className="flex max-w-7xl mx-auto p-6 gap-6">
         <aside className="w-64 border-r border-gray-300 dark:border-gray-700 overflow-y-auto max-h-[80vh]">
-          <h2 className="text-xl font-medium text-gray-800 dark:text-white/90">Alunos</h2>
+          <h2 className="text-xl font-medium text-gray-800 dark:text-white/90">
+            Alunos
+          </h2>
           <ul>
-            {studentsAnswers.map((student, idx) => (
-              <li
-                key={student.user_id._id}
-                onClick={() => setSelectedStudentIndex(idx)}
-                className={`cursor-pointer p-2 rounded dark:text-white/90 ${
-                  idx === selectedStudentIndex
-                    ? "bg-blue-200 dark:bg-blue-700 font-semibold"
-                    : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`}
-              >
-                {student.user_id.name}
-              </li>
-            ))}
+            {studentsAnswers.map((student, idx) => {
+              const hasGrade =
+                student.final_grade !== undefined &&
+                student.final_grade !== null;
+              return (
+                <li
+                  key={student.user_id._id}
+                  onClick={() => setSelectedStudentIndex(idx)}
+                  className={`cursor-pointer p-2 rounded dark:text-white/90 flex justify-between items-center ${
+                    idx === selectedStudentIndex
+                      ? "bg-blue-200 dark:bg-blue-700 font-semibold"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  <span>{student.user_id.name}</span>
+                  <span
+                    className={`text-sm font-medium ${
+                      hasGrade ? "text-green-600" : "text-red-500"
+                    }`}
+                  >
+                    {hasGrade ? "Nota Enviada" : "Sem nota"}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         </aside>
 
         <main className="flex-1 bg-white dark:bg-gray-900 rounded-lg p-6 shadow-lg max-h-[80vh] overflow-y-auto">
-          <h1 className="text-3xl font-medium text-gray-800 dark:text-white/90">{exercise.statement}</h1>
+          <h1 className="text-3xl font-medium text-gray-800 dark:text-white/90">
+            {exercise.statement}
+          </h1>
 
           <div className="mb-6">
             <h3 className="text-lg font-medium mb-2 dark:text-white/90">
@@ -210,29 +261,44 @@ const ExerciseCorrectionPage = () => {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="grade" className="block font-medium mb-2 dark:text-white/90">
+            <label
+              htmlFor="grade"
+              className="block font-medium mb-2 dark:text-white/90"
+            >
               Nota para {selectedStudentName}
             </label>
-            <input
+            <Input
               id="grade"
               type="number"
-              min={0}
-              max={100}
+              min="0"
+              max="10"
               step={0.1}
-              value={grade}
+              defaultValue={grade}
               onChange={(e) => setGrade(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 w-32 dark:text-white/90"
+              className="border border-gray-300 rounded px-3 py-2 !w-32 dark:text-white/90"
               placeholder="Ex: 8.5"
               required
+              disabled={!isEditing}
             />
           </div>
 
-          <button
-            onClick={handleSubmitGrade}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded "
-          >
-            Enviar Nota
-          </button>
+          {!isEditing && (
+            <button
+              onClick={handleEditClick}
+              className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-6 py-2 rounded mr-4"
+            >
+              Editar Nota
+            </button>
+          )}
+
+          {isEditing && (
+            <button
+              onClick={handleSubmitGrade}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded"
+            >
+              Enviar Nota
+            </button>
+          )}
         </main>
       </div>
     </>

@@ -20,11 +20,6 @@ interface TokenPayload {
   iat?: number;
 }
 
-interface TrueFalseStatement {
-  statement: string;
-  answer: "true" | "false";
-}
-
 const ExerciseFormPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -42,13 +37,16 @@ const ExerciseFormPage = () => {
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [selectedLessonPlan, setSelectedLessonPlan] = useState("");
   const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
-  const [options, setOptions] = useState<string[]>(["", "", "", ""]);
-  const [trueFalseStatements, setTrueFalseStatements] = useState<
-    TrueFalseStatement[]
-  >([{ statement: "", answer: "true" }]);
+
+  const [mcOptions, setMcOptions] = useState<string[]>(["", "", "", ""]);
   const [correctOptionIndex, setCorrectOptionIndex] = useState<number | null>(
     null
   );
+
+  const [tfOptions, setTfOptions] = useState<Options[]>([
+    { statement: "", answer: true },
+  ]);
+
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -77,26 +75,23 @@ const ExerciseFormPage = () => {
           Array.isArray(initialData.options) &&
           initialData.options.length > 0
         ) {
-          setOptions(initialData.options);
-          if (initialData.answer) {
-            const idx = Number(initialData.answer);
-            if (!isNaN(idx)) setCorrectOptionIndex(idx);
-          }
+          setMcOptions(initialData.options as string[]);
         } else {
-          setOptions([""]);
+          setMcOptions([""]);
+        }
+        if (initialData.answer) {
+          const idx = Number(initialData.answer);
+          if (!isNaN(idx)) setCorrectOptionIndex(idx);
+          else setCorrectOptionIndex(null);
         }
       } else if (initialData.type === "true_false") {
         if (
           Array.isArray(initialData.options) &&
           initialData.options.length > 0
         ) {
-          const truefalseArray = initialData.options.map((opt: Options) => ({
-            statement: opt.statement,
-            answer: opt.answer ? "true" : "false",
-          }));
-          setTrueFalseStatements(truefalseArray);
+          setTfOptions(initialData.options as Options[]);
         } else {
-          setTrueFalseStatements([{ statement: "", answer: "true" }]);
+          setTfOptions([{ statement: "", answer: true }]);
         }
       }
     }
@@ -125,17 +120,6 @@ const ExerciseFormPage = () => {
     }
   }, []);
 
-  const addMultipleChoiceOption = () => setOptions((prev) => [...prev, ""]);
-  const removeMultipleChoiceOption = (index: number) =>
-    setOptions((prev) => prev.filter((_, i) => i !== index));
-  const addTrueFalseStatement = () =>
-    setTrueFalseStatements((prev) => [
-      ...prev,
-      { statement: "", answer: "true" },
-    ]);
-  const removeTrueFalseStatement = (index: number) =>
-    setTrueFalseStatements((prev) => prev.filter((_, i) => i !== index));
-
   const handleClose = () => {
     router.push("/exercise");
   };
@@ -151,34 +135,33 @@ const ExerciseFormPage = () => {
     }
 
     try {
-      let finalOptions: Options[] | string[] = [];
+      let finalOptions: string[] | Options[] = [];
+      let finalAnswer = "";
+
       if (type === "multiple_choice") {
-        finalOptions = options;
+        finalOptions = mcOptions;
         if (correctOptionIndex === null) {
           alert("Selecione a alternativa correta.");
           setSaving(false);
           return;
         }
-        setAnswer(String(correctOptionIndex));
+        finalAnswer = String(correctOptionIndex);
       } else if (type === "true_false") {
-        finalOptions = trueFalseStatements.map((tf) => ({
-          statement: tf.statement,
-          answer: tf.answer === "true",
-        }));
-        const tfEncoded = trueFalseStatements.map((tf) =>
-          tf.answer === "true" ? "V" : "F"
-        );
-        setAnswer(tfEncoded.join(""));
+        finalOptions = tfOptions;
+        finalAnswer = tfOptions.map((opt) => (opt.answer ? "V" : "F")).join("");
+      } else {
+        finalAnswer = answer;
       }
 
       const httpRequest = new HttpRequest();
       let createdExercise;
+
       if (exerciseId) {
         createdExercise = await httpRequest.updateExercise(
           exerciseId,
           statement,
           type,
-          answer,
+          finalAnswer,
           showAnswer,
           finalOptions,
           selectedLessonPlan
@@ -187,7 +170,7 @@ const ExerciseFormPage = () => {
         createdExercise = await httpRequest.createExercise(
           statement,
           type,
-          answer,
+          finalAnswer,
           showAnswer,
           teacherId,
           finalOptions,
@@ -243,11 +226,12 @@ const ExerciseFormPage = () => {
             </select>
           </div>
 
+          {/* Múltipla Escolha */}
           {type === "multiple_choice" && (
             <div className="col-span-2">
               <Label>Alternativas*</Label>
               <div className="grid grid-cols-2 gap-4 mb-3">
-                {options.map((option, index) => (
+                {mcOptions.map((option, index) => (
                   <div
                     key={index}
                     className="mb-3 flex flex-col rounded-md border p-3 shadow-sm dark:border-white/10"
@@ -260,7 +244,6 @@ const ExerciseFormPage = () => {
                         checked={correctOptionIndex === index}
                         onChange={() => setCorrectOptionIndex(index)}
                         className="accent-blue-600"
-                        value={answer}
                       />
                       <label
                         htmlFor={`option-${index}`}
@@ -274,17 +257,30 @@ const ExerciseFormPage = () => {
                       placeholder={`Texto da Alternativa ${index + 1}`}
                       value={option}
                       onChange={(e) => {
-                        const updatedOptions = [...options];
+                        const updatedOptions = [...mcOptions];
                         updatedOptions[index] = e;
-                        setOptions(updatedOptions);
+                        setMcOptions(updatedOptions);
                       }}
                       rows={2}
                     />
 
-                    {options.length > 1 && (
+                    {mcOptions.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => removeMultipleChoiceOption(index)}
+                        onClick={() => {
+                          const newOptions = mcOptions.filter(
+                            (_, i) => i !== index
+                          );
+                          setMcOptions(newOptions);
+                          if (correctOptionIndex === index) {
+                            setCorrectOptionIndex(null);
+                          } else if (
+                            correctOptionIndex !== null &&
+                            correctOptionIndex > index
+                          ) {
+                            setCorrectOptionIndex(correctOptionIndex - 1);
+                          }
+                        }}
                         className="mt-2 self-start text-xs text-red-500 hover:underline"
                       >
                         Remover Alternativa
@@ -297,7 +293,7 @@ const ExerciseFormPage = () => {
                 type="button"
                 size="sm"
                 variant="outline"
-                onClick={addMultipleChoiceOption}
+                onClick={() => setMcOptions([...mcOptions, ""])}
               >
                 Adicionar Alternativa
               </Button>
@@ -308,37 +304,38 @@ const ExerciseFormPage = () => {
             <div className="col-span-2">
               <Label>Afirmações Verdadeiro/Falso*</Label>
               <div className="grid grid-cols-2 gap-4 mb-3">
-                {trueFalseStatements.map((tf, index) => (
+                {tfOptions.map((opt, index) => (
                   <div key={index} className="mb-2 flex flex-col">
                     <TextArea
                       required
                       placeholder={`Afirmação ${index + 1}`}
-                      value={tf.statement}
+                      value={opt.statement}
                       onChange={(e) => {
-                        const updated = [...trueFalseStatements];
-                        updated[index].statement = e;
-                        setTrueFalseStatements(updated);
+                        const updatedOptions = [...tfOptions];
+                        updatedOptions[index].statement = e;
+                        setTfOptions(updatedOptions);
                       }}
                       rows={2}
                     />
                     <select
-                      value={tf.answer}
+                      value={opt.answer ? "true" : "false"}
                       onChange={(e) => {
-                        const updated = [...trueFalseStatements];
-                        updated[index].answer = e.target.value as
-                          | "true"
-                          | "false";
-                        setTrueFalseStatements(updated);
+                        const updatedOptions = [...tfOptions];
+                        updatedOptions[index].answer =
+                          e.target.value === "true";
+                        setTfOptions(updatedOptions);
                       }}
                       className="mb-2 w-full rounded-md border border-gray-300 p-2 dark:bg-navy-700 dark:text-white"
                     >
                       <option value="true">Verdadeiro</option>
                       <option value="false">Falso</option>
                     </select>
-                    {trueFalseStatements.length > 1 && (
+                    {tfOptions.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => removeTrueFalseStatement(index)}
+                        onClick={() =>
+                          setTfOptions(tfOptions.filter((_, i) => i !== index))
+                        }
                         className="mt-1 text-sm text-red-500"
                       >
                         Remover
@@ -351,7 +348,9 @@ const ExerciseFormPage = () => {
                 type="button"
                 size="sm"
                 variant="outline"
-                onClick={addTrueFalseStatement}
+                onClick={() =>
+                  setTfOptions([...tfOptions, { statement: "", answer: true }])
+                }
               >
                 Adicionar Afirmação
               </Button>

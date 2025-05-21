@@ -402,7 +402,7 @@ export class HttpRequest {
     id: string,
     statement: string,
     type: string,
-    answerText: string,
+    finalAnswer: string,
     showAnswer: boolean,
     options?: any[],
     lesson_plan_id?: string
@@ -415,7 +415,7 @@ export class HttpRequest {
         {
           statement,
           type,
-          answerText,
+          answer: finalAnswer,
           showAnswer,
           options,
           lesson_plan_id,
