@@ -141,7 +141,6 @@ const ExerciseFormPage = () => {
       if (type === "multiple_choice") {
         finalOptions = mcOptions;
         if (correctOptionIndex === null) {
-          alert("Selecione a alternativa correta.");
           setSaving(false);
           return;
         }

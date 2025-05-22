@@ -221,6 +221,26 @@ export class HttpRequest {
     }
   }
 
+  async getLessonById(id: string) {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/lessons/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar aula:", error);
+      throw new Error("Ocorreu um erro ao buscar aula: " + error);
+    }
+  }
+
   async getAllLessonsByLessonPlanId(lessonPlanId: string) {
     try {
       const token = await this.getToken();

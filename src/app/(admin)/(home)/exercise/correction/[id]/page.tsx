@@ -11,7 +11,7 @@ type StudentAnswer = {
   user_id: { _id: string; name: string };
   answer: string;
   _id: string;
-  final_grade?: number; // Assumindo que essa seja a nota já salva
+  final_grade?: number; 
 };
 
 const ExerciseCorrectionPage = () => {
@@ -47,7 +47,6 @@ const ExerciseCorrectionPage = () => {
     fetchExercise();
   }, [exerciseId]);
 
-  // Atualiza a nota e bloqueia input ao mudar aluno
   useEffect(() => {
     if (studentsAnswers.length === 0) return;
 

@@ -1,29 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
 import ExerciseTable from "@/components/exercise/ExerciseTable";
-import { HttpRequest } from "@/utils/http-request";
-import { IExercise } from "@/utils/interfaces/exercise.interface";
 
 const Exercises = () => {
-  const [exercises, setExercises] = useState<IExercise[]>([]);
-  const httpRequest = new HttpRequest();
   const router = useRouter();
-
-  useEffect(() => {
-    const fetchAllExercises = async () => {
-      try {
-        const allExercises = await httpRequest.getAllExercises();
-        setExercises(allExercises);
-      } catch (error) {
-        console.error("Erro ao carregar exercícios:", error);
-      }
-    };
-
-    fetchAllExercises();
-  }, []);
 
   return (
     <div className="flex w-full flex-col gap-5">

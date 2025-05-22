@@ -1,12 +1,10 @@
 "use client";
 
-import LessonForm from "@/components/lesson/LessonForm";
 import LessonTable from "@/components/lesson/LessonTable";
-import { Modal } from "@/components/ui/modal";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const Lessons = () => {
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const router = useRouter();
 
   return (
     <div className="flex w-full flex-col gap-5">
@@ -14,7 +12,7 @@ const Lessons = () => {
         <h1 className="text-2xl font-bold">Aulas</h1>
         <button
           className="rounded-lg bg-brand-500 px-4 py-2 text-white transition hover:bg-brand-600"
-          onClick={() => setIsFormOpen(true)}
+          onClick={() => router.push("/lesson/form")}
         >
           Criar aula
         </button>
@@ -23,18 +21,6 @@ const Lessons = () => {
       <div className="space-y-6 mt-5">
         <LessonTable />
       </div>
-      
-      {isFormOpen && (
-        <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)}>
-          <div className="max-w-[584px] p-5 lg:p-10 mx-auto">
-            <h3 className="mb-4 text-xl font-bold">Criar Aula</h3>
-            <LessonForm
-              reloadOnSubmit={true}
-              onClose={() => setIsFormOpen(false)}
-            />
-          </div>
-        </Modal>
-      )}
     </div>
   );
 };

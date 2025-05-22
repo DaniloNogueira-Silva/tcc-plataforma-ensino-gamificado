@@ -1,52 +1,81 @@
 "use client";
 
-import { FaEdit, FaEye, FaTrashAlt } from "react-icons/fa"; // Importe os ícones
+import { FaEdit, FaTrashAlt } from "react-icons/fa";
 import React, { useEffect, useState } from "react";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "../ui/table";
 
 import Button from "../ui/button/Button";
 import { HttpRequest } from "@/utils/http-request";
 import { ILesson } from "@/utils/interfaces/lesson.interface";
-import LessonForm from "./LessonForm";
+import { useRouter } from "next/navigation";
+import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 
 export default function LessonTable() {
   const [lessons, setLessons] = useState<ILesson[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedLesson, setSelectedLesson] = useState<ILesson | null>(null);
+  const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchLessons = async () => {
+    const fetchLessonsAndPlans = async () => {
       const httpRequest = new HttpRequest();
-      const foundLessons = await httpRequest.getAllLessons();
+      const [foundLessons, foundLessonPlans] = await Promise.all([
+        httpRequest.getAllLessons(),
+        httpRequest.getLessonPlansByRole(),
+      ]);
       setLessons(foundLessons);
+      setLessonPlans(foundLessonPlans);
     };
 
-    fetchLessons();
+    fetchLessonsAndPlans();
   }, []);
 
-  function formatDate(dateString: string): string {
+  function formatDate(dateString?: string | null): string {
+    if (!dateString) return "Sem data de entrega";
     const date = new Date(dateString);
-    return date.toLocaleDateString("pt-BR"); // dd/mm/aaaa
+    if (isNaN(date.getTime())) return "Sem data de entrega";
+    return date.toLocaleDateString("pt-BR");
   }
 
+  function getLessonPlanName(lessonPlanId: string): string {
+    const plan = lessonPlans.find(
+      (plan) => plan.lessonplan._id === lessonPlanId
+    );
+    return plan?.lessonplan.name || "Sem plano atribuído";
+  }
+
+  const typeLabels: Record<string, string> = {
+    reading: "Leitura",
+    school_work: "Trabalho",
+  };
+
+  const formatGrade = (grade?: number | null) => {
+    if (!grade || grade === 0) return "Sem nota atribuída";
+    return grade;
+  };
+
+  const formatPoints = (points?: number | null) => {
+    if (!points || points === 0) return "Sem pontos atribuídos";
+    return points;
+  };
+
   const handleEdit = (lesson: ILesson) => {
-    setSelectedLesson(lesson); // Atribui a aula selecionada
-    setIsModalOpen(true); // Abre o modal de edição
+    router.push(`/lesson/form?id=${lesson._id}`);
   };
 
   const handleDelete = async (lessonId: string) => {
     try {
       const httpRequest = new HttpRequest();
-      await httpRequest.removeLesson(lessonId); // Deleta a aula com o id passado
-      setLessons(lessons.filter((lesson) => lesson._id !== lessonId)); // Atualiza a lista de aulas
+      await httpRequest.removeLesson(lessonId);
+      setLessons(lessons.filter((lesson) => lesson._id !== lessonId));
     } catch (error) {
       console.error("Erro ao deletar aula:", error);
     }
-  };
-  const closeModal = () => {
-    setSelectedLesson(null); // Limpa a aula selecionada
-    setIsModalOpen(false); // Fecha o modal de edição
-    window.location.reload();
   };
 
   return (
@@ -55,31 +84,96 @@ export default function LessonTable() {
         <Table>
           <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
             <TableRow>
-              <TableCell isHeader className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400">Nome</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400">Data de Entrega</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400">Nota</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400">Links</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400">Pontos</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400">Tipo</TableCell>
-              <TableCell isHeader className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400">Ações</TableCell>
+              <TableCell
+                isHeader
+                className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400"
+              >
+                Nome
+              </TableCell>
+              <TableCell
+                isHeader
+                className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400"
+              >
+                Data de Entrega
+              </TableCell>
+              <TableCell
+                isHeader
+                className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400"
+              >
+                Nota
+              </TableCell>
+              <TableCell
+                isHeader
+                className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400"
+              >
+                Links
+              </TableCell>
+              <TableCell
+                isHeader
+                className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400"
+              >
+                Pontos
+              </TableCell>
+              <TableCell
+                isHeader
+                className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400"
+              >
+                Tipo
+              </TableCell>
+              <TableCell
+                isHeader
+                className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400"
+              >
+                Plano de aula
+              </TableCell>
+              <TableCell
+                isHeader
+                className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400"
+              >
+                Ações
+              </TableCell>
             </TableRow>
           </TableHeader>
 
           <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
             {lessons.map((lesson) => (
               <TableRow key={lesson._id}>
-                <TableCell className="px-5 py-4 text-start text-gray-800 text-theme-sm dark:text-white/90">{lesson.name}</TableCell>
-                <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">{formatDate(lesson.due_date)}</TableCell>
-                <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">{lesson.grade}</TableCell>
-                <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">{lesson.links}</TableCell>
-                <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">{lesson.points}</TableCell>
-                <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">{lesson.type}</TableCell>
+                <TableCell className="px-5 py-4 text-start text-gray-800 text-theme-sm dark:text-white/90">
+                  {lesson.name}
+                </TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
-                  <Button size="sm" className="mr-2" onClick={() => handleEdit(lesson)}>
-                    <FaEdit /> {/* Ícone de lápis para editar */}
+                  {formatDate(lesson.due_date)}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
+                  {formatGrade(lesson.grade)}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
+                  {lesson.links}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
+                  {formatPoints(lesson.points)}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
+                  {typeLabels[lesson.type] || lesson.type}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
+                  {getLessonPlanName(lesson.lesson_plan_id)}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
+                  <Button
+                    size="sm"
+                    className="mr-2"
+                    onClick={() => handleEdit(lesson)}
+                  >
+                    <FaEdit />
                   </Button>
-                  <Button size="sm" variant="outline" className="mr-2" onClick={() => handleDelete(lesson._id)}>
-                    <FaTrashAlt /> {/* Ícone de lixeira para deletar */}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mr-2"
+                    onClick={() => handleDelete(lesson._id)}
+                  >
+                    <FaTrashAlt />
                   </Button>
                 </TableCell>
               </TableRow>
@@ -87,23 +181,6 @@ export default function LessonTable() {
           </TableBody>
         </Table>
       </div>
-
-      {/* Modal de Cadastro/Edição */}
-      {isModalOpen && selectedLesson && (
-        <LessonForm
-          initialData={selectedLesson}
-          reloadOnSubmit={false}
-          onCreated={(lessonId) => {
-            setLessons((prevLessons) =>
-              prevLessons.map((lesson) =>
-                lesson._id === lessonId ? { ...lesson, ...selectedLesson } : lesson
-              )
-            ); // Atualiza a lista de aulas com os dados editados
-            setIsModalOpen(false);
-          }}
-          onClose={() => closeModal()}
-        />
-      )}
     </div>
   );
 }
