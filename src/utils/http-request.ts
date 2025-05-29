@@ -3,7 +3,7 @@ import {
   ILessonPlanByRole,
 } from "./interfaces/lesson-plan.interface";
 
-import { IExercise } from "./interfaces/exercise.interface";
+import { IExercise, Options } from "./interfaces/exercise.interface";
 import { ILesson } from "./interfaces/lesson.interface";
 import { IUser } from "./interfaces/user.interface";
 import axios from "axios";
@@ -169,7 +169,7 @@ export class HttpRequest {
     type: string,
     grade: number,
     teacher_id: string,
-    lesson_plan_id: string
+    lesson_plan_ids: string[]
   ): Promise<ILesson | null> {
     try {
       const token = await this.getToken();
@@ -185,7 +185,7 @@ export class HttpRequest {
           type,
           grade,
           teacher_id,
-          lesson_plan_id,
+          lesson_plan_ids,
         },
         {
           headers: {
@@ -263,14 +263,14 @@ export class HttpRequest {
 
   async updateLesson(
     id: string,
-    name: string,
-    due_date: string,
-    content: string,
-    links: string,
-    points: number,
-    type: string,
-    grade: number,
-    lesson_plan_id: string
+    name?: string,
+    due_date?: string,
+    content?: string,
+    links?: string,
+    points?: number,
+    type?: string,
+    grade?: number,
+    lesson_plan_ids?: string[]
   ): Promise<ILesson | null> {
     try {
       const token = await this.getToken();
@@ -285,7 +285,7 @@ export class HttpRequest {
           points,
           type,
           grade,
-          lesson_plan_id,
+          lesson_plan_ids,
         },
         {
           headers: {
@@ -387,8 +387,12 @@ export class HttpRequest {
     answer: string,
     showAnswer: boolean,
     teacher_id: string,
-    options?: any[],
-    lesson_plan_id?: string
+    multiple_choice_options?: string[],
+    true_false_options?: Options[],
+    lesson_plan_ids?: string[],
+    due_date?: string,
+    points?: number,
+    grade?: number
   ): Promise<IExercise | null> {
     try {
       const token = await this.getToken();
@@ -400,9 +404,13 @@ export class HttpRequest {
           type,
           answer,
           showAnswer,
-          options,
           teacher_id,
-          lesson_plan_id,
+          due_date,
+          points,
+          grade,
+          multiple_choice_options,
+          true_false_options,
+          lesson_plan_ids,
         },
         {
           headers: {
@@ -418,14 +426,18 @@ export class HttpRequest {
     }
   }
 
-  async updateExercise(
+  async updateExerciseAndLessonPlans(
     id: string,
-    statement: string,
-    type: string,
-    finalAnswer: string,
-    showAnswer: boolean,
-    options?: any[],
-    lesson_plan_id?: string
+    statement?: string,
+    type?: string,
+    finalAnswer?: string,
+    showAnswer?: boolean,
+    multiple_choice_options?: string[],
+    true_false_options?: Options[],
+    lesson_plan_ids?: string[],
+    due_date?: string,
+    points?: number,
+    grade?: number
   ): Promise<IExercise | null> {
     try {
       const token = await this.getToken();
@@ -437,8 +449,12 @@ export class HttpRequest {
           type,
           answer: finalAnswer,
           showAnswer,
-          options,
-          lesson_plan_id,
+          due_date,
+          points,
+          grade,
+          multiple_choice_options,
+          true_false_options,
+          lesson_plan_ids,
         },
         {
           headers: {
@@ -576,7 +592,7 @@ export class HttpRequest {
     }
   }
 
-  async getUserStats(){
+  async getUserStats() {
     try {
       const token = await this.getToken();
 
@@ -590,9 +606,57 @@ export class HttpRequest {
       );
 
       return response.data;
-  } catch (error) {
-    console.error("Erro ao buscar dados do usuário:", error);
-    throw new Error("Ocorreu um erro ao buscar dados do usuário: " + error);
+    } catch (error) {
+      console.error("Erro ao buscar dados do usuário:", error);
+      throw new Error("Ocorreu um erro ao buscar dados do usuário: " + error);
+    }
   }
+
+  async getAllLessonPlanContent() {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/lesson-plan-contents`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar conteúdos do plano de aula:", error);
+      throw new Error(
+        "Ocorreu um erro ao buscar conteúdos do plano de aula: " + error
+      );
+    }
+  }
+
+  async getAssociationsByContent(content_id: string, content_type: string) {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/lesson-plan-contents/associations`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            content_id,
+            content_type,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar conteúdos do plano de aula:", error);
+      throw new Error(
+        "Ocorreu um erro ao buscar conteúdos do plano de aula: " + error
+      );
+    }
   }
 }

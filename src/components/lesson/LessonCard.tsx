@@ -38,6 +38,11 @@ const LessonCard: React.FC<LessonCardProps> = ({
     onUpdateSuccess();
   };
 
+  const typeLabels: Record<string, string> = {
+    reading: "Leitura",
+    school_work: "Trabalho",
+  };
+
   return (
     <>
       <div className="relative group rounded-2xl border border-gray-200 bg-white px-6 pb-5 pt-6 overflow-hidden transition-shadow hover:shadow-md dark:border-gray-800 dark:bg-white/[0.03]">
@@ -55,7 +60,7 @@ const LessonCard: React.FC<LessonCardProps> = ({
             Data de Entrega: {new Date(dueDate).toLocaleDateString()}
           </span>
           <span className="block text-sm text-indigo-600 font-medium mt-1">
-            Tipo: {type}
+            Tipo: {typeLabels[type] || type}
           </span>
           <span className="block text-sm text-gray-600 dark:text-gray-400">
             Nota: {grade}

@@ -7,9 +7,10 @@ export interface IExercise {
   due_date: string;
   grade: number;
   points: number;
-  lesson_plan_id: string;
   teacher_id: string;
-  options?: Options[];
+  multiple_choice_options?: string[];
+  true_false_options?: Options[];
+  lesson_plan_ids?: string[];
 }
 
 export interface Options {

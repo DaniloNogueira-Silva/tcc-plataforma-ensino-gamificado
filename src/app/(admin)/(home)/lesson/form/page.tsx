@@ -39,8 +39,6 @@ const LessonForm = () => {
   const [selectedLessonPlan, setSelectedLessonPlan] = useState("");
   const [teacherId, setTeacherId] = useState<string | null>(null);
 
-  const [saving, setSaving] = useState(false);
-
   useEffect(() => {
     if (lessonId) {
       setLoading(true);
@@ -57,7 +55,7 @@ const LessonForm = () => {
   useEffect(() => {
     if (initialData) {
       const formattedDueDate = initialData.due_date
-        ? new Date(initialData.due_date).toISOString().split("T")[0] // Formato yyyy-MM-dd
+        ? new Date(initialData.due_date).toISOString().split("T")[0] 
         : "";
       setName(initialData.name || "");
       setContent(initialData.content || "");
@@ -224,7 +222,6 @@ const LessonForm = () => {
               value={selectedLessonPlan}
               onChange={(e) => setSelectedLessonPlan(e.target.value)}
               className="mb-3 w-full rounded-md border border-gray-300 p-2 dark:bg-navy-700 dark:text-white"
-              required
             >
               <option value="">Selecione um plano de aula</option>
               {lessonPlans.map((plan) => (

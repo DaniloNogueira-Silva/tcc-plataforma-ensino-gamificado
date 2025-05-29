@@ -12,6 +12,7 @@ import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { HelpCircle } from "lucide-react";
 import TextArea from "@/components/form/input/TextArea";
 import { IExercise, Options } from "@/utils/interfaces/exercise.interface";
+import MultiSelect from "@/components/form/MultiSelect";
 
 interface TokenPayload {
   _id: string;
@@ -35,7 +36,7 @@ const ExerciseFormPage = () => {
   const [answer, setAnswer] = useState("");
   const [showAnswer, setShowAnswer] = useState(false);
   const [teacherId, setTeacherId] = useState<string | null>(null);
-  const [selectedLessonPlan, setSelectedLessonPlan] = useState("");
+  const [lessonPlanIds, setLessonPlanIds] = useState<string[]>([]);
   const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
 
   const [mcOptions, setMcOptions] = useState<string[]>(["", "", "", ""]);
@@ -49,16 +50,28 @@ const ExerciseFormPage = () => {
 
   const [saving, setSaving] = useState(false);
 
+  const options = lessonPlans.map((plan) => ({
+    value: plan.lessonplan._id,
+    text: plan.lessonplan.name,
+    selected: lessonPlanIds.includes(plan.lessonplan._id),
+  }));
+
   useEffect(() => {
     if (exerciseId) {
       setLoading(true);
-      const fetchExercise = async () => {
+      const fetchData = async () => {
         const httpRequest = new HttpRequest();
         const exercise = await httpRequest.getExerciseById(exerciseId);
+        const associations = await httpRequest.getAssociationsByContent(
+          exerciseId,
+          "exercise"
+        );
+        const lessonPlanIds = associations.map((a) => a.lesson_plan_id);
         setInitialData(exercise);
+        setLessonPlanIds(lessonPlanIds);
         setLoading(false);
       };
-      fetchExercise();
+      fetchData();
     }
   }, [exerciseId]);
 
@@ -68,14 +81,14 @@ const ExerciseFormPage = () => {
       setType(initialData.type || "open");
       setAnswer(initialData.answer || "");
       setShowAnswer(initialData.showAnswer || false);
-      setSelectedLessonPlan(initialData.lesson_plan_id || "");
+      setLessonPlanIds(initialData.lesson_plan_ids || []);
 
       if (initialData.type === "multiple_choice") {
         if (
-          Array.isArray(initialData.options) &&
-          initialData.options.length > 0
+          Array.isArray(initialData.multiple_choice_options) &&
+          initialData.multiple_choice_options.length > 0
         ) {
-          setMcOptions(initialData.options as string[]);
+          setMcOptions(initialData.multiple_choice_options);
         } else {
           setMcOptions([""]);
         }
@@ -86,10 +99,10 @@ const ExerciseFormPage = () => {
         }
       } else if (initialData.type === "true_false") {
         if (
-          Array.isArray(initialData.options) &&
-          initialData.options.length > 0
+          Array.isArray(initialData.true_false_options) &&
+          initialData.true_false_options.length > 0
         ) {
-          setTfOptions(initialData.options as Options[]);
+          setTfOptions(initialData.true_false_options);
         } else {
           setTfOptions([{ statement: "", answer: true }]);
         }
@@ -135,18 +148,15 @@ const ExerciseFormPage = () => {
     }
 
     try {
-      let finalOptions: string[] | Options[] = [];
       let finalAnswer = "";
 
       if (type === "multiple_choice") {
-        finalOptions = mcOptions;
         if (correctOptionIndex === null) {
           setSaving(false);
           return;
         }
         finalAnswer = String(correctOptionIndex);
       } else if (type === "true_false") {
-        finalOptions = tfOptions;
         finalAnswer = tfOptions.map((opt) => (opt.answer ? "V" : "F")).join("");
       } else {
         finalAnswer = answer;
@@ -156,14 +166,15 @@ const ExerciseFormPage = () => {
       let createdExercise;
 
       if (exerciseId) {
-        createdExercise = await httpRequest.updateExercise(
+        createdExercise = await httpRequest.updateExerciseAndLessonPlans(
           exerciseId,
           statement,
           type,
           finalAnswer,
           showAnswer,
-          finalOptions,
-          selectedLessonPlan
+          type === "multiple_choice" ? mcOptions : undefined,
+          type === "true_false" ? tfOptions : undefined,
+          lessonPlanIds.length ? lessonPlanIds : undefined
         );
       } else {
         createdExercise = await httpRequest.createExercise(
@@ -172,8 +183,9 @@ const ExerciseFormPage = () => {
           finalAnswer,
           showAnswer,
           teacherId,
-          finalOptions,
-          selectedLessonPlan
+          type === "multiple_choice" ? mcOptions : undefined,
+          type === "true_false" ? tfOptions : undefined,
+          lessonPlanIds.length ? lessonPlanIds : undefined
         );
       }
 
@@ -373,6 +385,7 @@ const ExerciseFormPage = () => {
           </label>
           <Tooltip
             position="right"
+            width="330px"
             content="Aqui você define se o aluno verá a resposta após responder."
           >
             <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
@@ -392,19 +405,12 @@ const ExerciseFormPage = () => {
               <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
             </Tooltip>
           </div>
-          <select
-            id="lesson_plan_id"
-            onChange={(e) => setSelectedLessonPlan(e.target.value)}
-            className="mb-3 w-full rounded-md border border-gray-300 p-2 dark:bg-navy-700 dark:text-white"
-            value={selectedLessonPlan}
-          >
-            <option value="">Selecione um plano de aula</option>
-            {lessonPlans.map((plan) => (
-              <option key={plan.lessonplan._id} value={plan.lessonplan._id}>
-                {plan.lessonplan.name}
-              </option>
-            ))}
-          </select>
+          <MultiSelect
+            options={options}
+            defaultSelected={lessonPlanIds}
+            onChange={(selected) => setLessonPlanIds(selected)}
+            disabled={saving}
+          />
         </div>
 
         <div className="flex items-center justify-end w-full gap-3 mt-6">
