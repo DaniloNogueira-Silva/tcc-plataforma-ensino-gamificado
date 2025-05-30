@@ -1,12 +1,15 @@
+import { IExercise, Options } from "./interfaces/exercise.interface";
 import {
   ILessonPlan,
   ILessonPlanByRole,
 } from "./interfaces/lesson-plan.interface";
 
-import { IExercise, Options } from "./interfaces/exercise.interface";
+import { IAvatar } from "./interfaces/avatar.interface";
 import { ILesson } from "./interfaces/lesson.interface";
 import { IUser } from "./interfaces/user.interface";
+import { TokenPayload } from "@/app/(admin)/(home)/exercise/form/page";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
 export class HttpRequest {
   async getToken(): Promise<string | undefined> {
@@ -657,6 +660,77 @@ export class HttpRequest {
       throw new Error(
         "Ocorreu um erro ao buscar conteúdos do plano de aula: " + error
       );
+    }
+  }
+
+  async createAvatar(avatar: {
+    torso: string;
+    head: string;
+    eyes: string;
+  }): Promise<IAvatar | null> {
+    try {
+      const token = await this.getToken();
+
+      if (!token) return null;
+
+      const decoded = jwtDecode<TokenPayload>(token);
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_GAME_BACKEND_URL}/avatar`,
+        { ...avatar, user_id: decoded._id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao criar avatar:", error);
+      throw new Error("Ocorreu um erro ao criar avatar" + error);
+    }
+  }
+
+  async getAvatarByUserId(): Promise<IAvatar | null> {
+    try {
+      const token = await this.getToken();
+      if (!token) return null;
+      const decoded = jwtDecode<TokenPayload>(token);
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_GAME_BACKEND_URL}/avatar/${decoded._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar avatar:", error);
+      throw new Error("Ocorreu um erro ao buscar avatar: " + error);
+    }
+  }
+
+  async updateAvatar(avatar: IAvatar): Promise<IAvatar | null> {
+    try {
+      const token = await this.getToken();
+      if (!token) return null;
+      const response = await axios.patch(
+        `${process.env.NEXT_PUBLIC_GAME_BACKEND_URL}/avatar`,
+        avatar,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar avatar:", error);
+      throw new Error("Ocorreu um erro ao atualizar avatar: " + error);
     }
   }
 }
