@@ -19,17 +19,23 @@ import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 export default function LessonTable() {
   const [lessons, setLessons] = useState<ILesson[]>([]);
   const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
+  const [lessonPlanContents, setLessonPlanContents] = useState<
+    { content_id: string; lesson_plan_id: string }[]
+  >([]);
   const router = useRouter();
 
   useEffect(() => {
     const fetchLessonsAndPlans = async () => {
       const httpRequest = new HttpRequest();
-      const [foundLessons, foundLessonPlans] = await Promise.all([
-        httpRequest.getAllLessons(),
-        httpRequest.getLessonPlansByRole(),
-      ]);
+      const [foundLessons, foundLessonPlans, foundLessonPlanContents] =
+        await Promise.all([
+          httpRequest.getAllLessons(),
+          httpRequest.getLessonPlansByRole(),
+          httpRequest.getAllLessonPlanContent(),
+        ]);
       setLessons(foundLessons);
       setLessonPlans(foundLessonPlans);
+      setLessonPlanContents(foundLessonPlanContents);
     };
 
     fetchLessonsAndPlans();
@@ -42,11 +48,25 @@ export default function LessonTable() {
     return date.toLocaleDateString("pt-BR");
   }
 
-  function getLessonPlanName(lessonPlanId: string): string {
-    const plan = lessonPlans.find(
-      (plan) => plan.lessonplan._id === lessonPlanId
+  function getLessonPlanNamesByExercise(exerciseId: string): string {
+    // Filtra as associações para o exercício
+    const associatedPlans = lessonPlanContents.filter(
+      (assoc) => assoc.content_id === exerciseId
     );
-    return plan?.lessonplan.name || "Sem plano atribuído";
+
+    if (associatedPlans.length === 0) return "Sem plano atribuído";
+
+    // Pega os nomes dos planos associados
+    const names = associatedPlans
+      .map((assoc) => {
+        const plan = lessonPlans.find(
+          (p) => p.lessonplan._id === assoc.lesson_plan_id
+        );
+        return plan?.lessonplan.name;
+      })
+      .filter(Boolean);
+
+    return names.join(", ");
   }
 
   const typeLabels: Record<string, string> = {
@@ -157,7 +177,7 @@ export default function LessonTable() {
                   {typeLabels[lesson.type] || lesson.type}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
-                  {getLessonPlanName(lesson.lesson_plan_id)}
+                  {getLessonPlanNamesByExercise(lesson._id)}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
                   <Button

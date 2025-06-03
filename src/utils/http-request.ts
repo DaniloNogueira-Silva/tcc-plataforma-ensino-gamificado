@@ -172,7 +172,7 @@ export class HttpRequest {
     type: string,
     grade: number,
     teacher_id: string,
-    lesson_plan_ids: string[]
+    lesson_plan_ids?: string[]
   ): Promise<ILesson | null> {
     try {
       const token = await this.getToken();
@@ -301,6 +301,46 @@ export class HttpRequest {
     } catch (error) {
       console.error("Erro ao criar aula:", error);
       throw new Error("Ocorreu um erro ao criar a aula: " + error);
+    }
+  }
+
+  async updateLessonAndLessonPlans(
+    id: string,
+    name?: string,
+    due_date?: string,
+    content?: string,
+    links?: string,
+    points?: number,
+    type?: string,
+    grade?: number,
+    lesson_plan_ids?: string[]
+  ): Promise<IExercise | null> {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.patch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/lessons/${id}`,
+        {
+          name,
+          due_date,
+          content,
+          links,
+          points,
+          type,
+          grade,
+          lesson_plan_ids,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar aula:", error);
+      throw new Error("Ocorreu um erro ao atualizar aula: " + error);
     }
   }
 

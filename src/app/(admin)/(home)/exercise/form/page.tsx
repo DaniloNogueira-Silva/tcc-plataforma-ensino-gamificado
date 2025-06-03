@@ -237,7 +237,6 @@ const ExerciseFormPage = () => {
             </select>
           </div>
 
-          {/* Múltipla Escolha */}
           {type === "multiple_choice" && (
             <div className="col-span-2">
               <Label>Alternativas*</Label>

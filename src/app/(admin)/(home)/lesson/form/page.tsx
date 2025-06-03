@@ -12,6 +12,7 @@ import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { HelpCircle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TextArea from "@/components/form/input/TextArea";
+import MultiSelect from "@/components/form/MultiSelect";
 
 interface TokenPayload {
   _id: string;
@@ -35,9 +36,16 @@ const LessonForm = () => {
   const [links, setLinks] = useState("");
   const [type, setType] = useState("");
   const [grade, setGrade] = useState(0);
+  const [lessonPlanIds, setLessonPlanIds] = useState<string[]>([]);
   const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
-  const [selectedLessonPlan, setSelectedLessonPlan] = useState("");
   const [teacherId, setTeacherId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const options = lessonPlans.map((plan) => ({
+    value: plan.lessonplan._id,
+    text: plan.lessonplan.name,
+    selected: lessonPlanIds.includes(plan.lessonplan._id),
+  }));
 
   useEffect(() => {
     if (lessonId) {
@@ -45,7 +53,13 @@ const LessonForm = () => {
       const fetchLesson = async () => {
         const httpRequest = new HttpRequest();
         const lesson = await httpRequest.getLessonById(lessonId);
+        const associations = await httpRequest.getAssociationsByContent(
+          lessonId,
+          "lesson"
+        );
+        const lessonPlanIds = associations.map((a) => a.lesson_plan_id);
         setInitialData(lesson);
+        setLessonPlanIds(lessonPlanIds);
         setLoading(false);
       };
       fetchLesson();
@@ -55,7 +69,7 @@ const LessonForm = () => {
   useEffect(() => {
     if (initialData) {
       const formattedDueDate = initialData.due_date
-        ? new Date(initialData.due_date).toISOString().split("T")[0] 
+        ? new Date(initialData.due_date).toISOString().split("T")[0]
         : "";
       setName(initialData.name || "");
       setContent(initialData.content || "");
@@ -64,7 +78,7 @@ const LessonForm = () => {
       setLinks(initialData.links || "");
       setType(initialData.type || "");
       setGrade(initialData.grade || 0);
-      setSelectedLessonPlan(initialData.lesson_plan_id || "");
+      setLessonPlanIds(initialData.lesson_plan_ids || []);
     }
 
     const fetchLessonPlans = async () => {
@@ -96,18 +110,19 @@ const LessonForm = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
     if (!teacherId) {
       console.error("Erro ao encontrar Id do professor:");
-      setLoading(false);
+      setSaving(false);
       return;
     }
 
     try {
       const httpRequest = new HttpRequest();
       let createdLesson;
+      setSaving(false);
       if (initialData?._id) {
-        createdLesson = await httpRequest.updateLesson(
+        createdLesson = await httpRequest.updateLessonAndLessonPlans(
           initialData._id,
           name,
           dueDate,
@@ -116,7 +131,7 @@ const LessonForm = () => {
           points,
           type,
           grade,
-          selectedLessonPlan
+          lessonPlanIds.length ? lessonPlanIds : undefined
         );
       } else {
         createdLesson = await httpRequest.createLesson(
@@ -128,19 +143,21 @@ const LessonForm = () => {
           type,
           grade,
           teacherId,
-          selectedLessonPlan
+          lessonPlanIds.length ? lessonPlanIds : undefined
         );
       }
-
+      console.log(createdLesson);
       if (createdLesson?._id) {
         router.push("/lesson");
       }
     } catch (error) {
       console.error("Erro ao salvar aula:", error);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
+
+  if (loading) return <p>Carregando exercício...</p>;
 
   return (
     <div>
@@ -217,19 +234,12 @@ const LessonForm = () => {
             >
               <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
             </Tooltip>
-            <select
-              id="lesson_plan_id"
-              value={selectedLessonPlan}
-              onChange={(e) => setSelectedLessonPlan(e.target.value)}
-              className="mb-3 w-full rounded-md border border-gray-300 p-2 dark:bg-navy-700 dark:text-white"
-            >
-              <option value="">Selecione um plano de aula</option>
-              {lessonPlans.map((plan) => (
-                <option key={plan.lessonplan._id} value={plan.lessonplan._id}>
-                  {plan.lessonplan.name}
-                </option>
-              ))}
-            </select>
+            <MultiSelect
+              options={options}
+              defaultSelected={lessonPlanIds}
+              onChange={(selected) => setLessonPlanIds(selected)}
+              disabled={saving}
+            />
           </div>
         </div>
 
@@ -237,8 +247,8 @@ const LessonForm = () => {
           <Button size="sm" variant="outline" onClick={handleClose}>
             Fechar
           </Button>
-          <Button size="sm" type="submit" disabled={loading}>
-            {loading
+          <Button size="sm" type="submit" disabled={saving}>
+            {saving
               ? "Salvando..."
               : initialData?._id
               ? "Editar Aula"
