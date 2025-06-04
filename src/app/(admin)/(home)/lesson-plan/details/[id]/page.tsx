@@ -93,7 +93,7 @@ export default function DetailsPage() {
   ) {
     if (type === "lesson") {
       const lesson = item as ILesson;
-      await httpRequest.updateLesson(
+      await httpRequest.updateLessonAndLessonPlans(
         lesson._id,
         lesson.name,
         dueDate,
@@ -102,18 +102,23 @@ export default function DetailsPage() {
         points,
         lesson.type || "",
         grade,
-        lessonPlanId
+        [lessonPlanId]
       );
     } else {
       const exercise = item as IExercise;
-      await httpRequest.updateExercise(
+      await httpRequest.updateExerciseAndLessonPlans(
         exercise._id,
         exercise.statement || "",
         exercise.type || "",
         exercise.answer || "",
         exercise.showAnswer || false,
-        exercise.options || [],
-        lessonPlanId,
+        exercise.type === "multiple_choice"
+          ? exercise.multiple_choice_options
+          : undefined,
+        exercise.type === "true_false"
+          ? exercise.true_false_options
+          : undefined,
+        [lessonPlanId],
         dueDate,
         points,
         grade

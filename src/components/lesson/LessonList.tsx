@@ -37,7 +37,7 @@ export default function LessonList({ lessonPlanId }: LessonListProps) {
           links={lesson.links}
           type={lesson.type}
           grade={lesson.grade}
-          lessonPlanId={lesson.lesson_plan_id}
+          lessonPlanId={lesson.lesson_plan_ids}
           onUpdateSuccess={fetchData}
         />
       ))}

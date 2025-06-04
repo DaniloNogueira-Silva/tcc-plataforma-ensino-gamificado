@@ -133,6 +133,7 @@ const LessonForm = () => {
           grade,
           lessonPlanIds.length ? lessonPlanIds : undefined
         );
+        console.log(lessonPlanIds);
       } else {
         createdLesson = await httpRequest.createLesson(
           name,
@@ -146,7 +147,6 @@ const LessonForm = () => {
           lessonPlanIds.length ? lessonPlanIds : undefined
         );
       }
-      console.log(createdLesson);
       if (createdLesson?._id) {
         router.push("/lesson");
       }
