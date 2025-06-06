@@ -37,16 +37,44 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
       : `/exercise/correction/${exerciseId}`;
 
   return (
-    <Link href={href} passHref>
-      <div className="relative group rounded-2xl border border-gray-200 bg-white px-6 pb-5 pt-6 overflow-hidden transition-shadow hover:shadow-md dark:border-gray-800 dark:bg-white/[0.03]">
-        <div className="mb-6 z-10 relative">
-          <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">
-            {statement}
-          </h3>
-          <span className="block text-sm text-gray-600 dark:text-gray-400">
-            Data de entrega: {formattedDueDate}
-          </span>
+    <Link href={href} passHref className="block">
+      <div className="flex items-stretch justify-between gap-4 rounded-xl bg-white p-4">
+        <div className="flex flex-[2_2_0px] flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <p className="text-[#6a7581] text-sm font-normal leading-normal">
+              Exercise
+            </p>
+            <p className="text-[#121416] text-base font-bold leading-tight">
+              {statement}
+            </p>
+            <p className="text-[#6a7581] text-sm font-normal leading-normal">
+              Data de entrega: {formattedDueDate}
+            </p>
+          </div>
+          <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-8 px-4 flex-row-reverse bg-[#f1f2f4] text-[#121416] pr-2 gap-1 text-sm font-medium leading-normal w-fit">
+            <div
+              className="text-[#121416]"
+              data-icon="Check"
+              data-size="18px"
+              data-weight="regular"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18px"
+                height="18px"
+                fill="currentColor"
+                viewBox="0 0 256 256"
+              >
+                <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"></path>
+              </svg>
+            </div>
+            <span className="truncate">Complete</span>
+          </button>
         </div>
+        <div
+          className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl flex-1"
+          style={{ backgroundImage: 'url("undefined")' }}
+        ></div>
       </div>
     </Link>
   );

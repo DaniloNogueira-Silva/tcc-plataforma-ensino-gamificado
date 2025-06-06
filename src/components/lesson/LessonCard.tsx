@@ -45,29 +45,26 @@ const LessonCard: React.FC<LessonCardProps> = ({
 
   return (
     <>
-      <div className="relative group rounded-2xl border border-gray-200 bg-white px-6 pb-5 pt-6 overflow-hidden transition-shadow hover:shadow-md dark:border-gray-800 dark:bg-white/[0.03]">
-        <div className="mb-6 z-10 relative">
-          <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">
-            {name}
-          </h3>
-          <span className="block text-sm text-gray-600 dark:text-gray-400">
-            Conteúdo: {content}
-          </span>
-          <span className="block text-sm text-gray-600 dark:text-gray-400">
-            Pontos: {points}
-          </span>
-          <span className="block text-sm text-gray-600 dark:text-gray-400">
-            Data de Entrega: {new Date(dueDate).toLocaleDateString()}
-          </span>
-          <span className="block text-sm text-indigo-600 font-medium mt-1">
-            Tipo: {typeLabels[type] || type}
-          </span>
-          <span className="block text-sm text-gray-600 dark:text-gray-400">
-            Nota: {grade}
-          </span>
+      <div className="relative group">
+        <div className="flex items-stretch justify-between gap-4 rounded-xl bg-white p-4">
+          <div className="flex flex-col gap-1 flex-[2_2_0px]">
+            <p className="text-[#6a7581] text-sm font-normal leading-normal">
+              {typeLabels[type] || type}
+            </p>
+            <p className="text-[#121416] text-base font-bold leading-tight">
+              {name}
+            </p>
+            <p className="text-[#6a7581] text-sm font-normal leading-normal">
+              {content}
+            </p>
+          </div>
+          <div
+            className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl flex-1"
+            style={{ backgroundImage: `url("${links}")` }}
+          ></div>
         </div>
 
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4 z-20">
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4 rounded-xl">
           <button
             onClick={() => setEditModalOpen(true)}
             className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:bg-gray-200 transition"

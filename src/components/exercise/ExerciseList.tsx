@@ -25,7 +25,7 @@ export default function ExerciseList({ lessonPlanId }: ExerciseListProps) {
   }, [lessonPlanId]);
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">
+    <div className="space-y-4 px-4">
       {exercises.map((exercise, i) => (
         <ExerciseCard
           key={i}

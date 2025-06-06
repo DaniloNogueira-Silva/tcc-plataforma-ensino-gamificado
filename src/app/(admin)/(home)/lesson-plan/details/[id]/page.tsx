@@ -25,7 +25,9 @@ export default function DetailsPage() {
   const [dueDate, setDueDate] = useState("");
   const [points, setPoints] = useState(0);
   const [grade, setGrade] = useState(0);
-
+  const [activeTab, setActiveTab] = useState<"lessons" | "exercises">(
+    "lessons"
+  );
   const httpRequest = new HttpRequest();
 
   if (!lessonPlanId) {
@@ -141,24 +143,56 @@ export default function DetailsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold dark:text-white/90">
-          Detalhes do Plano de Aula
-        </h1>
+    <div className="px-40 flex flex-1 justify-center py-5">
+      <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
+        <div className="flex flex-wrap justify-between gap-3 p-4">
+          <p className="text-[#121416] tracking-light text-[32px] font-bold leading-tight min-w-72">
+            Lessons and Exercises
+          </p>
+          <button
+            onClick={openAddModal}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Adicionar
+          </button>
+        </div>
 
-        <button
-          onClick={openAddModal}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Adicionar
-        </button>
+        <div className="pb-3">
+          <div className="flex border-b border-[#dbe0e6] px-4 gap-8">
+            <button
+              type="button"
+              onClick={() => setActiveTab("lessons")}
+              className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 ${
+                activeTab === "lessons"
+                  ? "border-b-[#111418] text-[#111418]"
+                  : "border-b-transparent text-[#60758a]"
+              }`}
+            >
+              <p className="text-sm font-bold leading-normal tracking-[0.015em]">
+                Lessons
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("exercises")}
+              className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 ${
+                activeTab === "exercises"
+                  ? "border-b-[#111418] text-[#111418]"
+                  : "border-b-transparent text-[#60758a]"
+              }`}
+            >
+              <p className="text-sm font-bold leading-normal tracking-[0.015em]">
+                Exercises
+              </p>
+            </button>
+          </div>
+        </div>
+        {activeTab === "lessons" ? (
+          <LessonList lessonPlanId={lessonPlanId} />
+        ) : (
+          <ExerciseList lessonPlanId={lessonPlanId} />
+        )}
       </div>
-
-      <section>
-        <LessonList lessonPlanId={lessonPlanId} />
-        <ExerciseList lessonPlanId={lessonPlanId} />
-      </section>
 
       <Modal
         isOpen={showAddModal}
