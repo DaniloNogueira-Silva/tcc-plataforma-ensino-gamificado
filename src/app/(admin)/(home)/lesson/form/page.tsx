@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { HttpRequest } from "@/utils/http-request";
 import Input from "@/components/form/input/InputField";
+import FileInput from "@/components/form/input/FileInput";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
 import { jwtDecode } from "jwt-decode";
@@ -34,6 +35,7 @@ const LessonForm = () => {
   const [points, setPoints] = useState(0);
   const [dueDate, setDueDate] = useState("");
   const [links, setLinks] = useState("");
+  const [linksFile, setLinksFile] = useState<File | null>(null);
   const [type, setType] = useState("");
   const [grade, setGrade] = useState(0);
   const [lessonPlanIds, setLessonPlanIds] = useState<string[]>([]);
@@ -120,6 +122,7 @@ const LessonForm = () => {
     try {
       const httpRequest = new HttpRequest();
       let createdLesson;
+      const linkData = linksFile ? linksFile : links;
       setSaving(false);
       if (initialData?._id) {
         createdLesson = await httpRequest.updateLessonAndLessonPlans(
@@ -127,7 +130,7 @@ const LessonForm = () => {
           name,
           dueDate,
           content,
-          links,
+          linkData,
           points,
           type,
           grade,
@@ -139,7 +142,7 @@ const LessonForm = () => {
           name,
           dueDate,
           content,
-          links,
+          linkData,
           points,
           type,
           grade,
@@ -188,7 +191,11 @@ const LessonForm = () => {
           </div>
 
           <div className="col-span-1">
-            <Label>Links</Label>
+            <Label>Upload de Arquivo</Label>
+            <FileInput
+              onChange={(e) => setLinksFile(e.target.files?.[0] || null)}
+            />
+            <Label className="mt-2">Link (opcional)</Label>
             <Input
               type="text"
               placeholder="Digite links relacionados à aula"

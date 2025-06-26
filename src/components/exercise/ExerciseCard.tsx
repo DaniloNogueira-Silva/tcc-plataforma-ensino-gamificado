@@ -8,18 +8,22 @@ type ExerciseCardProps = {
   exerciseId: string;
   statement: string;
   dueDate: string;
+  lessonPlanId: string;
 };
 
 const ExerciseCard: React.FC<ExerciseCardProps> = ({
   exerciseId,
   statement,
   dueDate,
+  lessonPlanId,
 }) => {
   const formattedDueDate = dueDate
     ? new Date(dueDate).toISOString().split("T")[0]
     : "";
 
   const [userType, setUserType] = useState<string | null>(null);
+  const [totalStudents, setTotalStudents] = useState<number>(0);
+  const [deliveredStudents, setDeliveredStudents] = useState<number>(0);
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -30,6 +34,30 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
 
     fetchUserRole();
   }, []);
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      const httpRequest = new HttpRequest();
+
+      if (lessonPlanId) {
+        const students = await httpRequest.findAllStudentsByLessonPlanId(
+          lessonPlanId
+        );
+        setTotalStudents(students);
+      }
+
+      const submissions = await httpRequest.findAllStudentsByExerciseId(
+        exerciseId
+      );
+      const delivered = Array.isArray(submissions)
+        ? submissions.length
+        : submissions?.length ?? 0;
+      setDeliveredStudents(delivered);
+      console.log(delivered);
+    };
+
+    fetchCounts();
+  }, [lessonPlanId, exerciseId]);
 
   const href =
     userType === "STUDENT"
@@ -70,11 +98,12 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
             </div>
             <span className="truncate">Complete</span>
           </button>
+          <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-8 px-4 flex-row-reverse bg-[#f1f2f4] text-[#121416] pr-2 gap-1 text-sm font-medium leading-normal w-fit">
+            <span className="truncate">
+              {deliveredStudents}/{totalStudents}
+            </span>
+          </button>
         </div>
-        <div
-          className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl flex-1"
-          style={{ backgroundImage: 'url("undefined")' }}
-        ></div>
       </div>
     </Link>
   );

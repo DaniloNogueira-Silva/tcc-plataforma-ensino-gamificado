@@ -2,6 +2,7 @@
 
 import { PencilIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { HttpRequest } from "@/utils/http-request";
 import LessonForm from "@/components/lesson/LessonForm";
 
@@ -31,7 +32,11 @@ const LessonCard: React.FC<LessonCardProps> = ({
   onUpdateSuccess,
 }) => {
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const router = useRouter();
 
+  const handleCardClick = () => {
+    router.push(`/lesson/details/${lessonId}`);
+  };
   const handleDelete = async () => {
     const httpRequest = new HttpRequest();
     await httpRequest.removeLesson(lessonId);
@@ -45,7 +50,7 @@ const LessonCard: React.FC<LessonCardProps> = ({
 
   return (
     <>
-      <div className="relative group">
+      <div className="relative group cursor-pointer" onClick={handleCardClick}>
         <div className="flex items-stretch justify-between gap-4 rounded-xl bg-white p-4">
           <div className="flex flex-col gap-1 flex-[2_2_0px]">
             <p className="text-[#6a7581] text-sm font-normal leading-normal">
@@ -58,22 +63,24 @@ const LessonCard: React.FC<LessonCardProps> = ({
               {content}
             </p>
           </div>
-          <div
-            className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl flex-1"
-            style={{ backgroundImage: `url("${links}")` }}
-          ></div>
         </div>
 
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4 rounded-xl">
           <button
-            onClick={() => setEditModalOpen(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setEditModalOpen(true);
+            }}
             className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:bg-gray-200 transition"
             title="Editar"
           >
             <PencilIcon size={18} />
           </button>
           <button
-            onClick={handleDelete}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete();
+            }}
             className="w-10 h-10 rounded-full bg-white text-red-600 flex items-center justify-center hover:bg-red-100 transition"
             title="Deletar"
           >

@@ -635,6 +635,28 @@ export class HttpRequest {
     }
   }
 
+  async findAllStudentsByLessonPlanId(lesson_plan_id: string) {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-progress/lesson_plan/${lesson_plan_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar alunos do plano de aula:", error);
+      throw new Error(
+        "Ocorreu um erro ao buscar alunos do plano de aula: " + error
+      );
+    }
+  }
+
   async getUserStats() {
     try {
       const token = await this.getToken();
@@ -771,6 +793,25 @@ export class HttpRequest {
     } catch (error) {
       console.error("Erro ao atualizar avatar:", error);
       throw new Error("Ocorreu um erro ao atualizar avatar: " + error);
+    }
+  }
+
+  async getFile(filename: string): Promise<string> {
+    try {
+      const token = await this.getToken();
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}${filename}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            responseType: "blob",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar arquivo:", error);
+      throw new Error("Ocorreu um erro ao buscar arquivo: " + error);
     }
   }
 }

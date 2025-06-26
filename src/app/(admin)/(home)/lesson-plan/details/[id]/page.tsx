@@ -147,7 +147,7 @@ export default function DetailsPage() {
       <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
         <div className="flex flex-wrap justify-between gap-3 p-4">
           <p className="text-[#121416] tracking-light text-[32px] font-bold leading-tight min-w-72">
-            Lessons and Exercises
+            Aulas e Exercícios
           </p>
           <button
             onClick={openAddModal}
@@ -169,7 +169,7 @@ export default function DetailsPage() {
               }`}
             >
               <p className="text-sm font-bold leading-normal tracking-[0.015em]">
-                Lessons
+                Aulas
               </p>
             </button>
             <button
@@ -182,7 +182,7 @@ export default function DetailsPage() {
               }`}
             >
               <p className="text-sm font-bold leading-normal tracking-[0.015em]">
-                Exercises
+                Exercícios
               </p>
             </button>
           </div>
