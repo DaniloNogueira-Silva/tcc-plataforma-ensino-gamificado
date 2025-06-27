@@ -104,8 +104,6 @@ export class HttpRequest {
         }
       );
 
-      console.log("Plano de aula criado:", response.data);
-
       return response.data;
     } catch (error) {
       console.error("Erro ao criar o plano de aula:", error);
@@ -133,8 +131,6 @@ export class HttpRequest {
         }
       );
 
-      console.log("Plano de aula atualizado:", response.data);
-
       return response.data;
     } catch (error) {
       console.error("Erro ao atualizar o plano de aula:", error);
@@ -153,8 +149,6 @@ export class HttpRequest {
           },
         }
       );
-
-      console.log("Plano de aula deletado:", response.data);
 
       return response.data;
     } catch (error) {
@@ -654,6 +648,26 @@ export class HttpRequest {
       throw new Error(
         "Ocorreu um erro ao buscar alunos do plano de aula: " + error
       );
+    }
+  }
+
+  async isExerciseCompleted(exercise_id: string) {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercises/${exercise_id}/completed`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao verificar se exercício foi completado:", error);
+      throw new Error("Erro ao verificar status do exercício: " + error);
     }
   }
 

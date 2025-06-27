@@ -35,7 +35,7 @@ const LessonPlanCard: React.FC<LessonPlanCardProps> = ({
   const handleDelete = async () => {
     const httpRequest = new HttpRequest();
     await httpRequest.removeLessonPlan(lessonPlanId);
-    onUpdateSuccess(); // atualiza localmente
+    onUpdateSuccess();
   };
 
   const handleUpdate = async () => {
@@ -44,7 +44,7 @@ const LessonPlanCard: React.FC<LessonPlanCardProps> = ({
     await httpRequest.updateLessonPlan(lessonPlanId, name);
     setLoading(false);
     setEditModalOpen(false);
-    onUpdateSuccess(); // atualiza localmente
+    onUpdateSuccess();
   };
 
   return (
@@ -52,11 +52,21 @@ const LessonPlanCard: React.FC<LessonPlanCardProps> = ({
       <div className="relative group rounded-2xl border border-gray-200 bg-white px-6 pb-5 pt-6 overflow-hidden transition-shadow hover:shadow-md dark:border-gray-800 dark:bg-white/[0.03]">
         <div className="flex items-center gap-3 mb-6 z-10 relative">
           <div className="w-10 h-10">
-            <Image width={40} height={40} className="w-full" src={imgUrl} alt={lessonPlanName} />
+            <Image
+              width={40}
+              height={40}
+              className="w-full"
+              src={imgUrl}
+              alt={lessonPlanName}
+            />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">{lessonPlanName}</h3>
-            <span className="block text-gray-500 text-theme-xs dark:text-gray-400">{teacherName}</span>
+            <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">
+              {lessonPlanName}
+            </h3>
+            <span className="block text-gray-500 text-theme-xs dark:text-gray-400">
+              {teacherName}
+            </span>
           </div>
         </div>
 
@@ -67,14 +77,22 @@ const LessonPlanCard: React.FC<LessonPlanCardProps> = ({
         {/* overlay com botões */}
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4 z-20">
           <button
-            onClick={() => setEditModalOpen(true)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setEditModalOpen(true);
+            }}
             className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:bg-gray-200 transition"
             title="Editar"
           >
             <PencilIcon size={18} />
           </button>
           <button
-            onClick={handleDelete}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleDelete();
+            }}
             className="w-10 h-10 rounded-full bg-white text-red-600 flex items-center justify-center hover:bg-red-100 transition"
             title="Deletar"
           >

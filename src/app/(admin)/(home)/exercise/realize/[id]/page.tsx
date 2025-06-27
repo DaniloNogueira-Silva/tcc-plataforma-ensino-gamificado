@@ -24,6 +24,7 @@ const ExerciseDetailsPage = () => {
       if (!exerciseId) return;
       const httpRequest = new HttpRequest();
       const response = await httpRequest.getExerciseById(exerciseId as string);
+      console.log(response);
       setExercise(response);
     };
 
@@ -37,7 +38,7 @@ const ExerciseDetailsPage = () => {
     let answerString = "";
 
     if (exercise?.type === "true_false") {
-      exercise.options?.forEach((alternative) => {
+      exercise.true_false_options?.forEach((alternative) => {
         const answer = selectedAnswer[alternative._id];
         if (answer === "true") {
           answerString += "V";
@@ -68,7 +69,9 @@ const ExerciseDetailsPage = () => {
       <form onSubmit={handleAnswerSubmission}>
         {exercise.type === "open" && (
           <div className="mt-6">
-            <h2 className="text-base font-medium text-gray-800 dark:text-white/90">Sua Resposta</h2>
+            <h2 className="text-base font-medium text-gray-800 dark:text-white/90">
+              Sua Resposta
+            </h2>
             <TextArea
               value={selectedAnswer[exerciseId] || ""}
               onChange={(e) =>
@@ -86,9 +89,11 @@ const ExerciseDetailsPage = () => {
 
         {exercise.type === "multiple_choice" && (
           <div className="mt-6">
-            <h2 className="text-base font-medium text-gray-800 dark:text-white/90">Alternativas</h2>
+            <h2 className="text-base font-medium text-gray-800 dark:text-white/90">
+              Alternativas
+            </h2>
             <div className="space-y-4 mt-4">
-              {exercise.options?.map((option, index) => (
+              {exercise.multiple_choice_options?.map((option, index) => (
                 <div
                   key={index}
                   className="flex items-center space-x-3 border-b border-gray-300 pb-3"
@@ -119,12 +124,16 @@ const ExerciseDetailsPage = () => {
           </div>
         )}
 
-        {exercise.type === "true_false" && exercise.options && (
+        {exercise.type === "true_false" && exercise.true_false_options && (
           <div className="mt-6">
-            <h2 className="text-base font-medium text-gray-800 dark:text-white/90">Proposições</h2>
-            {exercise.options.map((alternative, index) => (
+            <h2 className="text-base font-medium text-gray-800 dark:text-white/90">
+              Proposições
+            </h2>
+            {exercise.true_false_options?.map((alternative, index) => (
               <div key={alternative._id} className="mt-4">
-                <p className="text-lg font-medium text-gray-800 dark:text-white/90">{alternative.statement}</p>
+                <p className="text-lg font-medium text-gray-800 dark:text-white/90">
+                  {alternative.statement}
+                </p>
                 <div className="flex items-center space-x-6 mt-4">
                   <input
                     type="radio"

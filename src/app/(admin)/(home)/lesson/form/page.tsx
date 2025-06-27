@@ -136,7 +136,6 @@ const LessonForm = () => {
           grade,
           lessonPlanIds.length ? lessonPlanIds : undefined
         );
-        console.log(lessonPlanIds);
       } else {
         createdLesson = await httpRequest.createLesson(
           name,
