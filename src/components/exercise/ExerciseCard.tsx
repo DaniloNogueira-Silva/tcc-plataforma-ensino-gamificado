@@ -11,6 +11,7 @@ type ExerciseCardProps = {
   statement: string;
   dueDate: string;
   lessonPlanId: string;
+  type: string;
 };
 
 const ExerciseCard: React.FC<ExerciseCardProps> = ({
@@ -18,6 +19,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
   statement,
   dueDate,
   lessonPlanId,
+  type,
 }) => {
   const formattedDueDate = dueDate
     ? new Date(dueDate)
@@ -105,6 +107,11 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
       ? `/exercise/realize/${exerciseId}`
       : `/exercise/correction/${exerciseId}`;
 
+  const typeLabels: Record<string, string> = {
+    open: "Aberta",
+    multiple_choice: "Múltipla Escolha",
+    true_false: "Verdadeiro ou Falso",
+  };
   return (
     <>
       <Link href={href} passHref className="block">
@@ -112,9 +119,9 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
           <div className="flex flex-[2_2_0px] flex-col gap-4">
             <div className="flex flex-col gap-1">
               <p className="text-[#6a7581] text-sm font-normal leading-normal">
-                Exercise
+                {typeLabels[type] || "Tipo Desconhecido"}
               </p>
-              <p className="text-[#121416] text-base font-bold leading-tight">
+              <p className="text-[#121416] text-base font-bold leading-tight line-clamp-1">
                 {statement}
               </p>
               <p className="text-[#6a7581] text-sm font-normal leading-normal">

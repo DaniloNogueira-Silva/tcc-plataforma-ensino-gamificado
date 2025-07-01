@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import LessonList from "@/components/lesson/LessonList";
 import ExerciseList from "@/components/exercise/ExerciseList";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/modal";
 import { HttpRequest } from "@/utils/http-request";
 import { ILesson } from "@/utils/interfaces/lesson.interface";
@@ -25,10 +25,20 @@ export default function DetailsPage() {
   const [dueDate, setDueDate] = useState("");
   const [points, setPoints] = useState(0);
   const [grade, setGrade] = useState(0);
+  const [userType, setUserType] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"lessons" | "exercises">(
     "lessons"
   );
   const httpRequest = new HttpRequest();
+
+  useEffect(() => {
+    const fetchRole = async () => {
+      const result = await httpRequest.getUserByRole();
+      setUserType(result.role);
+    };
+
+    fetchRole();
+  }, []);
 
   if (!lessonPlanId) {
     return <div>Carregando...</div>;
@@ -149,12 +159,14 @@ export default function DetailsPage() {
           <p className="text-[#121416] tracking-light text-[32px] font-bold leading-tight min-w-72">
             Aulas e Exercícios
           </p>
-          <button
-            onClick={openAddModal}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Adicionar
-          </button>
+          {userType !== "STUDENT" && (
+            <button
+              onClick={openAddModal}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Adicionar
+            </button>
+          )}
         </div>
 
         <div className="pb-3">

@@ -40,10 +40,10 @@ const LessonCard: React.FC<LessonCardProps> = ({
             <p className="text-[#6a7581] text-sm font-normal leading-normal">
               {typeLabels[type] || type}
             </p>
-            <p className="text-[#121416] text-base font-bold leading-tight">
+            <p className="text-[#121416] text-base font-bold leading-tight line-clamp-1">
               {name}
             </p>
-            <p className="text-[#6a7581] text-sm font-normal leading-normal">
+            <p className="text-[#6a7581] text-sm font-normal leading-normal break-words line-clamp-3">
               {content}
             </p>
           </div>

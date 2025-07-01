@@ -33,6 +33,7 @@ export default function ExerciseList({ lessonPlanId }: ExerciseListProps) {
           statement={exercise.statement}
           dueDate={exercise.due_date}
           lessonPlanId={lessonPlanId}
+          type={exercise.type}
         />
       ))}
     </div>

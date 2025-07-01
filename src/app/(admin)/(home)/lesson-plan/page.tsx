@@ -10,6 +10,7 @@ import Label from "@/components/form/Label";
 import LessonPlanList from "@/components/lesson-plan/LessonPlanList";
 import { Modal } from "@/components/ui/modal";
 import useAuth from "@/hooks/useAuth";
+import Image from "next/image";
 
 export default function LessonPlan() {
     useAuth();
@@ -102,7 +103,7 @@ export default function LessonPlan() {
                         <Label>Ícone</Label>
                         {selectedImage ? (
                             <div>
-                                <img src={selectedImage} alt="Ícone selecionado" className="w-16 h-16" />
+                                <Image src={selectedImage} alt="Ícone selecionado" className="w-16 h-16" />
                                 <p className="text-sm text-gray-500">{selectedImage}</p>
                             </div>
                         ) : (
@@ -136,7 +137,7 @@ export default function LessonPlan() {
                 <div className="grid grid-cols-3 gap-4">
                     {images.map((image, index) => (
                         <div key={index} className="cursor-pointer" onClick={() => handleImageSelect(image)}>
-                            <img src={image} alt={`Imagem ${index + 1}`} className="w-full h-auto border rounded-lg" />
+                            <Image src={image} alt={`Imagem ${index + 1}`} className="w-full h-auto border rounded-lg" />
                         </div>
                     ))}
                 </div>

@@ -68,13 +68,13 @@ const LessonDetailsPage = () => {
           <span className="text-[#4e7097] text-base font-medium leading-normal">
             /
           </span>
-          <span className="text-[#0e141b] text-base font-medium leading-normal">
+          <span className="truncate whitespace-nowrap overflow-hidden text-ellipsis text-[#0e141b] text-base font-medium leading-normal max-w-[600px]">
             {lesson.name}
           </span>
         </div>
         <div className="flex flex-wrap justify-between gap-3 p-4">
           <div className="flex min-w-72 flex-col gap-3">
-            <p className="text-[#0e141b] tracking-light text-[32px] font-bold leading-tight">
+            <p className="text-[#0e141b] tracking-light text-[32px] font-bold leading-tight text-justify">
               {lesson.name}
             </p>
             {formattedDate && lesson.type !== "reading" && (
@@ -87,7 +87,7 @@ const LessonDetailsPage = () => {
         <h2 className="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
           Descrição
         </h2>
-        <p className="text-[#0e141b] text-base font-normal leading-normal pb-3 pt-1 px-4 whitespace-pre-wrap">
+        <p className="text-[#0e141b] text-base font-normal leading-normal pb-3 pt-1 px-4 whitespace-pre-wrap break-words text-justify">
           {lesson.content}
         </p>
         {lesson.links && (
