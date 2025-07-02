@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import { HttpRequest } from "@/utils/http-request";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
 import Label from "@/components/form/Label";
 import TextArea from "@/components/form/input/TextArea";
 import { useParams } from "next/navigation";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
+import { jwtDecode } from "jwt-decode";
+import { TokenPayload } from "../../form/page";
+import LessonPlanBreadcrumb from "@/components/ui/breadcrumb/LessonPlanBreadcrumb";
 
 const ExerciseDetailsPage = () => {
   const params = useParams();
@@ -24,7 +26,8 @@ const ExerciseDetailsPage = () => {
     const fetchExerciseDetails = async () => {
       if (!exerciseId) return;
       const httpRequest = new HttpRequest();
-      const response = await httpRequest.getExerciseById(exerciseId as string);
+      const response = await httpRequest.getExerciseById(exerciseId);
+
       setExercise(response);
 
       try {
@@ -56,22 +59,31 @@ const ExerciseDetailsPage = () => {
       const httpRequest = new HttpRequest();
       try {
         const result = await httpRequest.isExerciseCompleted(exerciseId);
+        const token = await httpRequest.getToken();
+        const decoded = jwtDecode<TokenPayload>(token);
+
         if (result && result.completed) {
+          const data = await httpRequest.findAllStudentsByExerciseId(
+            exerciseId
+          );
           setSubmitted(true);
-          if (result.answer) {
+          const userAnswer = data.find(
+            (item) => item.user_id._id === decoded._id
+          );
+          if (userAnswer.answer) {
             if (
               exercise?.type === "true_false" &&
               exercise.true_false_options
             ) {
               exercise.true_false_options.forEach((alt, idx) => {
-                const char = result.answer[idx];
+                const char = userAnswer.answer[idx];
                 setSelectedAnswer((prev) => ({
                   ...prev,
                   [alt._id]: char === "V" ? "true" : "false",
                 }));
               });
             } else {
-              setSelectedAnswer({ [exerciseId]: result.answer });
+              setSelectedAnswer({ [exerciseId]: userAnswer.answer });
             }
           }
         }
@@ -110,6 +122,16 @@ const ExerciseDetailsPage = () => {
     setSubmitted(true);
   };
 
+  const handleAnswerChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setSelectedAnswer((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   if (!exercise) return <div>Carregando...</div>;
 
   const formattedDate = exercise.due_date
@@ -119,26 +141,11 @@ const ExerciseDetailsPage = () => {
   return (
     <div className="px-40 flex flex-1 justify-center py-5">
       <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
-        <div className="flex flex-wrap items-center gap-2 overflow-hidden truncate">
-          {lessonPlanId && lessonPlanName ? (
-            <a
-              className="text-[#4e7097] text-base font-medium leading-normal"
-              href={`/lesson-plan/details/${lessonPlanId}`}
-            >
-              {lessonPlanName}
-            </a>
-          ) : (
-            <span className="text-[#4e7097] text-base font-medium leading-normal">
-              Plano de aula
-            </span>
-          )}
-          <span className="text-[#4e7097] text-base font-medium leading-normal">
-            /
-          </span>
-          <span className="truncate whitespace-nowrap overflow-hidden text-ellipsis text-[#0e141b] text-base font-medium leading-normal max-w-[600px]">
-            {exercise.statement}
-          </span>
-        </div>
+        <LessonPlanBreadcrumb
+          lessonPlanId={lessonPlanId}
+          lessonPlanName={lessonPlanName}
+          currentName={exercise.statement}
+        />
 
         <div className="flex flex-wrap justify-between gap-3 p-4">
           <div className="flex min-w-72 flex-col gap-3">
@@ -164,7 +171,7 @@ const ExerciseDetailsPage = () => {
                 onChange={(e) =>
                   setSelectedAnswer({
                     ...selectedAnswer,
-                    [exerciseId]: e,
+                    [exerciseId]: e.target.value,
                   })
                 }
                 className="w-full h-40 mt-2 p-4 border border-gray-300 rounded-md"
@@ -172,11 +179,6 @@ const ExerciseDetailsPage = () => {
                 required
                 disabled={submitted}
               />
-              {submitted && selectedAnswer[exerciseId] && (
-                <p className="mt-2 text-green-700">
-                  Resposta enviada: {selectedAnswer[exerciseId]}
-                </p>
-              )}
             </div>
           )}
 
@@ -196,6 +198,7 @@ const ExerciseDetailsPage = () => {
                       id={`alternative-${index}`}
                       name={`multiple_choice-${exerciseId}`}
                       value={option}
+                      checked={selectedAnswer[exerciseId] === option}
                       onChange={(e) =>
                         setSelectedAnswer({
                           ...selectedAnswer,
@@ -213,16 +216,11 @@ const ExerciseDetailsPage = () => {
                       {option}
                     </Label>
                     {submitted && selectedAnswer[exerciseId] === option && (
-                      <span className="ml-2 text-green-700">(sua escolha)</span>
+                      <span className="ml-2 text-green-700"></span>
                     )}
                   </div>
                 ))}
               </div>
-              {submitted && selectedAnswer[exerciseId] && (
-                <p className="mt-2 text-green-700">
-                  Resposta enviada: {selectedAnswer[exerciseId]}
-                </p>
-              )}
             </div>
           )}
 
@@ -282,14 +280,6 @@ const ExerciseDetailsPage = () => {
                       Falso
                     </label>
                   </div>
-                  {submitted && selectedAnswer[alternative._id] && (
-                    <p className="mt-2 text-green-700">
-                      Resposta enviada:{" "}
-                      {selectedAnswer[alternative._id] === "true"
-                        ? "Verdadeiro"
-                        : "Falso"}
-                    </p>
-                  )}
                 </div>
               ))}
             </div>

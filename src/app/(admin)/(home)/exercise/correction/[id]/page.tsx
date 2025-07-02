@@ -6,12 +6,14 @@ import { HttpRequest } from "@/utils/http-request";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
 import Notification from "@/components/ui/notification/Notification";
 import Input from "@/components/form/input/InputField";
-
+import { Search } from "lucide-react";
+import LessonPlanBreadcrumb from "@/components/ui/breadcrumb/LessonPlanBreadcrumb";
+import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 type StudentAnswer = {
   user_id: { _id: string; name: string };
   answer: string;
   _id: string;
-  final_grade?: number; 
+  final_grade?: number;
 };
 
 const ExerciseCorrectionPage = () => {
@@ -25,6 +27,9 @@ const ExerciseCorrectionPage = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [showErrorNotification, setShowErrorNotification] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [lessonPlanId, setLessonPlanId] = useState<string | null>(null);
+  const [lessonPlanName, setLessonPlanName] = useState<string | null>(null);
 
   const httpRequest = new HttpRequest();
 
@@ -41,8 +46,27 @@ const ExerciseCorrectionPage = () => {
   useEffect(() => {
     async function fetchExercise() {
       if (!exerciseId) return;
-      const ex = await httpRequest.getExerciseById(exerciseId);
-      setExercise(ex);
+      const exercise = await httpRequest.getExerciseById(exerciseId);
+      setExercise(exercise);
+
+      try {
+        const associations = await httpRequest.getAssociationsByContent(
+          exerciseId,
+          "exercise"
+        );
+        if (associations && associations.length > 0) {
+          const planId = associations[0].lesson_plan_id;
+          setLessonPlanId(planId);
+          const plans: ILessonPlanByRole[] =
+            await httpRequest.getLessonPlansByRole();
+          const found = plans.find((p) => p.lessonplan._id === planId);
+          if (found) {
+            setLessonPlanName(found.lessonplan.name);
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao buscar plano de aula:", error);
+      }
     }
     fetchExercise();
   }, [exerciseId]);
@@ -68,10 +92,13 @@ const ExerciseCorrectionPage = () => {
     return <div>Nenhum aluno respondeu</div>;
   }
 
+  const filteredStudents = studentsAnswers.filter((student) =>
+    student.user_id.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const selectedAnswerObj = studentsAnswers[selectedStudentIndex];
   const selectedAnswer = selectedAnswerObj?.answer || "";
   const selectedStudentName = selectedAnswerObj?.user_id?.name || "";
-
   const handleSubmitGrade = async () => {
     if (grade === "" || isNaN(Number(grade))) {
       setShowErrorNotification(true);
@@ -144,161 +171,193 @@ const ExerciseCorrectionPage = () => {
         </div>
       )}
 
-      <div className="flex max-w-7xl mx-auto p-6 gap-6">
-        <aside className="w-64 border-r border-gray-300 dark:border-gray-700 overflow-y-auto max-h-[80vh]">
-          <h2 className="text-xl font-medium text-gray-800 dark:text-white/90">
-            Alunos
-          </h2>
-          <ul>
-            {studentsAnswers.map((student, idx) => {
+      <div className="flex flex-col gap-4 px-6 py-5">
+        {/* Mover o LessonPlanBreadcrumb para o topo */}
+        <div className="flex w-full">
+          <LessonPlanBreadcrumb
+            lessonPlanId={lessonPlanId}
+            lessonPlanName={lessonPlanName}
+            currentName={exercise.statement}
+          />
+        </div>
+
+        {/* Flex container para seções lado a lado */}
+        <div className="flex flex-1 gap-6">
+          {/* Seção Alunos */}
+          <div className="w-80 flex flex-col">
+            <h2 className="px-4 pt-5 text-[22px] font-bold leading-tight tracking-tight text-[#111418]">
+              Alunos
+            </h2>
+            <div className="py-3">
+              <label className="flex h-12 min-w-40 w-full flex-col">
+                <div className="flex h-full w-full flex-1 items-stretch rounded-lg">
+                  <div className="flex items-center justify-center rounded-l-lg bg-[#f0f2f5] pl-2 text-[#60748a]">
+                    <Search size={24} strokeWidth={2} />
+                  </div>
+                  <input
+                    placeholder="Buscar alunos"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="form-input h-full w-full flex-1 resize-none rounded-l-none rounded-lg border-none bg-[#f0f2f5] px-4 pl-2 text-base font-normal leading-normal text-[#111418] placeholder:text-[#60748a] focus:outline-none"
+                  />
+                </div>
+              </label>
+            </div>
+            {filteredStudents.map((student) => {
+              const globalIdx = studentsAnswers.findIndex(
+                (s) => s._id === student._id
+              );
               const hasGrade =
                 student.final_grade !== undefined &&
                 student.final_grade !== null;
               return (
-                <li
-                  key={student.user_id._id}
-                  onClick={() => setSelectedStudentIndex(idx)}
-                  className={`cursor-pointer p-2 rounded dark:text-white/90 flex justify-between items-center ${
-                    idx === selectedStudentIndex
-                      ? "bg-blue-200 dark:bg-blue-700 font-semibold"
-                      : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                <div
+                  key={student._id}
+                  onClick={() => setSelectedStudentIndex(globalIdx)}
+                  className={`flex items-center gap-4 px-4 py-2 min-h-[72px] rounded cursor-pointer ${
+                    globalIdx === selectedStudentIndex
+                      ? "bg-gray-100"
+                      : "bg-white"
                   }`}
                 >
-                  <span>{student.user_id.name}</span>
-                  <span
-                    className={`text-sm font-medium ${
-                      hasGrade ? "text-green-600" : "text-red-500"
-                    }`}
-                  >
-                    {hasGrade ? "Nota Enviada" : "Sem nota"}
-                  </span>
-                </li>
+                  <div className="flex flex-col justify-center">
+                    <p className="text-base font-medium leading-normal text-[#111418] line-clamp-1">
+                      {student.user_id.name}
+                    </p>
+                    <p
+                      className={`text-sm font-normal leading-normal ${
+                        hasGrade ? "text-green-600" : "text-red-500"
+                      } line-clamp-2}`}
+                    >
+                      {hasGrade ? "Nota Enviada" : "Sem nota"}
+                    </p>
+                  </div>
+                </div>
               );
             })}
-          </ul>
-        </aside>
+          </div>
 
-        <main className="flex-1 bg-white dark:bg-gray-900 rounded-lg p-6 shadow-lg max-h-[80vh] overflow-y-auto">
-          <h1 className="text-3xl font-medium text-gray-800 dark:text-white/90">
-            {exercise.statement}
-          </h1>
+          {/* Seção Questão */}
+          <div className="flex-1 max-w-[960px] flex flex-col px-2">
+            <h1 className="pb-2 pt-4 text-2xl font-bold leading-tight tracking-tight text-[#111418]">
+              {exercise.statement}
+            </h1>
+            <div className="mb-6">
+              {exercise.type === "open" && (
+                <textarea
+                  readOnly
+                  value={selectedAnswer}
+                  className="w-full h-40 p-3 border border-gray-300 rounded resize-none bg-gray-100 dark:bg-gray-800 dark:text-white/90"
+                />
+              )}
 
-          <div className="mb-6">
-            <h3 className="text-lg font-medium mb-2 dark:text-white/90">
-              Resposta de {selectedStudentName}:
-            </h3>
+              {exercise.type === "multiple_choice" && (
+                <div>
+                  {exercise.options?.map((option: any) => {
+                    const optionText =
+                      typeof option === "string"
+                        ? option
+                        : option.statement || option;
+                    const isSelected = selectedAnswer === optionText;
 
-            {exercise.type === "open" && (
-              <textarea
-                readOnly
-                value={selectedAnswer}
-                className="w-full h-40 p-3 border border-gray-300 rounded resize-none bg-gray-100 dark:bg-gray-800 dark:text-white/90"
-              />
-            )}
-
-            {exercise.type === "multiple_choice" && (
-              <div>
-                {exercise.options?.map((option: any) => {
-                  const optionText =
-                    typeof option === "string"
-                      ? option
-                      : option.statement || option;
-                  const isSelected = selectedAnswer === optionText;
-
-                  return (
-                    <div
-                      key={typeof option === "string" ? option : option._id}
-                      className={`p-2 rounded mb-1 border dark:text-white/90 ${
-                        isSelected
-                          ? "bg-green-300 dark:bg-green-700"
-                          : "bg-gray-100 dark:bg-gray-800"
-                      }`}
-                    >
-                      {optionText}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {exercise.type === "true_false" && exercise.options && (
-              <div className="mt-6">
-                <h2 className="text-base font-medium text-gray-800 dark:text-white/90">
-                  Proposições
-                </h2>
-                {exercise.options.map((alternative, i) => {
-                  const alunoResposta = selectedAnswer[i];
-
-                  return (
-                    <div
-                      key={alternative._id}
-                      className={`mt-2 p-2 rounded border border-gray-300 dark:border-gray-700 flex items-center justify-between bg-gray-100 dark:bg-gray-800`}
-                    >
-                      <p className="text-lg font-medium text-gray-800 dark:text-white/90">
-                        {alternative.statement}
-                      </p>
-                      <span
-                        className={`ml-4 font-semibold ${
-                          alunoResposta === "V"
-                            ? "text-green-600"
-                            : alunoResposta === "F"
-                            ? "text-red-600"
-                            : ""
+                    return (
+                      <div
+                        key={typeof option === "string" ? option : option._id}
+                        className={`p-2 rounded mb-1 border dark:text-white/90 ${
+                          isSelected
+                            ? "bg-green-300 dark:bg-green-700"
+                            : "bg-gray-100 dark:bg-gray-800"
                         }`}
                       >
-                        {alunoResposta === "V"
-                          ? "Verdadeiro"
-                          : alunoResposta === "F"
-                          ? "Falso"
-                          : ""}
-                      </span>
-                    </div>
-                  );
-                })}
+                        {optionText}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {exercise.type === "true_false" && exercise.options && (
+                <div className="mt-6">
+                  <h2 className="text-base font-medium text-gray-800 dark:text-white/90">
+                    Proposições
+                  </h2>
+                  {exercise.options.map((alternative, i) => {
+                    const alunoResposta = selectedAnswer[i];
+
+                    return (
+                      <div
+                        key={alternative._id}
+                        className={`mt-2 p-2 rounded border border-gray-300 dark:border-gray-700 flex items-center justify-between bg-gray-100 dark:bg-gray-800`}
+                      >
+                        <p className="text-lg font-medium text-gray-800 dark:text-white/90">
+                          {alternative.statement}
+                        </p>
+                        <span
+                          className={`ml-4 font-semibold ${
+                            alunoResposta === "V"
+                              ? "text-green-600"
+                              : alunoResposta === "F"
+                              ? "text-red-600"
+                              : ""
+                          }`}
+                        >
+                          {alunoResposta === "V"
+                            ? "Verdadeiro"
+                            : alunoResposta === "F"
+                            ? "Falso"
+                            : ""}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Editar ou enviar nota */}
+            <div className="mb-4 flex justify-between items-center">
+              <div className="flex flex-col w-full mr-4">
+                <label
+                  htmlFor="grade"
+                  className="block font-medium mb-2 dark:text-white/90"
+                >
+                  Nota para {selectedStudentName}
+                </label>
+                <Input
+                  id="grade"
+                  type="number"
+                  min="0"
+                  max="10"
+                  step={0.1}
+                  defaultValue={grade}
+                  onChange={(e) => setGrade(e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-2 !w-32 dark:text-white/90"
+                  placeholder="Ex: 8.5"
+                  required
+                  disabled={!isEditing}
+                />
               </div>
-            )}
+
+              <div>
+                {!isEditing ? (
+                  <button
+                    onClick={handleEditClick}
+                    className="flex h-10 min-w-[84px] items-center justify-center overflow-hidden rounded-lg bg-yellow-500 hover:bg-yellow-600 px-4 text-sm font-bold leading-normal tracking-wide text-white"
+                  >
+                    <span className="truncate">Editar Nota</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSubmitGrade}
+                    className="flex h-10 min-w-[84px] items-center justify-center overflow-hidden rounded-lg bg-[#0c77f2] px-4 text-sm font-bold leading-normal tracking-wide text-white"
+                  >
+                    <span className="truncate">Enviar Nota</span>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-
-          <div className="mb-4">
-            <label
-              htmlFor="grade"
-              className="block font-medium mb-2 dark:text-white/90"
-            >
-              Nota para {selectedStudentName}
-            </label>
-            <Input
-              id="grade"
-              type="number"
-              min="0"
-              max="10"
-              step={0.1}
-              defaultValue={grade}
-              onChange={(e) => setGrade(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 !w-32 dark:text-white/90"
-              placeholder="Ex: 8.5"
-              required
-              disabled={!isEditing}
-            />
-          </div>
-
-          {!isEditing && (
-            <button
-              onClick={handleEditClick}
-              className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-6 py-2 rounded mr-4"
-            >
-              Editar Nota
-            </button>
-          )}
-
-          {isEditing && (
-            <button
-              onClick={handleSubmitGrade}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded"
-            >
-              Enviar Nota
-            </button>
-          )}
-        </main>
+        </div>
       </div>
     </>
   );

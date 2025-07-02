@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { HttpRequest } from "@/utils/http-request";
 import { ILesson } from "@/utils/interfaces/lesson.interface";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
+import LessonPlanBreadcrumb from "@/components/ui/breadcrumb/LessonPlanBreadcrumb";
 
 const LessonDetailsPage = () => {
   const params = useParams();
@@ -52,26 +53,11 @@ const LessonDetailsPage = () => {
   return (
     <div className="px-40 flex flex-1 justify-center py-5">
       <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
-        <div className="flex flex-wrap gap-2 p-4">
-          {lessonPlanId && lessonPlanName ? (
-            <a
-              className="text-[#4e7097] text-base font-medium leading-normal"
-              href={`/lesson-plan/details/${lessonPlanId}`}
-            >
-              {lessonPlanName}
-            </a>
-          ) : (
-            <span className="text-[#4e7097] text-base font-medium leading-normal">
-              Plano de aula
-            </span>
-          )}
-          <span className="text-[#4e7097] text-base font-medium leading-normal">
-            /
-          </span>
-          <span className="truncate whitespace-nowrap overflow-hidden text-ellipsis text-[#0e141b] text-base font-medium leading-normal max-w-[600px]">
-            {lesson.name}
-          </span>
-        </div>
+        <LessonPlanBreadcrumb
+          lessonPlanId={lessonPlanId}
+          lessonPlanName={lessonPlanName}
+          currentName={lesson.name}
+        />
         <div className="flex flex-wrap justify-between gap-3 p-4">
           <div className="flex min-w-72 flex-col gap-3">
             <p className="text-[#0e141b] tracking-light text-[32px] font-bold leading-tight text-justify">
