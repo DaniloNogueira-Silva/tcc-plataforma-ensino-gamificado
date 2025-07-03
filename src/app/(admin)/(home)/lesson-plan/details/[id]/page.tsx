@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/modal";
 import { HttpRequest } from "@/utils/http-request";
 import { ILesson } from "@/utils/interfaces/lesson.interface";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
+import DatePicker from "@/components/form/date-picker";
 
 export default function DetailsPage() {
   const params = useParams();
@@ -219,20 +220,20 @@ export default function DetailsPage() {
             <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={() => handleChoose("lesson")}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 Aulas
               </button>
               <button
                 onClick={() => handleChoose("exercise")}
-                className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+                className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
               >
                 Exercícios
               </button>
             </div>
             <button
               onClick={closeAddModal}
-              className="mt-6 text-sm text-gray-600 hover:underline"
+              className="mt-6 px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
             >
               Cancelar
             </button>
@@ -256,7 +257,7 @@ export default function DetailsPage() {
                   </span>
                   <button
                     onClick={() => handleAddItem("lesson", lesson)}
-                    className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
+                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
                   >
                     Adicionar
                   </button>
@@ -288,7 +289,7 @@ export default function DetailsPage() {
                   key={exercise._id}
                   className="flex justify-between items-center py-3"
                 >
-                  <span className="text-gray-900 dark:text-white">
+                  <span className="text-gray-900 dark:text-white line-clamp-1">
                     {exercise.statement || "Sem título"}
                   </span>
                   <button
@@ -321,11 +322,10 @@ export default function DetailsPage() {
 
             <div className="flex flex-col space-y-2">
               <label className="text-sm">Data de entrega</label>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="p-2 border rounded"
+              <DatePicker
+                id="lesson-due-date-picker"
+                defaultDate={dueDate || undefined}
+                onChange={(_, dateStr) => setDueDate(dateStr)}
               />
             </div>
 
@@ -364,16 +364,15 @@ export default function DetailsPage() {
         {selectedExercise && (
           <div className="mt-6 space-y-4">
             <h4 className="text-lg font-semibold dark:text-white">
-              Configurar Exercício: {selectedExercise.statement}
+              Adicionar Exercício: {selectedExercise.statement}
             </h4>
 
             <div className="flex flex-col space-y-2">
               <label className="text-sm">Data de entrega</label>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="p-2 border rounded"
+              <DatePicker
+                id="exercise-due-date-picker"
+                defaultDate={dueDate || undefined}
+                onChange={(_, dateStr) => setDueDate(dateStr)}
               />
             </div>
 
@@ -399,12 +398,17 @@ export default function DetailsPage() {
 
             <div className="flex justify-end space-x-2 mt-4">
               <button
-                className="px-4 py-2 bg-gray-400 rounded"
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
                 onClick={() => setSelectedExercise(null)}
               >
                 Cancelar
               </button>
-              <button onClick={handleSave}>Salvar</button>
+              <button
+                className="bg-purple-500 text-white rounded hover:bg-purple-600"
+                onClick={handleSave}
+              >
+                Confirmar
+              </button>
             </div>
           </div>
         )}
