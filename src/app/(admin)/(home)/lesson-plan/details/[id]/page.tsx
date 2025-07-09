@@ -9,6 +9,7 @@ import { HttpRequest } from "@/utils/http-request";
 import { ILesson } from "@/utils/interfaces/lesson.interface";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
 import DatePicker from "@/components/form/date-picker";
+import RankingList from "@/components/ranking/RankingList"; // Make sure to create this component
 
 export default function DetailsPage() {
   const params = useParams();
@@ -27,7 +28,7 @@ export default function DetailsPage() {
   const [points, setPoints] = useState(0);
   const [grade, setGrade] = useState(0);
   const [userType, setUserType] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<"lessons" | "exercises">(
+  const [activeTab, setActiveTab] = useState<"lessons" | "exercises" | "ranking">(
     "lessons"
   );
   const httpRequest = new HttpRequest();
@@ -198,12 +199,27 @@ export default function DetailsPage() {
                 Exercícios
               </p>
             </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("ranking")}
+              className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 ${
+                activeTab === "ranking"
+                  ? "border-b-[#111418] text-[#111418]"
+                  : "border-b-transparent text-[#60758a]"
+              }`}
+            >
+              <p className="text-sm font-bold leading-normal tracking-[0.015em]">
+                Ranking de Pontuação
+              </p>
+            </button>
           </div>
         </div>
-        {activeTab === "lessons" ? (
-          <LessonList lessonPlanId={lessonPlanId} />
-        ) : (
+        {activeTab === "lessons" && <LessonList lessonPlanId={lessonPlanId} />}
+        {activeTab === "exercises" && (
           <ExerciseList lessonPlanId={lessonPlanId} />
+        )}
+        {activeTab === "ranking" && (
+          <RankingList lessonPlanId={lessonPlanId} />
         )}
       </div>
 
@@ -282,7 +298,9 @@ export default function DetailsPage() {
             <h4 className="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">
               Adicionar Exercícios
             </h4>
-            {availableExercises.length === 0 && <p>Carregando exercícios...</p>}
+            {availableExercises.length === 0 && (
+              <p>Carregando exercícios...</p>
+            )}
             <ul className="max-h-60 overflow-auto divide-y divide-gray-200 dark:divide-gray-700">
               {availableExercises.map((exercise) => (
                 <li

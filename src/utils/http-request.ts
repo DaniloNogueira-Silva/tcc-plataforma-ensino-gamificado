@@ -10,6 +10,7 @@ import { IUser } from "./interfaces/user.interface";
 import { TokenPayload } from "@/app/(admin)/(home)/exercise/form/page";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import { IRanking } from "./interfaces/ranking.interface";
 
 export class HttpRequest {
   async getToken(): Promise<string | undefined> {
@@ -826,6 +827,28 @@ export class HttpRequest {
     } catch (error) {
       console.error("Erro ao buscar arquivo:", error);
       throw new Error("Ocorreu um erro ao buscar arquivo: " + error);
+    }
+  }
+
+  async getRanking(lessonPlanId: string): Promise<IRanking[]> {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-progress/ranking/${lessonPlanId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar ranking do plano de aula:", error);
+      throw new Error(
+        "Ocorreu um erro ao buscar ranking do plano de aula: " + error
+      );
     }
   }
 }
