@@ -4,7 +4,7 @@ import { HttpRequest } from "@/utils/http-request";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Link from "next/link";
-import Notification from "@/components/ui/notification/Notification"; // Adiciona o componente de notificação
+import Notification from "@/components/ui/notification/Notification"; 
 import React from "react";
 import Select from "../form/Select";
 import { useRouter } from "next/navigation";
@@ -74,7 +74,7 @@ export default function SignUpForm() {
                       id="fname"
                       name="fname"
                       placeholder="Nome do usuário"
-                      onChange={(e) => setName(e.target.value)} // Adiciona o setName
+                      onChange={(e) => setName(e.target.value)} 
                     />
                   </div>
                   <div className="sm:col-span-1">
@@ -97,7 +97,7 @@ export default function SignUpForm() {
                   id="email"
                   name="email"
                   placeholder="Insira seu email"
-                  onChange={(e) => setEmail(e.target.value)} // Adiciona o setEmail
+                  onChange={(e) => setEmail(e.target.value)} 
                 />
               </div>
               <div>
@@ -108,7 +108,7 @@ export default function SignUpForm() {
                   <Input
                     placeholder="Insira sua senha"
                     type={"password"}
-                    onChange={(e) => setPassword(e.target.value)} // Adiciona o setPassword
+                    onChange={(e) => setPassword(e.target.value)} 
                   />
                 </div>
               </div>

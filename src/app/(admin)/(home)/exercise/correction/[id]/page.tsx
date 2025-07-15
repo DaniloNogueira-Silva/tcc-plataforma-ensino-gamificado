@@ -123,7 +123,6 @@ const ExerciseCorrectionPage = () => {
         100
       );
 
-      // Atualiza nota localmente
       const updatedStudents = [...studentsAnswers];
       updatedStudents[selectedStudentIndex] = {
         ...updatedStudents[selectedStudentIndex],

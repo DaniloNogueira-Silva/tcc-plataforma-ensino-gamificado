@@ -49,14 +49,12 @@ export default function ExerciseTable() {
   }
 
   function getLessonPlanNamesByExercise(exerciseId: string): string {
-    // Filtra as associações para o exercício
     const associatedPlans = lessonPlanContents.filter(
       (assoc) => assoc.content_id === exerciseId
     );
 
     if (associatedPlans.length === 0) return "Sem plano atribuído";
 
-    // Pega os nomes dos planos associados
     const names = associatedPlans
       .map((assoc) => {
         const plan = lessonPlans.find(

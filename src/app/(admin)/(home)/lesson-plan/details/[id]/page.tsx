@@ -8,8 +8,10 @@ import { Modal } from "@/components/ui/modal";
 import { HttpRequest } from "@/utils/http-request";
 import { ILesson } from "@/utils/interfaces/lesson.interface";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
+import { IExerciseList } from "@/utils/interfaces/exercise_list.interface";
 import DatePicker from "@/components/form/date-picker";
-import RankingList from "@/components/ranking/RankingList"; // Make sure to create this component
+import RankingList from "@/components/ranking/RankingList";
+import { ChevronDownIcon, ChevronUpIcon } from "@/icons";
 
 export default function DetailsPage() {
   const params = useParams();
@@ -20,6 +22,10 @@ export default function DetailsPage() {
 
   const [availableLessons, setAvailableLessons] = useState<ILesson[]>([]);
   const [availableExercises, setAvailableExercises] = useState<IExercise[]>([]);
+  const [availableExerciseLists, setAvailableExerciseLists] = useState<
+    IExerciseList[]
+  >([]);
+  const [expandedLists, setExpandedLists] = useState<string[]>([]);
   const [selectedLesson, setSelectedLesson] = useState<ILesson | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<IExercise | null>(
     null
@@ -28,9 +34,9 @@ export default function DetailsPage() {
   const [points, setPoints] = useState(0);
   const [grade, setGrade] = useState(0);
   const [userType, setUserType] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<"lessons" | "exercises" | "ranking">(
-    "lessons"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "lessons" | "exercises" | "ranking"
+  >("lessons");
   const httpRequest = new HttpRequest();
 
   useEffect(() => {
@@ -51,12 +57,20 @@ export default function DetailsPage() {
     setAddMode(null);
     setAvailableLessons([]);
     setAvailableExercises([]);
+    setAvailableExerciseLists([]);
+    setExpandedLists([]);
   }
 
   function closeAddModal() {
     setShowAddModal(false);
     setAddMode(null);
   }
+
+  const toggleList = (id: string) => {
+    setExpandedLists((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
 
   async function handleChoose(option: "lesson" | "exercise") {
     setAddMode(option);
@@ -65,8 +79,20 @@ export default function DetailsPage() {
       const lessons = await httpRequest.getAllLessons();
       setAvailableLessons(lessons);
     } else if (option === "exercise") {
-      const exercises = await httpRequest.getAllExercises();
+      const [exercises, lists] = await Promise.all([
+        httpRequest.getAllExercises(),
+        httpRequest.getAllExerciseLists(),
+      ]);
+      const listsWithExercises = await Promise.all(
+        lists.map(async (list: IExerciseList) => {
+          const exercisesDetails = await Promise.all(
+            list.exercises_ids.map((id) => httpRequest.getExerciseById(id))
+          );
+          return { ...list, exercises: exercisesDetails };
+        })
+      );
       setAvailableExercises(exercises);
+      setAvailableExerciseLists(listsWithExercises);
     }
   }
 
@@ -218,9 +244,7 @@ export default function DetailsPage() {
         {activeTab === "exercises" && (
           <ExerciseList lessonPlanId={lessonPlanId} />
         )}
-        {activeTab === "ranking" && (
-          <RankingList lessonPlanId={lessonPlanId} />
-        )}
+        {activeTab === "ranking" && <RankingList lessonPlanId={lessonPlanId} />}
       </div>
 
       <Modal
@@ -298,9 +322,46 @@ export default function DetailsPage() {
             <h4 className="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">
               Adicionar Exercícios
             </h4>
-            {availableExercises.length === 0 && (
-              <p>Carregando exercícios...</p>
+            {availableExerciseLists.length > 0 && (
+              <>
+                <p className="font-semibold mb-2">Listas</p>
+                <ul className="max-h-40 overflow-auto divide-y divide-gray-200 dark:divide-gray-700 mb-4">
+                  {availableExerciseLists.map((list) => (
+                    <li key={list._id} className="py-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-900 dark:text-white line-clamp-1">
+                          {list.name} (Lista)
+                        </span>
+                        <button
+                          onClick={() => toggleList(list._id)}
+                          className="text-gray-500"
+                        >
+                          {expandedLists.includes(list._id) ? (
+                            <ChevronUpIcon />
+                          ) : (
+                            <ChevronDownIcon />
+                          )}
+                        </button>
+                      </div>
+                      {expandedLists.includes(list._id) && (
+                        <ul className="ml-4 mt-2 list-disc space-y-1">
+                          {list.exercises?.map((ex) => (
+                            <li
+                              key={ex._id}
+                              className="text-sm text-gray-700 dark:text-gray-300 line-clamp-1"
+                            >
+                              {ex.statement}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
+            {availableExercises.length === 0 &&
+              availableExerciseLists.length === 0}
             <ul className="max-h-60 overflow-auto divide-y divide-gray-200 dark:divide-gray-700">
               {availableExercises.map((exercise) => (
                 <li

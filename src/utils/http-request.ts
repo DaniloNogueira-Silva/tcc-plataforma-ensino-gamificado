@@ -3,7 +3,7 @@ import {
   ILessonPlan,
   ILessonPlanByRole,
 } from "./interfaces/lesson-plan.interface";
-
+import { IExerciseList } from "./interfaces/exercise_list.interface";
 import { IAvatar } from "./interfaces/avatar.interface";
 import { ILesson } from "./interfaces/lesson.interface";
 import { IUser } from "./interfaces/user.interface";
@@ -583,6 +583,116 @@ export class HttpRequest {
       console.error("Erro ao atualizar nota do aluno no exercício:", error);
       throw new Error(
         "Ocorreu um erro ao atualizar nota do aluno no exercício: " + error
+      );
+    }
+  }
+
+  async createExerciseList(
+    name: string,
+    content: string,
+    teacher_id: string,
+    exercises_ids: string[],
+    lesson_plan_ids?: string[],
+    type?: string,
+    due_date?: string,
+    points?: number
+  ): Promise<IExerciseList | null> {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercise_lists`,
+        {
+          name,
+          content,
+          type,
+          teacher_id,
+          due_date,
+          points,
+          exercises_ids,
+          lesson_plan_ids,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao criar uma lista de exercício:", error);
+      throw new Error(
+        "Ocorreu um erro ao criar uma lista de exercício: " + error
+      );
+    }
+  }
+
+  async getAllExerciseLists() {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercise_lists`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar listas de exercício:", error);
+      throw new Error(
+        "Ocorreu um erro ao buscar listas de exercício: " + error
+      );
+    }
+  }
+
+  async getAllExerciseListByLessonPlanId(lessonPlanId: string) {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercise_lists/${lessonPlanId}/byLessonPlan`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar uma lista de exercício:", error);
+      throw new Error(
+        "Ocorreu um erro ao buscar uma lista de exercício: " + error
+      );
+    }
+  }
+
+  async isExerciseListCompleted(exercise_list_id: string) {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercise_lists/${exercise_list_id}/completed`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Erro ao verificar se uma lista de exercício foi completado:",
+        error
+      );
+      throw new Error(
+        "Erro ao verificar se uma lista de exercício foi completado: " + error
       );
     }
   }
