@@ -3,26 +3,27 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { HttpRequest } from "@/utils/http-request";
-import { IExercise } from "@/utils/interfaces/exercise.interface";
+import { IExerciseList } from "@/utils/interfaces/exercise_list.interface";
 import Notification from "@/components/ui/notification/Notification";
 import Input from "@/components/form/input/InputField";
 import { Search } from "lucide-react";
 import LessonPlanBreadcrumb from "@/components/ui/breadcrumb/LessonPlanBreadcrumb";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
-type StudentAnswer = {
+
+interface StudentAnswer {
   user_id: { _id: string; name: string };
-  answer: string;
+  answers: Record<string, string>;
   _id: string;
   final_grade?: number;
-};
+}
 
-const ExerciseCorrectionPage = () => {
+const ExerciseListCorrectionPage = () => {
   const params = useParams();
-  const exerciseId = params.id as string;
+  const listId = params.id as string;
 
   const [studentsAnswers, setStudentsAnswers] = useState<StudentAnswer[]>([]);
   const [selectedStudentIndex, setSelectedStudentIndex] = useState<number>(0);
-  const [exercise, setExercise] = useState<IExercise | null>(null);
+  const [exerciseList, setExerciseList] = useState<IExerciseList | null>(null);
   const [grade, setGrade] = useState<string>("");
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
@@ -35,24 +36,27 @@ const ExerciseCorrectionPage = () => {
 
   useEffect(() => {
     async function fetchStudentsAnswers() {
-      if (!exerciseId) return;
-      const data = await httpRequest.findAllStudentsByExerciseId(exerciseId);
+      if (!listId) return;
+      const data = await httpRequest.findAllStudentsByExerciseListId(listId);
       setStudentsAnswers(data);
       setSelectedStudentIndex(0);
     }
     fetchStudentsAnswers();
-  }, [exerciseId]);
+  }, [listId]);
 
   useEffect(() => {
-    async function fetchExercise() {
-      if (!exerciseId) return;
-      const exercise = await httpRequest.getExerciseById(exerciseId);
-      setExercise(exercise);
+    async function fetchList() {
+      if (!listId) return;
+      const list = await httpRequest.getExerciseListById(listId);
+      const exercises = await Promise.all(
+        list.exercises_ids.map((id: string) => httpRequest.getExerciseById(id))
+      );
+      setExerciseList({ ...list, exercises });
 
       try {
         const associations = await httpRequest.getAssociationsByContent(
-          exerciseId,
-          "exercise"
+          listId,
+          "exercise_list"
         );
         if (associations && associations.length > 0) {
           const planId = associations[0].lesson_plan_id;
@@ -68,8 +72,8 @@ const ExerciseCorrectionPage = () => {
         console.error("Erro ao buscar plano de aula:", error);
       }
     }
-    fetchExercise();
-  }, [exerciseId]);
+    fetchList();
+  }, [listId]);
 
   useEffect(() => {
     if (studentsAnswers.length === 0) return;
@@ -88,7 +92,7 @@ const ExerciseCorrectionPage = () => {
     }
   }, [selectedStudentIndex, studentsAnswers]);
 
-  if (!exercise || studentsAnswers.length === 0) {
+  if (!exerciseList || studentsAnswers.length === 0) {
     return <div>Nenhum aluno respondeu</div>;
   }
 
@@ -97,7 +101,6 @@ const ExerciseCorrectionPage = () => {
   );
 
   const selectedAnswerObj = studentsAnswers[selectedStudentIndex];
-  const selectedAnswer = selectedAnswerObj?.answer || "";
   const selectedStudentName = selectedAnswerObj?.user_id?.name || "";
   const handleSubmitGrade = async () => {
     if (grade === "" || isNaN(Number(grade))) {
@@ -116,12 +119,13 @@ const ExerciseCorrectionPage = () => {
     const user_id = selectedAnswerObj.user_id._id;
 
     try {
-      await httpRequest.teacherCorretion(
-        exerciseId,
-        user_id,
-        numericGrade,
-        100
-      );
+      if (exerciseList) {
+        await Promise.all(
+          exerciseList.exercises_ids.map((exId) =>
+            httpRequest.teacherCorretion(exId, user_id, numericGrade, 100)
+          )
+        );
+      }
 
       const updatedStudents = [...studentsAnswers];
       updatedStudents[selectedStudentIndex] = {
@@ -141,6 +145,8 @@ const ExerciseCorrectionPage = () => {
   const handleEditClick = () => {
     setIsEditing(true);
   };
+
+  const firstExercise = exerciseList.exercises?.[0];
 
   return (
     <>
@@ -171,18 +177,14 @@ const ExerciseCorrectionPage = () => {
       )}
 
       <div className="flex flex-col gap-4 px-6 py-5">
-        {/* Mover o LessonPlanBreadcrumb para o topo */}
         <div className="flex w-full">
           <LessonPlanBreadcrumb
             lessonPlanId={lessonPlanId}
             lessonPlanName={lessonPlanName}
-            currentName={exercise.statement}
+            currentName={exerciseList.name}
           />
         </div>
-
-        {/* Flex container para seções lado a lado */}
         <div className="flex flex-1 gap-6">
-          {/* Seção Alunos */}
           <div className="w-80 flex flex-col">
             <h2 className="px-4 pt-5 text-[22px] font-bold leading-tight tracking-tight text-[#111418]">
               Alunos
@@ -226,7 +228,7 @@ const ExerciseCorrectionPage = () => {
                     <p
                       className={`text-sm font-normal leading-normal ${
                         hasGrade ? "text-green-600" : "text-red-500"
-                      } line-clamp-2}`}
+                      } line-clamp-2`}
                     >
                       {hasGrade ? "Nota Enviada" : "Sem nota"}
                     </p>
@@ -236,86 +238,18 @@ const ExerciseCorrectionPage = () => {
             })}
           </div>
 
-          {/* Seção Questão */}
           <div className="flex-1 max-w-[960px] flex flex-col px-2">
             <h1 className="pb-2 pt-4 text-2xl font-bold leading-tight tracking-tight text-[#111418]">
-              {exercise.statement}
+              {exerciseList.name}
             </h1>
-            <div className="mb-6">
-              {exercise.type === "open" && (
-                <textarea
-                  readOnly
-                  value={selectedAnswer}
-                  className="w-full h-40 p-3 border border-gray-300 rounded resize-none bg-gray-100 dark:bg-gray-800 dark:text-white/90"
-                />
-              )}
-
-              {exercise.type === "multiple_choice" && (
-                <div>
-                  {exercise.options?.map(
-                    (option: string | { statement: string }) => {
-                      const optionText =
-                        typeof option === "string"
-                          ? option
-                          : option.statement || option;
-                      const isSelected = selectedAnswer === optionText;
-
-                      return (
-                        <div
-                          key={typeof option === "string" ? option : option._id}
-                          className={`p-2 rounded mb-1 border dark:text-white/90 ${
-                            isSelected
-                              ? "bg-green-300 dark:bg-green-700"
-                              : "bg-gray-100 dark:bg-gray-800"
-                          }`}
-                        >
-                          {optionText}
-                        </div>
-                      );
-                    }
-                  )}
-                </div>
-              )}
-
-              {exercise.type === "true_false" && exercise.options && (
-                <div className="mt-6">
-                  <h2 className="text-base font-medium text-gray-800 dark:text-white/90">
-                    Proposições
-                  </h2>
-                  {exercise.options.map((alternative, i) => {
-                    const alunoResposta = selectedAnswer[i];
-
-                    return (
-                      <div
-                        key={alternative._id}
-                        className={`mt-2 p-2 rounded border border-gray-300 dark:border-gray-700 flex items-center justify-between bg-gray-100 dark:bg-gray-800`}
-                      >
-                        <p className="text-lg font-medium text-gray-800 dark:text-white/90">
-                          {alternative.statement}
-                        </p>
-                        <span
-                          className={`ml-4 font-semibold ${
-                            alunoResposta === "V"
-                              ? "text-green-600"
-                              : alunoResposta === "F"
-                              ? "text-red-600"
-                              : ""
-                          }`}
-                        >
-                          {alunoResposta === "V"
-                            ? "Verdadeiro"
-                            : alunoResposta === "F"
-                            ? "Falso"
-                            : ""}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Editar ou enviar nota */}
+            {firstExercise && (
+              <div className="mb-6">
+                <h2 className="text-base font-medium text-gray-800 dark:text-white/90">
+                  Primeiro Exercício
+                </h2>
+                <p>{firstExercise.statement}</p>
+              </div>
+            )}
             <div className="mb-4 flex justify-between items-center">
               <div className="flex flex-col w-full mr-4">
                 <label
@@ -364,4 +298,4 @@ const ExerciseCorrectionPage = () => {
   );
 };
 
-export default ExerciseCorrectionPage;
+export default ExerciseListCorrectionPage;

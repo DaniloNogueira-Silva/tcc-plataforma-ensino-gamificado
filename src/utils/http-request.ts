@@ -672,6 +672,91 @@ export class HttpRequest {
     }
   }
 
+  async getExerciseListById(id: string) {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercise_lists/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar lista de exercício:", error);
+      throw new Error(
+        "Ocorreu um erro ao buscar lista de exercício: " + error
+      );
+    }
+  }
+
+  async findAllStudentsByExerciseListId(exercise_list_id: string) {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-progress/exercise_list/${exercise_list_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar exercício:", error);
+      throw new Error("Ocorreu um erro ao buscar exercício: " + error);
+    }
+  }
+
+
+  async updateExerciseListAndLessonPlans(
+    id: string,
+    name?: string,
+    content?: string,
+    teacher_id?: string,
+    exercises_ids?: string[],
+    lesson_plan_ids?: string[],
+    type?: string,
+    due_date?: string,
+    points?: number
+  ): Promise<IExerciseList | null> {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.patch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercise_lists/${id}`,
+        {
+          name,
+          content,
+          teacher_id,
+          exercises_ids,
+          lesson_plan_ids,
+          type,
+          due_date,
+          points,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar lista de exercício:", error);
+      throw new Error(
+        "Ocorreu um erro ao atualizar lista de exercício: " + error
+      );
+    }
+  }
+
   async isExerciseListCompleted(exercise_list_id: string) {
     try {
       const token = await this.getToken();

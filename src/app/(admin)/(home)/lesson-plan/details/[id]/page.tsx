@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import LessonList from "@/components/lesson/LessonList";
 import ExerciseList from "@/components/exercise/ExerciseList";
+import ListOfExerciseList from "@/components/exercise-list/ListOfExerciseList";
 import { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/modal";
 import { HttpRequest } from "@/utils/http-request";
@@ -18,7 +19,9 @@ export default function DetailsPage() {
   const lessonPlanId = params.id as string;
 
   const [showAddModal, setShowAddModal] = useState(false);
-  const [addMode, setAddMode] = useState<"lesson" | "exercise" | null>(null);
+  const [addMode, setAddMode] = useState<
+    "lesson" | "exercise" | "exerciseList" | null
+  >(null);
 
   const [availableLessons, setAvailableLessons] = useState<ILesson[]>([]);
   const [availableExercises, setAvailableExercises] = useState<IExercise[]>([]);
@@ -97,8 +100,8 @@ export default function DetailsPage() {
   }
 
   async function handleAddItem(
-    type: "lesson" | "exercise",
-    item: ILesson | IExercise
+    type: "lesson" | "exercise" | "exerciseList",
+    item: ILesson | IExercise | IExerciseList
   ) {
     try {
       if (type === "lesson") {
@@ -107,18 +110,34 @@ export default function DetailsPage() {
         if (lesson.type === "reading") {
           await updateItem("lesson", lesson);
           setShowAddModal(false);
+          window.location.reload();
         } else {
           setSelectedLesson(lesson);
           setDueDate("");
           setPoints(0);
           setGrade(0);
         }
-      } else {
+      } else if (type === "exercise") {
         const exercise = item as IExercise;
         setSelectedExercise(exercise);
         setDueDate("");
         setPoints(0);
         setGrade(0);
+      } else {
+        const list = item as IExerciseList;
+        await httpRequest.updateExerciseListAndLessonPlans(
+          list._id,
+          list.name,
+          list.content,
+          list.teacher_id,
+          list.exercises_ids,
+          [...(list.lesson_plan_ids || []), lessonPlanId],
+          list.type,
+          list.due_date,
+          list.points
+        );
+        setShowAddModal(false);
+        window.location.reload();
       }
 
       setAddMode(null);
@@ -178,6 +197,7 @@ export default function DetailsPage() {
     }
 
     setShowAddModal(false);
+    window.location.reload();
   }
 
   return (
@@ -242,7 +262,10 @@ export default function DetailsPage() {
         </div>
         {activeTab === "lessons" && <LessonList lessonPlanId={lessonPlanId} />}
         {activeTab === "exercises" && (
-          <ExerciseList lessonPlanId={lessonPlanId} />
+          <>
+            <ListOfExerciseList lessonPlanId={lessonPlanId} />
+            <ExerciseList lessonPlanId={lessonPlanId} />
+          </>
         )}
         {activeTab === "ranking" && <RankingList lessonPlanId={lessonPlanId} />}
       </div>
@@ -332,16 +355,24 @@ export default function DetailsPage() {
                         <span className="text-gray-900 dark:text-white line-clamp-1">
                           {list.name} (Lista)
                         </span>
-                        <button
-                          onClick={() => toggleList(list._id)}
-                          className="text-gray-500"
-                        >
-                          {expandedLists.includes(list._id) ? (
-                            <ChevronUpIcon />
-                          ) : (
-                            <ChevronDownIcon />
-                          )}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => toggleList(list._id)}
+                            className="text-gray-500"
+                          >
+                            {expandedLists.includes(list._id) ? (
+                              <ChevronUpIcon />
+                            ) : (
+                              <ChevronDownIcon />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleAddItem("exerciseList", list)}
+                            className="px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm"
+                          >
+                            Adicionar
+                          </button>
+                        </div>
                       </div>
                       {expandedLists.includes(list._id) && (
                         <ul className="ml-4 mt-2 list-disc space-y-1">

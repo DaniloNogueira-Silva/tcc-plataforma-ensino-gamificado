@@ -122,16 +122,6 @@ const ExerciseDetailsPage = () => {
     setSubmitted(true);
   };
 
-  const handleAnswerChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setSelectedAnswer((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
   if (!exercise) return <div>Carregando...</div>;
 
   const formattedDate = exercise.due_date
