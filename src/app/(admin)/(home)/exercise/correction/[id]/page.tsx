@@ -37,6 +37,7 @@ const ExerciseCorrectionPage = () => {
     async function fetchStudentsAnswers() {
       if (!exerciseId) return;
       const data = await httpRequest.findAllStudentsByExerciseId(exerciseId);
+      console.log(data);
       setStudentsAnswers(data);
       setSelectedStudentIndex(0);
     }
@@ -73,7 +74,7 @@ const ExerciseCorrectionPage = () => {
 
   useEffect(() => {
     if (studentsAnswers.length === 0) return;
-
+    console.log("studentsAnswers", studentsAnswers);
     const currentStudent = studentsAnswers[selectedStudentIndex];
     if (!currentStudent) return;
 
@@ -252,67 +253,62 @@ const ExerciseCorrectionPage = () => {
 
               {exercise.type === "multiple_choice" && (
                 <div>
-                  {exercise.options?.map(
-                    (option: string | { statement: string }) => {
-                      const optionText =
-                        typeof option === "string"
-                          ? option
-                          : option.statement || option;
-                      const isSelected = selectedAnswer === optionText;
-
-                      return (
-                        <div
-                          key={typeof option === "string" ? option : option._id}
-                          className={`p-2 rounded mb-1 border dark:text-white/90 ${
-                            isSelected
-                              ? "bg-green-300 dark:bg-green-700"
-                              : "bg-gray-100 dark:bg-gray-800"
-                          }`}
-                        >
-                          {optionText}
-                        </div>
-                      );
-                    }
-                  )}
-                </div>
-              )}
-
-              {exercise.type === "true_false" && exercise.options && (
-                <div className="mt-6">
-                  <h2 className="text-base font-medium text-gray-800 dark:text-white/90">
-                    Proposições
-                  </h2>
-                  {exercise.options.map((alternative, i) => {
-                    const alunoResposta = selectedAnswer[i];
+                  {exercise.multiple_choice_options?.map((option) => {
+                    const isSelected = selectedAnswer === option;
 
                     return (
                       <div
-                        key={alternative._id}
-                        className={`mt-2 p-2 rounded border border-gray-300 dark:border-gray-700 flex items-center justify-between bg-gray-100 dark:bg-gray-800`}
+                        key={option}
+                        className={`p-2 rounded mb-1 border dark:text-white/90 ${
+                          isSelected
+                            ? "bg-green-300 dark:bg-green-700"
+                            : "bg-gray-100 dark:bg-gray-800"
+                        }`}
                       >
-                        <p className="text-lg font-medium text-gray-800 dark:text-white/90">
-                          {alternative.statement}
-                        </p>
-                        <span
-                          className={`ml-4 font-semibold ${
-                            alunoResposta === "V"
-                              ? "text-green-600"
-                              : alunoResposta === "F"
-                              ? "text-red-600"
-                              : ""
-                          }`}
-                        >
-                          {alunoResposta === "V"
-                            ? "Verdadeiro"
-                            : alunoResposta === "F"
-                            ? "Falso"
-                            : ""}
-                        </span>
+                        {option}
                       </div>
                     );
                   })}
                 </div>
               )}
+
+              {exercise.type === "true_false" &&
+                exercise.true_false_options && (
+                  <div className="mt-6">
+                    <h2 className="text-base font-medium text-gray-800 dark:text-white/90">
+                      Proposições
+                    </h2>
+                    {exercise.true_false_options.map((alternative, i) => {
+                      const alunoResposta = selectedAnswer[i];
+
+                      return (
+                        <div
+                          key={i}
+                          className={`mt-2 p-2 rounded border border-gray-300 dark:border-gray-700 flex items-center justify-between bg-gray-100 dark:bg-gray-800`}
+                        >
+                          <p className="text-lg font-medium text-gray-800 dark:text-white/90">
+                            {alternative.statement}
+                          </p>
+                          <span
+                            className={`ml-4 font-semibold ${
+                              alunoResposta === "V"
+                                ? "text-green-600"
+                                : alunoResposta === "F"
+                                ? "text-red-600"
+                                : ""
+                            }`}
+                          >
+                            {alunoResposta === "V"
+                              ? "Verdadeiro"
+                              : alunoResposta === "F"
+                              ? "Falso"
+                              : ""}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
             </div>
 
             {/* Editar ou enviar nota */}

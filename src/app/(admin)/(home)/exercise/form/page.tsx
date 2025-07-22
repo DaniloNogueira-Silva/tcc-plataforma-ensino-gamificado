@@ -66,7 +66,9 @@ const ExerciseFormPage = () => {
           exerciseId,
           "exercise"
         );
-        const lessonPlanIds = associations.map((a) => a.lesson_plan_id);
+        const lessonPlanIds = (
+          associations as { lesson_plan_id: string }[]
+        ).map((a) => a.lesson_plan_id);
         setInitialData(exercise);
         setLessonPlanIds(lessonPlanIds);
         setLoading(false);

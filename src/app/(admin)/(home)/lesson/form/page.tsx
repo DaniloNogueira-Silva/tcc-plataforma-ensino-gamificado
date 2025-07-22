@@ -59,7 +59,9 @@ const LessonForm = () => {
           lessonId,
           "lesson"
         );
-        const lessonPlanIds = associations.map((a) => a.lesson_plan_id);
+        const lessonPlanIds = associations.map(
+          (a: { lesson_plan_id: string }) => a.lesson_plan_id
+        );
         setInitialData(lesson);
         setLessonPlanIds(lessonPlanIds);
         setLoading(false);

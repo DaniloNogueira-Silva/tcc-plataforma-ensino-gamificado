@@ -71,15 +71,13 @@ const ExerciseListCard: React.FC<ExerciseListCardProps> = ({
       if (lessonPlanId) {
         const students: { _id: string; name: string }[] =
           await httpRequest.findAllStudentsByLessonPlanId(lessonPlanId);
-
         setTotalStudents(students.length);
 
-        const submissions: { user_id: { _id: string; name: string } }[] =
+        const submissions: { _id: string; name: string }[] =
           await httpRequest.findAllStudentsByExerciseListId(list._id);
-
-        const deliveredNames = submissions.map((sub) => sub.user_id.name);
-        const deliveredIds = submissions.map((sub) => sub.user_id._id);
-
+        const deliveredNames = submissions.map((sub) => sub.name);
+        const deliveredIds = submissions.map((sub) => sub._id);
+        console.log(deliveredNames);
         setStudentsDeliveredList(deliveredNames);
 
         const notDelivered = students

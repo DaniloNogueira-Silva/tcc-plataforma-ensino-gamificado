@@ -9,7 +9,7 @@ import TextArea from "@/components/form/input/TextArea";
 import { useParams } from "next/navigation";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import { jwtDecode } from "jwt-decode";
-import { TokenPayload } from "../../form/page";
+import { TokenPayload } from "../../../exercise/form/page";
 import LessonPlanBreadcrumb from "@/components/ui/breadcrumb/LessonPlanBreadcrumb";
 
 const ExerciseListRealizePage = () => {
@@ -66,24 +66,31 @@ const ExerciseListRealizePage = () => {
         if (result && result.completed) {
           setSubmitted(true);
           const token = await httpRequest.getToken();
-          const decoded = jwtDecode<TokenPayload>(token);
+          const decoded = token ? jwtDecode<TokenPayload>(token) : null;
           for (const ex of exerciseList.exercises || []) {
             const data = await httpRequest.findAllStudentsByExerciseId(ex._id);
             const userAnswer = data.find(
               (item: { user_id: { _id: string }; answer: string }) =>
-                item.user_id._id === decoded._id
+                decoded && item.user_id._id === decoded._id
             );
             if (userAnswer?.answer) {
               if (ex.type === "true_false" && ex.true_false_options) {
                 ex.true_false_options.forEach((alt, idx) => {
                   const char = userAnswer.answer[idx];
-                  setSelectedAnswer((prev) => ({
-                    ...prev,
-                    [ex._id]: {
-                      ...(prev[ex._id] || {}),
-                      [alt._id]: char === "V" ? "true" : "false",
-                    },
-                  }));
+                  const key = alt._id || String(idx);
+                  setSelectedAnswer((prev) => {
+                    const exAns =
+                      typeof prev[ex._id] === "string"
+                        ? {}
+                        : (prev[ex._id] as Record<string, string>) || {};
+                    return {
+                      ...prev,
+                      [ex._id]: {
+                        ...exAns,
+                        [key]: char === "V" ? "true" : "false",
+                      },
+                    };
+                  });
                 });
               } else {
                 setSelectedAnswer((prev) => ({
@@ -119,15 +126,18 @@ const ExerciseListRealizePage = () => {
     for (const exercise of exerciseList.exercises || []) {
       let answerString = "";
       if (exercise.type === "true_false" && exercise.true_false_options) {
-        exercise.true_false_options.forEach((alt) => {
-          const val = (selectedAnswer[exercise._id] || {})[alt._id];
+        exercise.true_false_options.forEach((alt, idx) => {
+          const key = alt._id || String(idx);
+          const exAns = selectedAnswer[exercise._id];
+          const val =
+            typeof exAns === "string" ? undefined : (exAns || {})[key];
           if (val === "true") answerString += "V";
           else if (val === "false") answerString += "F";
         });
       } else {
         answerString = selectedAnswer[exercise._id] as string;
       }
-      await httpRequest.submitAnswer(exercise._id, answerString);
+      await httpRequest.submitExerciseListAnswers(exercise._id, answerString);
     }
     setSubmitted(true);
   };
@@ -167,9 +177,13 @@ const ExerciseListRealizePage = () => {
               {exercise.type === "open" && (
                 <div className="mt-2">
                   <TextArea
-                    value={selectedAnswer[exercise._id] || ""}
-                    onChange={(e) =>
-                      handleAnswer(exercise._id, exercise._id, e.target.value)
+                    value={
+                      typeof selectedAnswer[exercise._id] === "string"
+                        ? (selectedAnswer[exercise._id] as string)
+                        : ""
+                    }
+                    onChange={(value) =>
+                      handleAnswer(exercise._id, exercise._id, value)
                     }
                     className="w-full h-40 mt-2 p-4 border border-gray-300 rounded-md"
                     placeholder="Digite sua resposta aqui"
@@ -190,7 +204,10 @@ const ExerciseListRealizePage = () => {
                         id={`${exercise._id}-opt-${index}`}
                         name={exercise._id}
                         value={option}
-                        checked={selectedAnswer[exercise._id] === option}
+                        checked={
+                          typeof selectedAnswer[exercise._id] === "string" &&
+                          selectedAnswer[exercise._id] === option
+                        }
                         onChange={(e) =>
                           handleAnswer(
                             exercise._id,
@@ -215,69 +232,72 @@ const ExerciseListRealizePage = () => {
               {exercise.type === "true_false" &&
                 exercise.true_false_options && (
                   <div className="mt-2">
-                    {exercise.true_false_options.map((alternative) => (
-                      <div key={alternative._id} className="mt-4">
-                        <p className="text-lg font-medium text-gray-800 dark:text-white/90">
-                          {alternative.statement}
-                        </p>
-                        <div className="flex items-center space-x-6 mt-4">
-                          <input
-                            type="radio"
-                            id={`true-${alternative._id}`}
-                            name={`${exercise._id}-${alternative._id}`}
-                            value="true"
-                            checked={
-                              (selectedAnswer[exercise._id] || {})[
-                                alternative._id
-                              ] === "true"
-                            }
-                            onChange={() =>
-                              handleAnswer(
-                                exercise._id,
-                                alternative._id,
-                                "true"
-                              )
-                            }
-                            className="h-5 w-5 text-blue-500 border-gray-300 rounded"
-                            required
-                            disabled={submitted}
-                          />
-                          <label
-                            htmlFor={`true-${alternative._id}`}
-                            className="text-lg font-light text-gray-800 dark:text-white/90"
-                          >
-                            Verdadeiro
-                          </label>
-                          <input
-                            type="radio"
-                            id={`false-${alternative._id}`}
-                            name={`${exercise._id}-${alternative._id}`}
-                            value="false"
-                            checked={
-                              (selectedAnswer[exercise._id] || {})[
-                                alternative._id
-                              ] === "false"
-                            }
-                            onChange={() =>
-                              handleAnswer(
-                                exercise._id,
-                                alternative._id,
-                                "false"
-                              )
-                            }
-                            className="h-5 w-5 text-blue-500 border-gray-300 rounded"
-                            required
-                            disabled={submitted}
-                          />
-                          <label
-                            htmlFor={`false-${alternative._id}`}
-                            className="text-lg font-light text-gray-800 dark:text-white/90"
-                          >
-                            Falso
-                          </label>
+                    {exercise.true_false_options.map((alternative, idx) => {
+                      const key = alternative._id || String(idx);
+                      return (
+                        <div key={key} className="mt-4">
+                          <p className="text-lg font-medium text-gray-800 dark:text-white/90">
+                            {alternative.statement}
+                          </p>
+                          <div className="flex items-center space-x-6 mt-4">
+                            <input
+                              type="radio"
+                              id={`true-${key}`}
+                              name={`${exercise._id}-${key}`}
+                              value="true"
+                              checked={
+                                (
+                                  selectedAnswer[exercise._id] as Record<
+                                    string,
+                                    string
+                                  >
+                                )[key] === "true"
+                              }
+                              onChange={() =>
+                                handleAnswer(exercise._id, key, "true")
+                              }
+                              className="h-5 w-5 text-blue-500 border-gray-300 rounded"
+                              required
+                              disabled={submitted}
+                            />
+                            <label
+                              htmlFor={`true-${key}`}
+                              className="text-lg font-light text-gray-800 dark:text-white/90"
+                            >
+                              Verdadeiro
+                            </label>
+                            <input
+                              type="radio"
+                              id={`false-${key}`}
+                              name={`${exercise._id}-${key}`}
+                              value="false"
+                              checked={
+                                typeof selectedAnswer[exercise._id] !==
+                                  "string" &&
+                                (
+                                  selectedAnswer[exercise._id] as Record<
+                                    string,
+                                    string
+                                  >
+                                )[key] === "false"
+                              }
+                              onChange={() =>
+                                handleAnswer(exercise._id, key, "false")
+                              }
+                              className="h-5 w-5 text-blue-500 border-gray-300 rounded"
+                              required
+                              disabled={submitted}
+                            />
+                            <label
+                              htmlFor={`false-${key}`}
+                              className="text-lg font-light text-gray-800 dark:text-white/90"
+                            >
+                              Falso
+                            </label>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
             </div>

@@ -60,7 +60,7 @@ const ExerciseDetailsPage = () => {
       try {
         const result = await httpRequest.isExerciseCompleted(exerciseId);
         const token = await httpRequest.getToken();
-        const decoded = jwtDecode<TokenPayload>(token);
+        const decoded = token ? jwtDecode<TokenPayload>(token) : null;
 
         if (result && result.completed) {
           const data = await httpRequest.findAllStudentsByExerciseId(
@@ -68,7 +68,8 @@ const ExerciseDetailsPage = () => {
           );
           setSubmitted(true);
           const userAnswer = data.find(
-            (item) => item.user_id._id === decoded._id
+            (item: { user_id: { _id: string }; answer: string }) =>
+              decoded && item.user_id._id === decoded._id
           );
           if (userAnswer.answer) {
             if (
@@ -79,7 +80,7 @@ const ExerciseDetailsPage = () => {
                 const char = userAnswer.answer[idx];
                 setSelectedAnswer((prev) => ({
                   ...prev,
-                  [alt._id]: char === "V" ? "true" : "false",
+                  [alt._id || String(idx)]: char === "V" ? "true" : "false",
                 }));
               });
             } else {
@@ -102,8 +103,8 @@ const ExerciseDetailsPage = () => {
     let answerString = "";
 
     if (exercise?.type === "true_false") {
-      exercise.true_false_options?.forEach((alternative) => {
-        const answer = selectedAnswer[alternative._id];
+      exercise.true_false_options?.forEach((alternative, idx) => {
+        const answer = selectedAnswer[alternative._id || String(idx)];
         if (answer === "true") {
           answerString += "V";
         } else if (answer === "false") {
@@ -158,10 +159,10 @@ const ExerciseDetailsPage = () => {
               </h2>
               <TextArea
                 value={selectedAnswer[exerciseId] || ""}
-                onChange={(e) =>
+                onChange={(value) =>
                   setSelectedAnswer({
                     ...selectedAnswer,
-                    [exerciseId]: e.target.value,
+                    [exerciseId]: value,
                   })
                 }
                 className="w-full h-40 mt-2 p-4 border border-gray-300 rounded-md"
@@ -219,59 +220,62 @@ const ExerciseDetailsPage = () => {
               <h2 className="text-base font-medium text-gray-800 dark:text-white/90">
                 Proposições
               </h2>
-              {exercise.true_false_options?.map((alternative) => (
-                <div key={alternative._id} className="mt-4">
-                  <p className="text-lg font-medium text-gray-800 dark:text-white/90">
-                    {alternative.statement}
-                  </p>
-                  <div className="flex items-center space-x-6 mt-4">
-                    <input
-                      type="radio"
-                      id={`true-${alternative._id}`}
-                      name={`true_false-${alternative._id}`}
-                      value="true"
-                      checked={selectedAnswer[alternative._id] === "true"}
-                      onChange={() =>
-                        setSelectedAnswer((prev) => ({
-                          ...prev,
-                          [alternative._id]: "true",
-                        }))
-                      }
-                      className="h-5 w-5 text-blue-500 border-gray-300 rounded"
-                      required
-                      disabled={submitted}
-                    />
-                    <label
-                      htmlFor={`true-${alternative._id}`}
-                      className="text-lg font-light text-gray-800 dark:text-white/90"
-                    >
-                      Verdadeiro
-                    </label>
-                    <input
-                      type="radio"
-                      id={`false-${alternative._id}`}
-                      name={`true_false-${alternative._id}`}
-                      value="false"
-                      checked={selectedAnswer[alternative._id] === "false"}
-                      onChange={() =>
-                        setSelectedAnswer((prev) => ({
-                          ...prev,
-                          [alternative._id]: "false",
-                        }))
-                      }
-                      className="h-5 w-5 text-blue-500 border-gray-300 rounded"
-                      required
-                      disabled={submitted}
-                    />
-                    <label
-                      htmlFor={`false-${alternative._id}`}
-                      className="text-lg font-light text-gray-800 dark:text-white/90"
-                    >
-                      Falso
-                    </label>
+              {exercise.true_false_options?.map((alternative, idx) => {
+                const key = alternative._id || String(idx);
+                return (
+                  <div key={key} className="mt-4">
+                    <p className="text-lg font-medium text-gray-800 dark:text-white/90">
+                      {alternative.statement}
+                    </p>
+                    <div className="flex items-center space-x-6 mt-4">
+                      <input
+                        type="radio"
+                        id={`true-${key}`}
+                        name={`true_false-${key}`}
+                        value="true"
+                        checked={selectedAnswer[key] === "true"}
+                        onChange={() =>
+                          setSelectedAnswer((prev) => ({
+                            ...prev,
+                            [key]: "true",
+                          }))
+                        }
+                        className="h-5 w-5 text-blue-500 border-gray-300 rounded"
+                        required
+                        disabled={submitted}
+                      />
+                      <label
+                        htmlFor={`true-${key}`}
+                        className="text-lg font-light text-gray-800 dark:text-white/90"
+                      >
+                        Verdadeiro
+                      </label>
+                      <input
+                        type="radio"
+                        id={`false-${key}`}
+                        name={`true_false-${key}`}
+                        value="false"
+                        checked={selectedAnswer[key] === "false"}
+                        onChange={() =>
+                          setSelectedAnswer((prev) => ({
+                            ...prev,
+                            [key]: "false",
+                          }))
+                        }
+                        className="h-5 w-5 text-blue-500 border-gray-300 rounded"
+                        required
+                        disabled={submitted}
+                      />
+                      <label
+                        htmlFor={`false-${key}`}
+                        className="text-lg font-light text-gray-800 dark:text-white/90"
+                      >
+                        Falso
+                      </label>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

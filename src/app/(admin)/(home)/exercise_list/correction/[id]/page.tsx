@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { HttpRequest } from "@/utils/http-request";
 import { IExerciseList } from "@/utils/interfaces/exercise_list.interface";
+import { IExerciseListAttempt } from "@/utils/interfaces/exercise_list_attempt.interface";
 import Notification from "@/components/ui/notification/Notification";
 import Input from "@/components/form/input/InputField";
 import { Search } from "lucide-react";
@@ -12,9 +13,9 @@ import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 
 interface StudentAnswer {
   user_id: { _id: string; name: string };
-  answers: Record<string, string>;
   _id: string;
   final_grade?: number;
+  attempts: IExerciseListAttempt[];
 }
 
 const ExerciseListCorrectionPage = () => {
@@ -37,8 +38,17 @@ const ExerciseListCorrectionPage = () => {
   useEffect(() => {
     async function fetchStudentsAnswers() {
       if (!listId) return;
-      const data = await httpRequest.findAllStudentsByExerciseListId(listId);
-      setStudentsAnswers(data);
+      const progresses = await httpRequest.findAllStudentsByExerciseListId(
+        listId
+      );
+      const withAttempts = await Promise.all(
+        progresses.map(async (prog: Omit<StudentAnswer, "attempts">) => {
+          const attempts =
+            await httpRequest.getExerciseListAttemptsByUserProgress(prog._id);
+          return { ...prog, attempts } as StudentAnswer;
+        })
+      );
+      setStudentsAnswers(withAttempts);
       setSelectedStudentIndex(0);
     }
     fetchStudentsAnswers();
@@ -92,12 +102,16 @@ const ExerciseListCorrectionPage = () => {
     }
   }, [selectedStudentIndex, studentsAnswers]);
 
-  if (!exerciseList || studentsAnswers.length === 0) {
+  if (!exerciseList) {
+    return <div>Carregando...</div>;
+  }
+
+  if (studentsAnswers.length === 0) {
     return <div>Nenhum aluno respondeu</div>;
   }
 
   const filteredStudents = studentsAnswers.filter((student) =>
-    student.user_id.name.toLowerCase().includes(searchTerm.toLowerCase())
+    student.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const selectedAnswerObj = studentsAnswers[selectedStudentIndex];
@@ -116,21 +130,21 @@ const ExerciseListCorrectionPage = () => {
       return;
     }
 
-    const user_id = selectedAnswerObj.user_id._id;
-
     try {
-      if (exerciseList) {
-        await Promise.all(
-          exerciseList.exercises_ids.map((exId) =>
-            httpRequest.teacherCorretion(exId, user_id, numericGrade, 100)
-          )
-        );
-      }
+      await Promise.all(
+        selectedAnswerObj.attempts.map((attempt) =>
+          httpRequest.gradeExerciseListAttempt(attempt._id, numericGrade)
+        )
+      );
 
       const updatedStudents = [...studentsAnswers];
       updatedStudents[selectedStudentIndex] = {
         ...updatedStudents[selectedStudentIndex],
         final_grade: numericGrade,
+        attempts: updatedStudents[selectedStudentIndex].attempts.map((a) => ({
+          ...a,
+          grade: numericGrade,
+        })),
       };
       setStudentsAnswers(updatedStudents);
 
@@ -145,8 +159,6 @@ const ExerciseListCorrectionPage = () => {
   const handleEditClick = () => {
     setIsEditing(true);
   };
-
-  const firstExercise = exerciseList.exercises?.[0];
 
   return (
     <>
@@ -223,7 +235,8 @@ const ExerciseListCorrectionPage = () => {
                 >
                   <div className="flex flex-col justify-center">
                     <p className="text-base font-medium leading-normal text-[#111418] line-clamp-1">
-                      {student.user_id.name}
+                      {student.user_id?.name ||
+                        (student as unknown as RawStudent).name}
                     </p>
                     <p
                       className={`text-sm font-normal leading-normal ${
@@ -242,14 +255,86 @@ const ExerciseListCorrectionPage = () => {
             <h1 className="pb-2 pt-4 text-2xl font-bold leading-tight tracking-tight text-[#111418]">
               {exerciseList.name}
             </h1>
-            {firstExercise && (
-              <div className="mb-6">
-                <h2 className="text-base font-medium text-gray-800 dark:text-white/90">
-                  Primeiro Exercício
-                </h2>
-                <p>{firstExercise.statement}</p>
-              </div>
-            )}
+            {exerciseList.exercises?.map((exercise, idx) => {
+              const attempt = selectedAnswerObj.attempts.find(
+                (a) => a.exercise_id === exercise._id
+              );
+              const answer = attempt?.answer || "";
+
+              return (
+                <div key={exercise._id} className="mb-6">
+                  <h2 className="text-base font-medium text-gray-800 dark:text-white/90">
+                    {idx + 1}. {exercise.statement}
+                  </h2>
+                  {exercise.type === "open" && (
+                    <textarea
+                      readOnly
+                      value={answer}
+                      className="w-full h-40 p-3 border border-gray-300 rounded resize-none bg-gray-100 dark:bg-gray-800 dark:text-white/90"
+                    />
+                  )}
+
+                  {exercise.type === "multiple_choice" && (
+                    <div>
+                      {exercise.multiple_choice_options?.map((option) => {
+                        const isSelected = answer === option;
+
+                        return (
+                          <div
+                            key={option}
+                            className={`p-2 rounded mb-1 border dark:text-white/90 ${
+                              isSelected
+                                ? "bg-green-300 dark:bg-green-700"
+                                : "bg-gray-100 dark:bg-gray-800"
+                            }`}
+                          >
+                            {option}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {exercise.type === "true_false" &&
+                    exercise.true_false_options && (
+                      <div className="mt-6">
+                        <h3 className="text-base font-medium text-gray-800 dark:text-white/90">
+                          Proposições
+                        </h3>
+                        {exercise.true_false_options.map((alternative, i) => {
+                          const char = answer[i];
+
+                          return (
+                            <div
+                              key={alternative._id}
+                              className="mt-2 p-2 rounded border border-gray-300 dark:border-gray-700 flex items-center justify-between bg-gray-100 dark:bg-gray-800"
+                            >
+                              <p className="text-lg font-medium text-gray-800 dark:text-white/90">
+                                {alternative.statement}
+                              </p>
+                              <span
+                                className={`ml-4 font-semibold ${
+                                  char === "V"
+                                    ? "text-green-600"
+                                    : char === "F"
+                                    ? "text-red-600"
+                                    : ""
+                                }`}
+                              >
+                                {char === "V"
+                                  ? "Verdadeiro"
+                                  : char === "F"
+                                  ? "Falso"
+                                  : ""}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                </div>
+              );
+            })}
             <div className="mb-4 flex justify-between items-center">
               <div className="flex flex-col w-full mr-4">
                 <label

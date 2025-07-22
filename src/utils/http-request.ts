@@ -11,6 +11,7 @@ import { TokenPayload } from "@/app/(admin)/(home)/exercise/form/page";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { IRanking } from "./interfaces/ranking.interface";
+import { IExerciseListAttempt } from "./interfaces/exercise_list_attempt.interface";
 
 export class HttpRequest {
   async getToken(): Promise<string | undefined> {
@@ -688,9 +689,7 @@ export class HttpRequest {
       return response.data;
     } catch (error) {
       console.error("Erro ao buscar lista de exercício:", error);
-      throw new Error(
-        "Ocorreu um erro ao buscar lista de exercício: " + error
-      );
+      throw new Error("Ocorreu um erro ao buscar lista de exercício: " + error);
     }
   }
 
@@ -714,6 +713,73 @@ export class HttpRequest {
     }
   }
 
+  async getExerciseListAttemptsByUserProgress(
+    user_progress_id: string
+  ): Promise<IExerciseListAttempt[]> {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercise-list-attempts/user-progress/${user_progress_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar tentativas da lista:", error);
+      throw new Error(
+        "Ocorreu um erro ao buscar tentativas da lista: " + error
+      );
+    }
+  }
+
+  async gradeExerciseListAttempt(
+    attempt_id: string,
+    grade: number
+  ): Promise<IExerciseListAttempt> {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.patch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercise-list-attempts/${attempt_id}/grade`,
+        { grade },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atribuir nota à tentativa:", error);
+      throw new Error("Ocorreu um erro ao atribuir nota à tentativa: " + error);
+    }
+  }
+
+  async findStudentsAnswersByExerciseListId(exercise_list_id: string) {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-progress/exercise_list_answers/${exercise_list_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar exercício:", error);
+      throw new Error("Ocorreu um erro ao buscar exercício: " + error);
+    }
+  }
 
   async updateExerciseListAndLessonPlans(
     id: string,
@@ -753,6 +819,33 @@ export class HttpRequest {
       console.error("Erro ao atualizar lista de exercício:", error);
       throw new Error(
         "Ocorreu um erro ao atualizar lista de exercício: " + error
+      );
+    }
+  }
+
+  async submitExerciseListAnswers(exerciseId: string, answer: string) {
+    try {
+      const token = await this.getToken();
+
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercise_lists/${exerciseId}/submitExerciseListAnswers`,
+        { answer },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return;
+    } catch (error) {
+      console.error(
+        "Erro ao coletar resposta do exercício de multipla escolha:",
+        error
+      );
+      throw new Error(
+        "Ocorreu um erro ao coletar resposta do exercício de multipla escolha: " +
+          error
       );
     }
   }

@@ -14,6 +14,7 @@ export interface IExercise {
 }
 
 export interface Options {
+  _id?: string;
   statement: string;
   answer: boolean;
 }
