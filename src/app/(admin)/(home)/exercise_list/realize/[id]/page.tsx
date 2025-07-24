@@ -14,7 +14,7 @@ import LessonPlanBreadcrumb from "@/components/ui/breadcrumb/LessonPlanBreadcrum
 
 const ExerciseListRealizePage = () => {
   const params = useParams();
-  const listId = params.id as string;
+  const exercise_list_id = params.id as string;
   const [exerciseList, setExerciseList] = useState<IExerciseList | null>(null);
   const [lessonPlanId, setLessonPlanId] = useState<string | null>(null);
   const [lessonPlanName, setLessonPlanName] = useState<string | null>(null);
@@ -26,9 +26,9 @@ const ExerciseListRealizePage = () => {
 
   useEffect(() => {
     const fetchListDetails = async () => {
-      if (!listId) return;
+      if (!exercise_list_id) return;
       const httpRequest = new HttpRequest();
-      const list = await httpRequest.getExerciseListById(listId);
+      const list = await httpRequest.getExerciseListById(exercise_list_id);
       const exercises: IExercise[] = await Promise.all(
         list.exercises_ids.map((id: string) => httpRequest.getExerciseById(id))
       );
@@ -36,7 +36,7 @@ const ExerciseListRealizePage = () => {
 
       try {
         const associations = await httpRequest.getAssociationsByContent(
-          listId,
+          exercise_list_id,
           "exercise_list"
         );
         if (associations && associations.length > 0) {
@@ -55,14 +55,16 @@ const ExerciseListRealizePage = () => {
     };
 
     fetchListDetails();
-  }, [listId]);
+  }, [exercise_list_id]);
 
   useEffect(() => {
     const checkCompleted = async () => {
-      if (!listId || !exerciseList) return;
+      if (!exercise_list_id || !exerciseList) return;
       const httpRequest = new HttpRequest();
       try {
-        const result = await httpRequest.isExerciseListCompleted(listId);
+        const result = await httpRequest.isExerciseListCompleted(
+          exercise_list_id
+        );
         if (result && result.completed) {
           setSubmitted(true);
           const token = await httpRequest.getToken();
@@ -107,7 +109,7 @@ const ExerciseListRealizePage = () => {
     };
 
     checkCompleted();
-  }, [listId, exerciseList]);
+  }, [exercise_list_id, exerciseList]);
 
   const handleAnswer = (exId: string, name: string, value: string) => {
     setSelectedAnswer((prev) => {
@@ -137,7 +139,7 @@ const ExerciseListRealizePage = () => {
       } else {
         answerString = selectedAnswer[exercise._id] as string;
       }
-      await httpRequest.submitExerciseListAnswers(exercise._id, answerString);
+      await httpRequest.submitExerciseListAnswers(exercise._id, exercise_list_id, answerString);
     }
     setSubmitted(true);
   };

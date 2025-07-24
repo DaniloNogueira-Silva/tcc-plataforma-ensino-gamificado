@@ -429,9 +429,9 @@ export class HttpRequest {
     multiple_choice_options?: string[],
     true_false_options?: Options[],
     lesson_plan_ids?: string[],
+    grade?: number,
     due_date?: string,
-    points?: number,
-    grade?: number
+    points?: number
   ): Promise<IExercise | null> {
     try {
       const token = await this.getToken();
@@ -444,9 +444,9 @@ export class HttpRequest {
           answer,
           showAnswer,
           teacher_id,
+          grade,
           due_date,
           points,
-          grade,
           multiple_choice_options,
           true_false_options,
           lesson_plan_ids,
@@ -474,9 +474,9 @@ export class HttpRequest {
     multiple_choice_options?: string[],
     true_false_options?: Options[],
     lesson_plan_ids?: string[],
+    grade?: number,
     due_date?: string,
-    points?: number,
-    grade?: number
+    points?: number
   ): Promise<IExercise | null> {
     try {
       const token = await this.getToken();
@@ -488,9 +488,9 @@ export class HttpRequest {
           type,
           answer: finalAnswer,
           showAnswer,
+          grade,
           due_date,
           points,
-          grade,
           multiple_choice_options,
           true_false_options,
           lesson_plan_ids,
@@ -823,16 +823,24 @@ export class HttpRequest {
     }
   }
 
-  async submitExerciseListAnswers(exerciseId: string, answer: string) {
+  async submitExerciseListAnswers(
+    exercise_list_id: string,
+    exercise_id: string,
+    answer: string
+  ) {
     try {
       const token = await this.getToken();
 
       await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercise_lists/${exerciseId}/submitExerciseListAnswers`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercise_lists/submitExerciseListAnswers`,
         { answer },
         {
           headers: {
             Authorization: `Bearer ${token}`,
+          },
+          params: {
+            exercise_id,
+            exercise_list_id,
           },
         }
       );

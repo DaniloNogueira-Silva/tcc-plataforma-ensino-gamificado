@@ -18,6 +18,20 @@ interface StudentAnswer {
   attempts: IExerciseListAttempt[];
 }
 
+interface RawStudent {
+  _id: string;
+  name: string;
+}
+
+interface ExerciseGradeMap {
+  [exerciseId: string]: string;
+}
+
+interface ValidationError {
+  exerciseId: string;
+  message: string;
+}
+
 const ExerciseListCorrectionPage = () => {
   const params = useParams();
   const listId = params.id as string;
@@ -25,10 +39,13 @@ const ExerciseListCorrectionPage = () => {
   const [studentsAnswers, setStudentsAnswers] = useState<StudentAnswer[]>([]);
   const [selectedStudentIndex, setSelectedStudentIndex] = useState<number>(0);
   const [exerciseList, setExerciseList] = useState<IExerciseList | null>(null);
-  const [grade, setGrade] = useState<string>("");
+  const [exerciseGrades, setExerciseGrades] = useState<ExerciseGradeMap>({});
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [showErrorNotification, setShowErrorNotification] = useState(false);
+  const [notificationErrorMsg, setNotificationErrorMsg] = useState("");
+  const [validationError, setValidationError] =
+    useState<ValidationError | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [lessonPlanId, setLessonPlanId] = useState<string | null>(null);
   const [lessonPlanName, setLessonPlanName] = useState<string | null>(null);
@@ -38,7 +55,7 @@ const ExerciseListCorrectionPage = () => {
   useEffect(() => {
     async function fetchStudentsAnswers() {
       if (!listId) return;
-      const progresses = await httpRequest.findAllStudentsByExerciseListId(
+      const progresses = await httpRequest.findStudentsAnswersByExerciseListId(
         listId
       );
       const withAttempts = await Promise.all(
@@ -86,21 +103,142 @@ const ExerciseListCorrectionPage = () => {
   }, [listId]);
 
   useEffect(() => {
-    if (studentsAnswers.length === 0) return;
+    if (studentsAnswers.length === 0 || !exerciseList) return;
 
-    const currentStudent = studentsAnswers[selectedStudentIndex];
-    if (!currentStudent) return;
+    setValidationError(null);
 
-    const existingGrade = currentStudent.final_grade;
+    const blankGrades: ExerciseGradeMap = {};
+    exerciseList.exercises?.forEach((ex) => {
+      blankGrades[ex._id] = "";
+    });
+    setExerciseGrades(blankGrades);
 
-    if (existingGrade !== undefined && existingGrade !== null) {
-      setGrade(existingGrade.toString());
-      setIsEditing(false);
-    } else {
-      setGrade("");
-      setIsEditing(true);
+    setIsEditing(true);
+  }, [selectedStudentIndex, studentsAnswers, exerciseList]);
+
+  const handleGradeChange = (
+    exerciseId: string,
+    value: string,
+    maxGrade: number
+  ) => {
+    if (validationError) {
+      setValidationError(null);
     }
-  }, [selectedStudentIndex, studentsAnswers]);
+
+    let numericValue = parseFloat(value.replace(",", "."));
+
+    if (isNaN(numericValue) || value.trim() === "") {
+      setExerciseGrades((prev) => ({
+        ...prev,
+        [exerciseId]: value,
+      }));
+      return;
+    }
+
+    if (numericValue < 0) {
+      numericValue = 0;
+    } else if (numericValue > maxGrade) {
+      numericValue = maxGrade;
+    }
+    setExerciseGrades((prev) => ({
+      ...prev,
+      [exerciseId]: numericValue.toString().replace(".", ","),
+    }));
+  };
+
+  const handleSubmitGrade = async () => {
+    const gradesToSubmit: { attemptId: string; grade: number }[] = [];
+    setValidationError(null);
+
+    for (const exercise of exerciseList.exercises || []) {
+      const gradeString = exerciseGrades[exercise._id] || "";
+      const numericGrade = parseFloat(gradeString.replace(",", "."));
+      const maxGrade = exercise.grade;
+
+      if (maxGrade > 0) {
+        if (gradeString.trim() === "" || isNaN(numericGrade)) {
+          const error = {
+            exerciseId: exercise._id,
+            message: `A nota deve ser entre 0 e ${maxGrade
+              .toString()
+              .replace(".", ",")}.`,
+          };
+          setValidationError(error);
+          setNotificationErrorMsg("Verifique os campos de nota.");
+          setShowErrorNotification(true);
+          setTimeout(() => setShowErrorNotification(false), 3000);
+          return;
+        }
+        if (numericGrade < 0 || numericGrade > maxGrade) {
+          const error = {
+            exerciseId: exercise._id,
+            message: `A nota deve ser entre 0 e ${maxGrade
+              .toString()
+              .replace(".", ",")}.`,
+          };
+          setValidationError(error);
+          setNotificationErrorMsg("Verifique os campos de nota.");
+          setShowErrorNotification(true);
+          setTimeout(() => setShowErrorNotification(false), 3000);
+          return;
+        }
+      }
+
+      const attempt = selectedAnswerObj.attempts.find(
+        (a) => a.exercise_id === exercise._id
+      );
+      if (attempt && maxGrade > 0) {
+        gradesToSubmit.push({ attemptId: attempt._id, grade: numericGrade });
+      }
+    }
+
+    try {
+      await Promise.all(
+        gradesToSubmit.map(({ attemptId, grade }) =>
+          httpRequest.gradeExerciseListAttempt(attemptId, grade)
+        )
+      );
+
+      const updatedStudents = [...studentsAnswers];
+      const currentStudent = updatedStudents[selectedStudentIndex];
+      if (currentStudent) {
+        currentStudent.attempts = currentStudent.attempts.map((attempt) => {
+          const submittedGrade = gradesToSubmit.find(
+            (g) => g.attemptId === attempt._id
+          );
+          if (submittedGrade) {
+            return { ...attempt, grade: submittedGrade.grade };
+          }
+          return attempt;
+        });
+
+        const totalPossibleScore = exerciseList.exercises.reduce(
+          (sum, exercise) => sum + (exercise.grade || 0),
+          0
+        );
+        const earnedScore = currentStudent.attempts.reduce(
+          (sum, attempt) => sum + (attempt.grade || 0),
+          0
+        );
+        currentStudent.final_grade =
+          totalPossibleScore > 0 ? (earnedScore / totalPossibleScore) * 100 : 0;
+      }
+      setStudentsAnswers(updatedStudents);
+
+      setIsEditing(false);
+      setShowSuccessNotification(true);
+      setTimeout(() => setShowSuccessNotification(false), 3000);
+    } catch (err) {
+      console.error("Erro ao enviar nota:", err);
+      setNotificationErrorMsg("Erro ao salvar as notas. Tente novamente.");
+      setShowErrorNotification(true);
+      setTimeout(() => setShowErrorNotification(false), 3000);
+    }
+  };
+
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
 
   if (!exerciseList) {
     return <div>Carregando...</div>;
@@ -111,54 +249,12 @@ const ExerciseListCorrectionPage = () => {
   }
 
   const filteredStudents = studentsAnswers.filter((student) =>
-    student.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (student.user_id?.name || (student as unknown as RawStudent).name || "")
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
   );
 
   const selectedAnswerObj = studentsAnswers[selectedStudentIndex];
-  const selectedStudentName = selectedAnswerObj?.user_id?.name || "";
-  const handleSubmitGrade = async () => {
-    if (grade === "" || isNaN(Number(grade))) {
-      setShowErrorNotification(true);
-      setTimeout(() => setShowErrorNotification(false), 3000);
-      return;
-    }
-
-    const numericGrade = Number(grade);
-    if (numericGrade < 0 || numericGrade > 100) {
-      setShowErrorNotification(true);
-      setTimeout(() => setShowErrorNotification(false), 3000);
-      return;
-    }
-
-    try {
-      await Promise.all(
-        selectedAnswerObj.attempts.map((attempt) =>
-          httpRequest.gradeExerciseListAttempt(attempt._id, numericGrade)
-        )
-      );
-
-      const updatedStudents = [...studentsAnswers];
-      updatedStudents[selectedStudentIndex] = {
-        ...updatedStudents[selectedStudentIndex],
-        final_grade: numericGrade,
-        attempts: updatedStudents[selectedStudentIndex].attempts.map((a) => ({
-          ...a,
-          grade: numericGrade,
-        })),
-      };
-      setStudentsAnswers(updatedStudents);
-
-      setIsEditing(false);
-      setShowSuccessNotification(true);
-      setTimeout(() => setShowSuccessNotification(false), 3000);
-    } catch (err) {
-      console.error("Erro ao enviar nota:", err);
-    }
-  };
-
-  const handleEditClick = () => {
-    setIsEditing(true);
-  };
 
   return (
     <>
@@ -171,7 +267,7 @@ const ExerciseListCorrectionPage = () => {
           }`}
           style={{ maxWidth: 340 }}
         >
-          <Notification variant="success" title="Nota enviada com sucesso" />
+          <Notification variant="success" title="Notas enviadas com sucesso" />
         </div>
       )}
 
@@ -184,7 +280,7 @@ const ExerciseListCorrectionPage = () => {
           }`}
           style={{ maxWidth: 340 }}
         >
-          <Notification variant="error" title="Erro: Nota inválida ou vazia" />
+          <Notification variant="error" title={notificationErrorMsg} />
         </div>
       )}
 
@@ -220,9 +316,18 @@ const ExerciseListCorrectionPage = () => {
               const globalIdx = studentsAnswers.findIndex(
                 (s) => s._id === student._id
               );
-              const hasGrade =
-                student.final_grade !== undefined &&
-                student.final_grade !== null;
+              const allGraded = exerciseList.exercises?.every((exercise) => {
+                if (exercise.grade === 0) return true;
+                const attempt = student.attempts.find(
+                  (a) => a.exercise_id === exercise._id
+                );
+                return (
+                  attempt &&
+                  attempt.grade !== undefined &&
+                  attempt.grade !== null
+                );
+              });
+
               return (
                 <div
                   key={student._id}
@@ -240,10 +345,10 @@ const ExerciseListCorrectionPage = () => {
                     </p>
                     <p
                       className={`text-sm font-normal leading-normal ${
-                        hasGrade ? "text-green-600" : "text-red-500"
+                        allGraded ? "text-green-600" : "text-red-500"
                       } line-clamp-2`}
                     >
-                      {hasGrade ? "Nota Enviada" : "Sem nota"}
+                      {allGraded ? "Notas Enviadas" : "Notas Pendentes"}
                     </p>
                   </div>
                 </div>
@@ -273,28 +378,32 @@ const ExerciseListCorrectionPage = () => {
                       className="w-full h-40 p-3 border border-gray-300 rounded resize-none bg-gray-100 dark:bg-gray-800 dark:text-white/90"
                     />
                   )}
-
                   {exercise.type === "multiple_choice" && (
                     <div>
                       {exercise.multiple_choice_options?.map((option) => {
-                        const isSelected = answer === option;
-
+                        const isSelected = answer.trim() === option.trim();
                         return (
-                          <div
+                          <label
                             key={option}
-                            className={`p-2 rounded mb-1 border dark:text-white/90 ${
+                            className={`flex items-center gap-2 p-2 rounded mb-1 border dark:text-white/90 ${
                               isSelected
                                 ? "bg-green-300 dark:bg-green-700"
                                 : "bg-gray-100 dark:bg-gray-800"
                             }`}
                           >
-                            {option}
-                          </div>
+                            <input
+                              type="radio"
+                              disabled
+                              checked={isSelected}
+                              name={`question-${exercise._id}`}
+                              className="h-4 w-4"
+                            />
+                            <span>{option}</span>
+                          </label>
                         );
                       })}
                     </div>
                   )}
-
                   {exercise.type === "true_false" &&
                     exercise.true_false_options && (
                       <div className="mt-6">
@@ -303,75 +412,110 @@ const ExerciseListCorrectionPage = () => {
                         </h3>
                         {exercise.true_false_options.map((alternative, i) => {
                           const char = answer[i];
-
+                          const isTrue = char === "V";
+                          const isFalse = char === "F";
                           return (
-                            <div
+                            <label
                               key={alternative._id}
-                              className="mt-2 p-2 rounded border border-gray-300 dark:border-gray-700 flex items-center justify-between bg-gray-100 dark:bg-gray-800"
+                              className="mt-2 p-2 rounded border border-gray-300 dark:border-gray-700 flex items-center justify-between gap-2 bg-gray-100 dark:bg-gray-800"
                             >
-                              <p className="text-lg font-medium text-gray-800 dark:text-white/90">
+                              <p className="text-lg font-medium text-gray-800 dark:text-white/90 flex-1">
                                 {alternative.statement}
                               </p>
-                              <span
-                                className={`ml-4 font-semibold ${
-                                  char === "V"
-                                    ? "text-green-600"
-                                    : char === "F"
-                                    ? "text-red-600"
-                                    : ""
-                                }`}
-                              >
-                                {char === "V"
-                                  ? "Verdadeiro"
-                                  : char === "F"
-                                  ? "Falso"
-                                  : ""}
-                              </span>
-                            </div>
+                              <div className="flex items-center gap-4">
+                                <span className="flex items-center gap-1">
+                                  <input
+                                    type="radio"
+                                    disabled
+                                    checked={isTrue}
+                                    className="h-4 w-4"
+                                  />
+                                  <span
+                                    className={`font-semibold ${
+                                      isTrue ? "text-green-600" : ""
+                                    }`}
+                                  >
+                                    Verdadeiro
+                                  </span>
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <input
+                                    type="radio"
+                                    disabled
+                                    checked={isFalse}
+                                    className="h-4 w-4"
+                                  />
+                                  <span
+                                    className={`font-semibold ${
+                                      isFalse ? "text-red-600" : ""
+                                    }`}
+                                  >
+                                    Falso
+                                  </span>
+                                </span>
+                              </div>
+                            </label>
                           );
                         })}
                       </div>
                     )}
+
+                  {exercise.grade > 0 && (
+                    <div className="mt-4">
+                      <label
+                        htmlFor={`grade-${exercise._id}`}
+                        className="block font-medium mb-2 dark:text-white/90"
+                      >
+                        Nota (0 - {exercise.grade.toString().replace(".", ",")}
+                        ):
+                      </label>
+                      <Input
+                        id={`grade-${exercise._id}`}
+                        type="text"
+                        min="0"
+                        max={exercise.grade.toString()}
+                        step={0.1}
+                        value={exerciseGrades[exercise._id] || ""}
+                        onChange={(e) =>
+                          handleGradeChange(
+                            exercise._id,
+                            e.target.value,
+                            exercise.grade
+                          )
+                        }
+                        className="border border-gray-300 rounded px-3 py-2 !w-32 dark:text-white/90"
+                        placeholder={`Ex: ${exercise.grade
+                          .toString()
+                          .replace(".", ",")}`}
+                        required
+                        disabled={!isEditing}
+                      />
+                      {validationError &&
+                        validationError.exerciseId === exercise._id && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {validationError.message}
+                          </p>
+                        )}
+                    </div>
+                  )}
                 </div>
               );
             })}
-            <div className="mb-4 flex justify-between items-center">
-              <div className="flex flex-col w-full mr-4">
-                <label
-                  htmlFor="grade"
-                  className="block font-medium mb-2 dark:text-white/90"
-                >
-                  Nota para {selectedStudentName}
-                </label>
-                <Input
-                  id="grade"
-                  type="number"
-                  min="0"
-                  max="10"
-                  step={0.1}
-                  defaultValue={grade}
-                  onChange={(e) => setGrade(e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 !w-32 dark:text-white/90"
-                  placeholder="Ex: 8.5"
-                  required
-                  disabled={!isEditing}
-                />
-              </div>
-
+            <div className="mb-4 flex justify-end items-center">
               <div>
                 {!isEditing ? (
                   <button
                     onClick={handleEditClick}
                     className="flex h-10 min-w-[84px] items-center justify-center overflow-hidden rounded-lg bg-yellow-500 hover:bg-yellow-600 px-4 text-sm font-bold leading-normal tracking-wide text-white"
                   >
-                    <span className="truncate">Editar Nota</span>
+                    <span className="truncate">Editar Notas</span>
                   </button>
                 ) : (
                   <button
                     onClick={handleSubmitGrade}
                     className="flex h-10 min-w-[84px] items-center justify-center overflow-hidden rounded-lg bg-[#0c77f2] px-4 text-sm font-bold leading-normal tracking-wide text-white"
                   >
-                    <span className="truncate">Enviar Nota</span>
+                    <span className="truncate">Enviar Notas</span>
                   </button>
                 )}
               </div>

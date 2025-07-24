@@ -35,6 +35,7 @@ const ExerciseFormPage = () => {
   );
   const [answer, setAnswer] = useState("");
   const [showAnswer, setShowAnswer] = useState(false);
+  const [grade, setGrade] = useState(0);
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [lessonPlanIds, setLessonPlanIds] = useState<string[]>([]);
   const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
@@ -81,6 +82,7 @@ const ExerciseFormPage = () => {
     if (initialData) {
       setStatement(initialData.statement || "");
       setType(initialData.type || "open");
+      setGrade(initialData.grade || 0);
       setAnswer(initialData.answer || "");
       setShowAnswer(initialData.showAnswer || false);
       setLessonPlanIds(initialData.lesson_plan_ids || []);
@@ -176,7 +178,8 @@ const ExerciseFormPage = () => {
           showAnswer,
           type === "multiple_choice" ? mcOptions : undefined,
           type === "true_false" ? tfOptions : undefined,
-          lessonPlanIds.length ? lessonPlanIds : undefined
+          lessonPlanIds.length ? lessonPlanIds : undefined,
+          grade
         );
       } else {
         createdExercise = await httpRequest.createExercise(
@@ -187,7 +190,8 @@ const ExerciseFormPage = () => {
           teacherId,
           type === "multiple_choice" ? mcOptions : undefined,
           type === "true_false" ? tfOptions : undefined,
-          lessonPlanIds.length ? lessonPlanIds : undefined
+          lessonPlanIds.length ? lessonPlanIds : undefined,
+          grade
         );
       }
 
@@ -393,25 +397,51 @@ const ExerciseFormPage = () => {
           </Tooltip>
         </div>
 
-        <div className="col-span-1 mt-6">
-          <div className="flex items-center gap-1 mb-1">
-            <span className="text-sm font-medium text-gray-800 dark:text-white">
-              Plano de Aula*
-            </span>
-            <Tooltip
-              position="right"
-              width="330px"
-              content="Isso define a qual plano de aula o exercício será atribuído. Pode ser deixado em branco, se preferir não vincular a nenhum."
-            >
-              <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
-            </Tooltip>
+        <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 mt-6">
+          <div className="col-span-1">
+            <div className="flex items-center gap-1 mb-1">
+              <span className="text-sm font-medium text-gray-800 dark:text-white">
+                Plano de Aula*
+              </span>
+              <Tooltip
+                position="right"
+                width="330px"
+                content="Isso define a qual plano de aula o exercício será atribuído. Pode ser deixado em branco, se preferir não vincular a nenhum."
+              >
+                <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
+              </Tooltip>
+            </div>
+            <MultiSelect
+              options={options}
+              defaultSelected={lessonPlanIds}
+              onChange={(selected) => setLessonPlanIds(selected)}
+              disabled={saving}
+            />
           </div>
-          <MultiSelect
-            options={options}
-            defaultSelected={lessonPlanIds}
-            onChange={(selected) => setLessonPlanIds(selected)}
-            disabled={saving}
-          />
+
+          <div className="col-span-1">
+            <div className="flex items-center gap-1 mb-1">
+              <span className="text-sm font-medium text-gray-800 dark:text-white">
+                Nota*
+              </span>
+              <Tooltip
+                position="right"
+                width="330px"
+                content="Defina a nota atribuída a este exercício. Caso não tenha, deixe 0."
+              >
+                <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
+              </Tooltip>
+            </div>
+            <input
+              type="number"
+              value={grade}
+              onChange={(e) => setGrade(Number(e.target.value))}
+              className="w-full rounded-md border border-gray-300 p-2 dark:bg-navy-700 dark:text-white"
+              placeholder="Digite a nota"
+              min={0}
+              required
+            />
+          </div>
         </div>
 
         <div className="flex items-center justify-end w-full gap-3 mt-6">
