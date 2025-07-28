@@ -139,7 +139,11 @@ const ExerciseListRealizePage = () => {
       } else {
         answerString = selectedAnswer[exercise._id] as string;
       }
-      await httpRequest.submitExerciseListAnswers(exercise._id, exercise_list_id, answerString);
+      await httpRequest.submitExerciseListAnswers(
+        exercise._id,
+        exercise_list_id,
+        answerString
+      );
     }
     setSubmitted(true);
   };
@@ -248,12 +252,13 @@ const ExerciseListRealizePage = () => {
                               name={`${exercise._id}-${key}`}
                               value="true"
                               checked={
+                                typeof selectedAnswer[exercise._id] !==
+                                  "string" &&
                                 (
-                                  selectedAnswer[exercise._id] as Record<
-                                    string,
-                                    string
-                                  >
-                                )[key] === "true"
+                                  selectedAnswer[exercise._id] as
+                                    | Record<string, string>
+                                    | undefined
+                                )?.[key] === "true"
                               }
                               onChange={() =>
                                 handleAnswer(exercise._id, key, "true")
@@ -277,11 +282,10 @@ const ExerciseListRealizePage = () => {
                                 typeof selectedAnswer[exercise._id] !==
                                   "string" &&
                                 (
-                                  selectedAnswer[exercise._id] as Record<
-                                    string,
-                                    string
-                                  >
-                                )[key] === "false"
+                                  selectedAnswer[exercise._id] as
+                                    | Record<string, string>
+                                    | undefined
+                                )?.[key] === "false"
                               }
                               onChange={() =>
                                 handleAnswer(exercise._id, key, "false")

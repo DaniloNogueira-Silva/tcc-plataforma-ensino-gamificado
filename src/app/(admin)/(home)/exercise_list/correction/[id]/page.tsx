@@ -103,7 +103,7 @@ const ExerciseListCorrectionPage = () => {
   }, [listId]);
 
   useEffect(() => {
-    if (studentsAnswers.length === 0 || !exerciseList) return;
+    if (!exerciseList) return;
 
     setValidationError(null);
 
@@ -114,7 +114,7 @@ const ExerciseListCorrectionPage = () => {
     setExerciseGrades(blankGrades);
 
     setIsEditing(true);
-  }, [selectedStudentIndex, studentsAnswers, exerciseList]);
+  }, [selectedStudentIndex, exerciseList]);
 
   const handleGradeChange = (
     exerciseId: string,
@@ -188,7 +188,8 @@ const ExerciseListCorrectionPage = () => {
         (a) => a.exercise_id === exercise._id
       );
       if (attempt && maxGrade > 0) {
-        gradesToSubmit.push({ attemptId: attempt._id, grade: numericGrade });
+        const clampedGrade = Math.max(0, Math.min(maxGrade, numericGrade));
+        gradesToSubmit.push({ attemptId: attempt._id, grade: clampedGrade });
       }
     }
 
@@ -256,6 +257,7 @@ const ExerciseListCorrectionPage = () => {
 
   const selectedAnswerObj = studentsAnswers[selectedStudentIndex];
 
+  const hasGradedExercises = exerciseList.exercises?.some((ex) => ex.grade > 0);
   return (
     <>
       {showSuccessNotification && (
@@ -343,13 +345,16 @@ const ExerciseListCorrectionPage = () => {
                       {student.user_id?.name ||
                         (student as unknown as RawStudent).name}
                     </p>
-                    <p
-                      className={`text-sm font-normal leading-normal ${
-                        allGraded ? "text-green-600" : "text-red-500"
-                      } line-clamp-2`}
-                    >
-                      {allGraded ? "Notas Enviadas" : "Notas Pendentes"}
-                    </p>
+
+                    {hasGradedExercises && (
+                      <p
+                        className={`text-sm font-normal leading-normal ${
+                          allGraded ? "text-green-600" : "text-red-500"
+                        } line-clamp-2`}
+                      >
+                        {allGraded ? "Notas Enviadas" : "Notas Pendentes"}
+                      </p>
+                    )}
                   </div>
                 </div>
               );
@@ -380,28 +385,37 @@ const ExerciseListCorrectionPage = () => {
                   )}
                   {exercise.type === "multiple_choice" && (
                     <div>
-                      {exercise.multiple_choice_options?.map((option) => {
-                        const isSelected = answer.trim() === option.trim();
-                        return (
-                          <label
-                            key={option}
-                            className={`flex items-center gap-2 p-2 rounded mb-1 border dark:text-white/90 ${
-                              isSelected
-                                ? "bg-green-300 dark:bg-green-700"
-                                : "bg-gray-100 dark:bg-gray-800"
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              disabled
-                              checked={isSelected}
-                              name={`question-${exercise._id}`}
-                              className="h-4 w-4"
-                            />
-                            <span>{option}</span>
-                          </label>
-                        );
-                      })}
+                      {exercise.multiple_choice_options?.map(
+                        (option, index) => {
+                          const isSelected = answer.trim() === option.trim();
+                          const isCorrect =
+                            exercise.answer.trim() === String(index);
+                          return (
+                            <label
+                              key={option}
+                              className={`flex items-center gap-2 p-2 rounded mb-1 border dark:text-white/90 ${
+                                isSelected
+                                  ? "bg-gray-200 dark:bg-gray-700"
+                                  : "bg-gray-100 dark:bg-gray-800"
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                disabled
+                                checked={isSelected}
+                                name={`question-${exercise._id}`}
+                                className="h-4 w-4"
+                              />
+                              <span>{option}</span>
+                              {isCorrect && (
+                                <span className="ml-auto text-xs font-semibold text-blue-600">
+                                  (Correta)
+                                </span>
+                              )}
+                            </label>
+                          );
+                        }
+                      )}
                     </div>
                   )}
                   {exercise.type === "true_false" &&
@@ -414,6 +428,9 @@ const ExerciseListCorrectionPage = () => {
                           const char = answer[i];
                           const isTrue = char === "V";
                           const isFalse = char === "F";
+                          const correta = alternative.answer
+                            ? "Verdadeiro"
+                            : "Falso";
                           return (
                             <label
                               key={alternative._id}
@@ -453,6 +470,9 @@ const ExerciseListCorrectionPage = () => {
                                     Falso
                                   </span>
                                 </span>
+                                <span className="text-xs font-semibold text-blue-600">
+                                  ({correta})
+                                </span>
                               </div>
                             </label>
                           );
@@ -484,9 +504,6 @@ const ExerciseListCorrectionPage = () => {
                           )
                         }
                         className="border border-gray-300 rounded px-3 py-2 !w-32 dark:text-white/90"
-                        placeholder={`Ex: ${exercise.grade
-                          .toString()
-                          .replace(".", ",")}`}
                         required
                         disabled={!isEditing}
                       />
@@ -501,25 +518,27 @@ const ExerciseListCorrectionPage = () => {
                 </div>
               );
             })}
-            <div className="mb-4 flex justify-end items-center">
-              <div>
-                {!isEditing ? (
-                  <button
-                    onClick={handleEditClick}
-                    className="flex h-10 min-w-[84px] items-center justify-center overflow-hidden rounded-lg bg-yellow-500 hover:bg-yellow-600 px-4 text-sm font-bold leading-normal tracking-wide text-white"
-                  >
-                    <span className="truncate">Editar Notas</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleSubmitGrade}
-                    className="flex h-10 min-w-[84px] items-center justify-center overflow-hidden rounded-lg bg-[#0c77f2] px-4 text-sm font-bold leading-normal tracking-wide text-white"
-                  >
-                    <span className="truncate">Enviar Notas</span>
-                  </button>
-                )}
+            {hasGradedExercises && (
+              <div className="mb-4 flex justify-end items-center">
+                <div>
+                  {!isEditing ? (
+                    <button
+                      onClick={handleEditClick}
+                      className="flex h-10 min-w-[84px] items-center justify-center overflow-hidden rounded-lg bg-yellow-500 hover:bg-yellow-600 px-4 text-sm font-bold leading-normal tracking-wide text-white"
+                    >
+                      <span className="truncate">Editar Notas</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleSubmitGrade}
+                      className="flex h-10 min-w-[84px] items-center justify-center overflow-hidden rounded-lg bg-[#0c77f2] px-4 text-sm font-bold leading-normal tracking-wide text-white"
+                    >
+                      <span className="truncate">Enviar Notas</span>
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

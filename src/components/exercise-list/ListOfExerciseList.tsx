@@ -19,7 +19,8 @@ export default function ListOfExerciseList({
     const result = await httpRequest.getAllExerciseListByLessonPlanId(
       lessonPlanId
     );
-    setLists(result);
+    const sorted = result.sort((a, b) => b._id.localeCompare(a._id));
+    setLists(sorted);
   };
 
   useEffect(() => {
@@ -29,7 +30,7 @@ export default function ListOfExerciseList({
   }, [lessonPlanId]);
 
   return (
-    <div className="space-y-4 px-4">
+    <div className="space-y-4 px-4 mb-4">
       {lists.map((list) => (
         <ExerciseListCard
           key={list._id}

@@ -15,7 +15,8 @@ export default function ExerciseList({ lessonPlanId }: ExerciseListProps) {
   const fetchData = async () => {
     const httpRequest = new HttpRequest();
     const result = await httpRequest.getAllExerciseByLessonPlanId(lessonPlanId);
-    setExercises(result);
+    const sorted = result.sort((a, b) => b._id.localeCompare(a._id));
+    setExercises(sorted);
   };
 
   useEffect(() => {

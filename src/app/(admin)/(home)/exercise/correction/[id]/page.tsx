@@ -172,7 +172,6 @@ const ExerciseCorrectionPage = () => {
       )}
 
       <div className="flex flex-col gap-4 px-6 py-5">
-        {/* Mover o LessonPlanBreadcrumb para o topo */}
         <div className="flex w-full">
           <LessonPlanBreadcrumb
             lessonPlanId={lessonPlanId}
@@ -181,9 +180,7 @@ const ExerciseCorrectionPage = () => {
           />
         </div>
 
-        {/* Flex container para seções lado a lado */}
         <div className="flex flex-1 gap-6">
-          {/* Seção Alunos */}
           <div className="w-80 flex flex-col">
             <h2 className="px-4 pt-5 text-[22px] font-bold leading-tight tracking-tight text-[#111418]">
               Alunos
@@ -237,7 +234,6 @@ const ExerciseCorrectionPage = () => {
             })}
           </div>
 
-          {/* Seção Questão */}
           <div className="flex-1 max-w-[960px] flex flex-col px-2">
             <h1 className="pb-2 pt-4 text-2xl font-bold leading-tight tracking-tight text-[#111418]">
               {exercise.statement}
@@ -255,17 +251,23 @@ const ExerciseCorrectionPage = () => {
                 <div>
                   {exercise.multiple_choice_options?.map((option) => {
                     const isSelected = selectedAnswer === option;
+                    const isCorrect = exercise.answer === option;
 
                     return (
                       <div
                         key={option}
                         className={`p-2 rounded mb-1 border dark:text-white/90 ${
                           isSelected
-                            ? "bg-green-300 dark:bg-green-700"
+                            ? "bg-gray-200 dark:bg-gray-700"
                             : "bg-gray-100 dark:bg-gray-800"
                         }`}
                       >
                         {option}
+                        {isCorrect && (
+                          <span className="ml-2 text-xs font-semibold text-blue-600">
+                            (Correta)
+                          </span>
+                        )}
                       </div>
                     );
                   })}
@@ -280,6 +282,9 @@ const ExerciseCorrectionPage = () => {
                     </h2>
                     {exercise.true_false_options.map((alternative, i) => {
                       const alunoResposta = selectedAnswer[i];
+                      const correta = alternative.answer
+                        ? "Verdadeiro"
+                        : "Falso";
 
                       return (
                         <div
@@ -302,7 +307,10 @@ const ExerciseCorrectionPage = () => {
                               ? "Verdadeiro"
                               : alunoResposta === "F"
                               ? "Falso"
-                              : ""}
+                              : ""}{" "}
+                            <span className="text-xs text-blue-600 font-semibold">
+                              ({correta})
+                            </span>
                           </span>
                         </div>
                       );
