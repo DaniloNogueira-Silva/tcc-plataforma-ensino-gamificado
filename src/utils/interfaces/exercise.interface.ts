@@ -6,6 +6,7 @@ export interface IExercise {
   showAnswer: boolean;
   due_date: string;
   grade: number;
+  difficulty: "easy" | "medium" | "hard";
   points: number;
   teacher_id: string;
   multiple_choice_options?: string[];

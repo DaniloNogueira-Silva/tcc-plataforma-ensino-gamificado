@@ -60,6 +60,13 @@ export default function UserInfoCard({ user }: UserInfoCardProps) {
                 {totalActivities || 0}
               </p>
             </div>
+
+            <div>
+              <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">Pontos</p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {user?.points || 0}
+              </p>
+            </div>
           </div>
         </div>
       </div>

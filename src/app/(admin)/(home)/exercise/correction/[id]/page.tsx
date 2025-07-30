@@ -37,7 +37,6 @@ const ExerciseCorrectionPage = () => {
     async function fetchStudentsAnswers() {
       if (!exerciseId) return;
       const data = await httpRequest.findAllStudentsByExerciseId(exerciseId);
-      console.log(data);
       setStudentsAnswers(data);
       setSelectedStudentIndex(0);
     }
@@ -74,7 +73,6 @@ const ExerciseCorrectionPage = () => {
 
   useEffect(() => {
     if (studentsAnswers.length === 0) return;
-    console.log("studentsAnswers", studentsAnswers);
     const currentStudent = studentsAnswers[selectedStudentIndex];
     if (!currentStudent) return;
 

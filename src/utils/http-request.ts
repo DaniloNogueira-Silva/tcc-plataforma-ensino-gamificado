@@ -426,10 +426,11 @@ export class HttpRequest {
     answer: string,
     showAnswer: boolean,
     teacher_id: string,
+    difficulty: "easy" | "medium" | "hard",
+    grade: number,
     multiple_choice_options?: string[],
     true_false_options?: Options[],
     lesson_plan_ids?: string[],
-    grade?: number,
     due_date?: string,
     points?: number
   ): Promise<IExercise | null> {
@@ -444,6 +445,7 @@ export class HttpRequest {
           answer,
           showAnswer,
           teacher_id,
+          difficulty,
           grade,
           due_date,
           points,
@@ -475,6 +477,7 @@ export class HttpRequest {
     true_false_options?: Options[],
     lesson_plan_ids?: string[],
     grade?: number,
+    difficulty?: "easy" | "medium" | "hard",
     due_date?: string,
     points?: number
   ): Promise<IExercise | null> {
@@ -489,6 +492,7 @@ export class HttpRequest {
           answer: finalAnswer,
           showAnswer,
           grade,
+          difficulty,
           due_date,
           points,
           multiple_choice_options,

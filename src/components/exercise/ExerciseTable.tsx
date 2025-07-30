@@ -73,6 +73,12 @@ export default function ExerciseTable() {
     true_false: "Verdadeiro ou Falso",
   };
 
+  const difficultyLabels: Record<string, string> = {
+    easy: "Fácil",
+    medium: "Médio",
+    hard: "Difícil",
+  };
+
   const handleEdit = (exercise: IExercise) => {
     router.push(`/exercise/form?id=${exercise._id}`);
   };
@@ -121,7 +127,7 @@ export default function ExerciseTable() {
                 isHeader
                 className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400"
               >
-                Pontos
+                Dificuldade
               </TableCell>
               <TableCell
                 isHeader
@@ -160,7 +166,7 @@ export default function ExerciseTable() {
                   {exercise.grade}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
-                  {exercise.points}
+                  {difficultyLabels[exercise.difficulty] || exercise.difficulty}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
                   {typeLabels[exercise.type] || "Tipo Desconhecido"}

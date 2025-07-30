@@ -36,6 +36,9 @@ const ExerciseFormPage = () => {
   const [answer, setAnswer] = useState("");
   const [showAnswer, setShowAnswer] = useState(false);
   const [grade, setGrade] = useState(0);
+  const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">(
+    "easy"
+  );
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [lessonPlanIds, setLessonPlanIds] = useState<string[]>([]);
   const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
@@ -83,6 +86,7 @@ const ExerciseFormPage = () => {
       setStatement(initialData.statement || "");
       setType(initialData.type || "open");
       setGrade(initialData.grade || 0);
+      setDifficulty(initialData.difficulty || "easy");
       setAnswer(initialData.answer || "");
       setShowAnswer(initialData.showAnswer || false);
       setLessonPlanIds(initialData.lesson_plan_ids || []);
@@ -179,7 +183,8 @@ const ExerciseFormPage = () => {
           type === "multiple_choice" ? mcOptions : undefined,
           type === "true_false" ? tfOptions : undefined,
           lessonPlanIds.length ? lessonPlanIds : undefined,
-          grade
+          grade,
+          difficulty
         );
       } else {
         createdExercise = await httpRequest.createExercise(
@@ -188,10 +193,11 @@ const ExerciseFormPage = () => {
           finalAnswer,
           showAnswer,
           teacherId,
+          difficulty,
+          grade,
           type === "multiple_choice" ? mcOptions : undefined,
           type === "true_false" ? tfOptions : undefined,
-          lessonPlanIds.length ? lessonPlanIds : undefined,
-          grade
+          lessonPlanIds.length ? lessonPlanIds : undefined
         );
       }
 
@@ -417,6 +423,25 @@ const ExerciseFormPage = () => {
               onChange={(selected) => setLessonPlanIds(selected)}
               disabled={saving}
             />
+          </div>
+
+          <div className="col-span-1">
+            <div className="flex items-center gap-1 mb-1">
+              <span className="text-sm font-medium text-gray-800 dark:text-white">
+                Dificuldade*
+              </span>
+            </div>
+            <select
+              value={difficulty}
+              onChange={(e) =>
+                setDifficulty(e.target.value as "easy" | "medium" | "hard")
+              }
+              className="mb-3 w-full rounded-md border border-gray-300 p-2 dark:bg-navy-700 dark:text-white"
+            >
+              <option value="easy">Fácil</option>
+              <option value="medium">Médio</option>
+              <option value="hard">Difícil</option>
+            </select>
           </div>
 
           <div className="col-span-1">
