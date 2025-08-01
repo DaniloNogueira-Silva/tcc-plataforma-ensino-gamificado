@@ -12,6 +12,7 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { IRanking } from "./interfaces/ranking.interface";
 import { IExerciseListAttempt } from "./interfaces/exercise_list_attempt.interface";
+import { IUploadResponse } from "./interfaces/upload.interface";
 
 export class HttpRequest {
   async getToken(): Promise<string | undefined> {
@@ -163,11 +164,10 @@ export class HttpRequest {
     name: string,
     due_date: string,
     content: string,
-    links: string,
-    points: number,
     type: string,
     grade: number,
     teacher_id: string,
+    links?: string,
     lesson_plan_ids?: string[]
   ): Promise<ILesson | null> {
     try {
@@ -179,11 +179,10 @@ export class HttpRequest {
           name,
           due_date,
           content,
-          links,
-          points,
           type,
           grade,
           teacher_id,
+          links,
           lesson_plan_ids,
         },
         {
@@ -266,7 +265,6 @@ export class HttpRequest {
     due_date?: string,
     content?: string,
     links?: string,
-    points?: number,
     type?: string,
     grade?: number,
     lesson_plan_ids?: string[]
@@ -281,7 +279,6 @@ export class HttpRequest {
           due_date,
           content,
           links,
-          points,
           type,
           grade,
           lesson_plan_ids,
@@ -305,10 +302,9 @@ export class HttpRequest {
     name?: string,
     due_date?: string,
     content?: string,
-    links?: string,
-    points?: number,
     type?: string,
     grade?: number,
+    links?: string,
     lesson_plan_ids?: string[]
   ): Promise<IExercise | null> {
     try {
@@ -320,10 +316,9 @@ export class HttpRequest {
           name,
           due_date,
           content,
-          links,
-          points,
           type,
           grade,
+          links,
           lesson_plan_ids,
         },
         {
@@ -431,8 +426,7 @@ export class HttpRequest {
     multiple_choice_options?: string[],
     true_false_options?: Options[],
     lesson_plan_ids?: string[],
-    due_date?: string,
-    points?: number
+    due_date?: string
   ): Promise<IExercise | null> {
     try {
       const token = await this.getToken();
@@ -448,7 +442,6 @@ export class HttpRequest {
           difficulty,
           grade,
           due_date,
-          points,
           multiple_choice_options,
           true_false_options,
           lesson_plan_ids,
@@ -478,8 +471,7 @@ export class HttpRequest {
     lesson_plan_ids?: string[],
     grade?: number,
     difficulty?: "easy" | "medium" | "hard",
-    due_date?: string,
-    points?: number
+    due_date?: string
   ): Promise<IExercise | null> {
     try {
       const token = await this.getToken();
@@ -494,7 +486,6 @@ export class HttpRequest {
           grade,
           difficulty,
           due_date,
-          points,
           multiple_choice_options,
           true_false_options,
           lesson_plan_ids,
@@ -599,8 +590,7 @@ export class HttpRequest {
     exercises_ids: string[],
     lesson_plan_ids?: string[],
     type?: string,
-    due_date?: string,
-    points?: number
+    due_date?: string
   ): Promise<IExerciseList | null> {
     try {
       const token = await this.getToken();
@@ -613,7 +603,6 @@ export class HttpRequest {
           type,
           teacher_id,
           due_date,
-          points,
           exercises_ids,
           lesson_plan_ids,
         },
@@ -793,8 +782,7 @@ export class HttpRequest {
     exercises_ids?: string[],
     lesson_plan_ids?: string[],
     type?: string,
-    due_date?: string,
-    points?: number
+    due_date?: string
   ): Promise<IExerciseList | null> {
     try {
       const token = await this.getToken();
@@ -809,7 +797,6 @@ export class HttpRequest {
           lesson_plan_ids,
           type,
           due_date,
-          points,
         },
         {
           headers: {
@@ -1108,6 +1095,28 @@ export class HttpRequest {
     } catch (error) {
       console.error("Erro ao atualizar avatar:", error);
       throw new Error("Ocorreu um erro ao atualizar avatar: " + error);
+    }
+  }
+
+  async uploadFile(file: File): Promise<IUploadResponse> {
+    try {
+      const token = await this.getToken();
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/supabase/upload`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao enviar arquivo:", error);
+      throw new Error("Ocorreu um erro ao enviar arquivo: " + error);
     }
   }
 

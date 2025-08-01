@@ -6,6 +6,7 @@ import { HttpRequest } from "@/utils/http-request";
 import { ILesson } from "@/utils/interfaces/lesson.interface";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import LessonPlanBreadcrumb from "@/components/ui/breadcrumb/LessonPlanBreadcrumb";
+import FileInput from "@/components/form/input/FileInput";
 
 const LessonDetailsPage = () => {
   const params = useParams();
@@ -13,7 +14,26 @@ const LessonDetailsPage = () => {
   const [lesson, setLesson] = useState<ILesson | null>(null);
   const [lessonPlanId, setLessonPlanId] = useState<string | null>(null);
   const [lessonPlanName, setLessonPlanName] = useState<string | null>(null);
+  const [studentFile, setStudentFile] = useState<File | null>(null);
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStudentFile(e.target.files?.[0] || null);
+  };
+
+  const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!studentFile) return;
+    try {
+      const httpRequest = new HttpRequest();
+      await httpRequest.uploadFile(studentFile);
+      setUploadMessage("Arquivo enviado com sucesso!");
+      setStudentFile(null);
+    } catch (error) {
+      console.error("Erro ao enviar arquivo:", error);
+      setUploadMessage("Falha ao enviar arquivo.");
+    }
+  };
   useEffect(() => {
     async function fetchLesson() {
       if (!lessonId) return;
@@ -50,6 +70,9 @@ const LessonDetailsPage = () => {
     ? new Date(lesson.due_date).toLocaleDateString()
     : null;
 
+
+  const cleanLinks = (lesson.links ?? []).map(l => (l ?? '').trim()).filter(Boolean);
+
   return (
     <div className="px-40 flex flex-1 justify-center py-5">
       <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
@@ -76,7 +99,7 @@ const LessonDetailsPage = () => {
         <p className="text-[#0e141b] text-base font-normal leading-normal pb-3 pt-1 px-4 whitespace-pre-wrap break-words text-justify">
           {lesson.content}
         </p>
-        {lesson.links && (
+        {(cleanLinks.length ?? 0) > 0 && (
           <>
             <h2 className="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
               Recursos
@@ -108,13 +131,35 @@ const LessonDetailsPage = () => {
                   href={lesson.links}
                   target="_blank"
                   rel="noopener noreferrer"
+                  download
                   className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-4 bg-[#e7edf3] text-[#0e141b] text-sm font-medium leading-normal w-fit"
                 >
-                  <span className="truncate">Abrir</span>
+                  <span className="truncate">Baixar</span>
                 </a>
               </div>
             </div>
           </>
+        )}
+        {lesson.type === "school_work" && (
+          <form
+            onSubmit={handleUpload}
+            className="flex flex-col gap-3 px-4 pt-5"
+          >
+            <h2 className="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3">
+              Enviar Trabalho
+            </h2>
+            <FileInput onChange={handleFileChange} />
+            {uploadMessage && (
+              <p className="text-green-600 text-sm">{uploadMessage}</p>
+            )}
+            <button
+              type="submit"
+              disabled={!studentFile}
+              className="flex h-8 w-fit items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white disabled:opacity-50"
+            >
+              Enviar
+            </button>
+          </form>
         )}
       </div>
     </div>

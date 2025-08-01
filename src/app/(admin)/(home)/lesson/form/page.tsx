@@ -32,9 +32,8 @@ const LessonForm = () => {
 
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
-  const [points, setPoints] = useState(0);
   const [dueDate, setDueDate] = useState("");
-  const [links, setLinks] = useState("");
+  const [links, setLinks] = useState();
   const [linksFile, setLinksFile] = useState<File | null>(null);
   const [type, setType] = useState("");
   const [grade, setGrade] = useState(0);
@@ -77,9 +76,8 @@ const LessonForm = () => {
         : "";
       setName(initialData.name || "");
       setContent(initialData.content || "");
-      setPoints(initialData.points || 0);
       setDueDate(formattedDueDate);
-      setLinks(initialData.links || "");
+      setLinks(initialData.links);
       setType(initialData.type || "");
       setGrade(initialData.grade || 0);
       setLessonPlanIds(initialData.lesson_plan_ids || []);
@@ -123,19 +121,23 @@ const LessonForm = () => {
 
     try {
       const httpRequest = new HttpRequest();
+      let linkData = links;
+      if (linksFile) {
+        const upload = await httpRequest.uploadFile(linksFile);
+        linkData = upload.publicUrl;
+      }
+
       let createdLesson;
-      const linkData = linksFile ? linksFile : links;
-      setSaving(false);
+      console.log(initialData)
       if (initialData?._id) {
         createdLesson = await httpRequest.updateLessonAndLessonPlans(
           initialData._id,
           name,
           dueDate,
           content,
-          linkData,
-          points,
           type,
           grade,
+          linkData,
           lessonPlanIds.length ? lessonPlanIds : undefined
         );
       } else {
@@ -143,11 +145,11 @@ const LessonForm = () => {
           name,
           dueDate,
           content,
-          linkData,
-          points,
+
           type,
           grade,
           teacherId,
+          linkData,
           lessonPlanIds.length ? lessonPlanIds : undefined
         );
       }
@@ -226,7 +228,7 @@ const LessonForm = () => {
               <option value="" disabled>
                 Selecione o tipo de aula
               </option>
-              <option value="reading">Leitura</option>
+              <option value="lesson">Aula</option>
               <option value="school_work">Trabalho</option>
             </select>
           </div>
