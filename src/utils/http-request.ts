@@ -88,6 +88,24 @@ export class HttpRequest {
     return response.data;
   }
 
+  async getLessonPlanById(id: string): Promise<ILessonPlan | null> {
+    try {
+      const token = await this.getToken();
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/lesson-plans/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar o plano de aula:", error);
+      throw error;
+    }
+  }
+
   async createLessonPlan(
     name: string,
     icon: string
@@ -156,6 +174,31 @@ export class HttpRequest {
       return response.data;
     } catch (error) {
       console.error("Erro ao deletar o plano de aula:", error);
+      throw error;
+    }
+  }
+
+  async inviteUserToLessonPlan(
+    lesson_plan_id: string,
+    user_id: string
+  ): Promise<any> {
+    try {
+      const token = await this.getToken();
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/lesson-plans/inviteUser`,
+        {
+          lesson_plan_id,
+          user_id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao entrar no plano de aula:", error);
       throw error;
     }
   }
