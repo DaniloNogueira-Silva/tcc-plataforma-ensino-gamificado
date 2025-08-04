@@ -6,13 +6,7 @@ type LessonCardProps = {
   lessonId: string;
   name: string;
   content: string;
-  points: number;
-  dueDate: string;
-  links: string;
   type: string;
-  grade: number;
-  lessonPlanId: string;
-  onUpdateSuccess: () => void;
 };
 
 const LessonCard: React.FC<LessonCardProps> = ({

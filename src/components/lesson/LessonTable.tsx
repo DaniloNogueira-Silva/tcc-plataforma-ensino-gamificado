@@ -48,6 +48,22 @@ export default function LessonTable() {
     return date.toLocaleDateString("pt-BR");
   }
 
+  function getFileNameFromUrl(url?: string): string {
+    if (!url) return "Nome de arquivo inválido";
+
+    try {
+      const decodedUrl = decodeURIComponent(url);
+      const fileNameWithTimestamp = decodedUrl.substring(
+        decodedUrl.lastIndexOf("/") + 1
+      );
+      const fileName = fileNameWithTimestamp.replace(/^\d+-/, "");
+      return fileName;
+    } catch (error) {
+      console.error("URL do arquivo inválida:", url, error);
+      return "Nome de arquivo inválido";
+    }
+  }
+
   function getLessonPlanNamesByExercise(exerciseId: string): string {
     const associatedPlans = lessonPlanContents.filter(
       (assoc) => assoc.content_id === exerciseId
@@ -124,6 +140,12 @@ export default function LessonTable() {
                 isHeader
                 className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400"
               >
+                Arquivo
+              </TableCell>
+              <TableCell
+                isHeader
+                className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400"
+              >
                 Links
               </TableCell>
               <TableCell
@@ -166,7 +188,27 @@ export default function LessonTable() {
                   {formatGrade(lesson.grade)}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
-                  {lesson.links}
+                  {lesson.file ? (
+                    <a
+                      href={lesson.file}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="
+        font-medium text-sky-600 no-underline
+        hover:text-sky-800 hover:font-semibold
+        dark:text-sky-400 dark:hover:text-sky-200
+        transition-all duration-200 ease-in-out
+      "
+                      title={getFileNameFromUrl(lesson.file)}
+                    >
+                      {getFileNameFromUrl(lesson.file)}
+                    </a>
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
+                  {lesson.links?.join(", ")}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
                   {formatPoints(lesson.points)}

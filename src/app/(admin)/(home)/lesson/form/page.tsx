@@ -33,8 +33,8 @@ const LessonForm = () => {
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [links, setLinks] = useState();
-  const [linksFile, setLinksFile] = useState<File | null>(null);
+  const [links, setLinks] = useState<string>("");
+  const [file, setFile] = useState<File | null>(null);
   const [type, setType] = useState("");
   const [grade, setGrade] = useState(0);
   const [lessonPlanIds, setLessonPlanIds] = useState<string[]>([]);
@@ -77,7 +77,7 @@ const LessonForm = () => {
       setName(initialData.name || "");
       setContent(initialData.content || "");
       setDueDate(formattedDueDate);
-      setLinks(initialData.links);
+      setLinks((initialData.links || []).join("\n"));
       setType(initialData.type || "");
       setGrade(initialData.grade || 0);
       setLessonPlanIds(initialData.lesson_plan_ids || []);
@@ -121,14 +121,19 @@ const LessonForm = () => {
 
     try {
       const httpRequest = new HttpRequest();
-      let linkData = links;
-      if (linksFile) {
-        const upload = await httpRequest.uploadFile(linksFile);
-        linkData = upload.publicUrl;
+      let fileUrl = initialData?.file;
+      if (file) {
+        const upload = await httpRequest.uploadFile(file);
+        fileUrl = upload.publicUrl;
       }
+      const linksArray = links
+        ? links
+            .split("\n")
+            .map((l) => l.trim())
+            .filter(Boolean)
+        : undefined;
 
       let createdLesson;
-      console.log(initialData)
       if (initialData?._id) {
         createdLesson = await httpRequest.updateLessonAndLessonPlans(
           initialData._id,
@@ -137,7 +142,8 @@ const LessonForm = () => {
           content,
           type,
           grade,
-          linkData,
+          fileUrl,
+          linksArray,
           lessonPlanIds.length ? lessonPlanIds : undefined
         );
       } else {
@@ -145,11 +151,11 @@ const LessonForm = () => {
           name,
           dueDate,
           content,
-
           type,
           grade,
           teacherId,
-          linkData,
+          fileUrl,
+          linksArray,
           lessonPlanIds.length ? lessonPlanIds : undefined
         );
       }
@@ -195,15 +201,13 @@ const LessonForm = () => {
 
           <div className="col-span-1">
             <Label>Upload de Arquivo</Label>
-            <FileInput
-              onChange={(e) => setLinksFile(e.target.files?.[0] || null)}
-            />
-            <Label className="mt-2">Link (opcional)</Label>
-            <Input
-              type="text"
+            <FileInput onChange={(e) => setFile(e.target.files?.[0] || null)} />
+            <Label className="mt-2">Links (um por linha)</Label>
+            <TextArea
               placeholder="Digite links relacionados à aula"
-              defaultValue={links}
-              onChange={(e) => setLinks(e.target.value)}
+              value={links}
+              onChange={(e) => setLinks(e)}
+              rows={3}
               required={false}
             />
           </div>

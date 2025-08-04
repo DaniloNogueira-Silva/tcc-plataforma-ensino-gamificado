@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { HttpRequest } from "@/utils/http-request";
 import Input from "@/components/form/input/InputField";
+import TextArea from "@/components/form/input/TextArea";
+import FileInput from "@/components/form/input/FileInput";
 import Label from "@/components/form/Label";
 import { Modal } from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
@@ -11,7 +13,6 @@ import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import { ILesson } from "@/utils/interfaces/lesson.interface";
 import { Tooltip } from "../ui/tooltip/Tooltip";
 import { HelpCircle } from "lucide-react";
-
 
 interface TokenPayload {
   _id: string;
@@ -37,24 +38,25 @@ const LessonForm = ({
   const [content, setContent] = useState("");
   const [points, setPoints] = useState(0);
   const [dueDate, setDueDate] = useState("");
-  const [links, setLinks] = useState("");
+  const [links, setLinks] = useState<string>("");
+  const [file, setFile] = useState<File | null>(null);
   const [type, setType] = useState("");
   const [grade, setGrade] = useState(0);
-  const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]); 
-  const [selectedLessonPlan, setSelectedLessonPlan] = useState(""); 
+  const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
+  const [selectedLessonPlan, setSelectedLessonPlan] = useState("");
   const [loading, setLoading] = useState(false);
   const [teacherId, setTeacherId] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialData) {
-      const formattedDueDate = initialData.due_date 
-      ? new Date(initialData.due_date).toISOString().split('T')[0] // Formato yyyy-MM-dd
-      : "";
+      const formattedDueDate = initialData.due_date
+        ? new Date(initialData.due_date).toISOString().split("T")[0]
+        : "";
       setName(initialData.name || "");
       setContent(initialData.content || "");
       setPoints(initialData.points || 0);
       setDueDate(formattedDueDate);
-      setLinks(initialData.links || "");
+      setLinks((initialData.links || []).join("\n"));
       setType(initialData.type || "");
       setGrade(initialData.grade || 0);
       setSelectedLessonPlan(initialData.lesson_plan_id || "");
@@ -94,6 +96,18 @@ const LessonForm = ({
 
     try {
       const httpRequest = new HttpRequest();
+      let fileUrl = initialData?.file;
+      if (file) {
+        const upload = await httpRequest.uploadFile(file);
+        fileUrl = upload.publicUrl;
+      }
+      const linksArray = links
+        ? links
+            .split("\n")
+            .map((l) => l.trim())
+            .filter(Boolean)
+        : undefined;
+
       let createdLesson;
       if (initialData?._id) {
         createdLesson = await httpRequest.updateLesson(
@@ -101,23 +115,23 @@ const LessonForm = ({
           name,
           dueDate,
           content,
-          links,
-          points,
+          fileUrl,
+          linksArray,
           type,
           grade,
-          selectedLessonPlan
+          selectedLessonPlan ? [selectedLessonPlan] : undefined
         );
       } else {
         createdLesson = await httpRequest.createLesson(
           name,
           dueDate,
           content,
-          links,
-          points,
           type,
           grade,
           teacherId,
-          selectedLessonPlan
+          fileUrl,
+          linksArray,
+          selectedLessonPlan ? [selectedLessonPlan] : undefined
         );
       }
 
@@ -190,12 +204,14 @@ const LessonForm = ({
           </div>
 
           <div className="col-span-1">
-            <Label>Links</Label>
-            <Input
-              type="text"
+            <Label>Upload de Arquivo</Label>
+            <FileInput onChange={(e) => setFile(e.target.files?.[0] || null)} />
+            <Label className="mt-2">Links (um por linha)</Label>
+            <TextArea
               placeholder="Digite links relacionados à aula"
-              defaultValue={links}
-              onChange={(e) => setLinks(e.target.value)}
+              value={links}
+              onChange={(e) => setLinks(e)}
+              rows={3}
             />
           </div>
 
@@ -223,7 +239,11 @@ const LessonForm = ({
             <span className="text-sm font-medium text-gray-800 dark:text-white">
               Plano de Aula*
             </span>
-            <Tooltip position="right" width="330px" content="Isso define a qual plano de aula o exercício será atribuído. Pode ser deixado em branco, se preferir não vincular a nenhum.">
+            <Tooltip
+              position="right"
+              width="330px"
+              content="Isso define a qual plano de aula o exercício será atribuído. Pode ser deixado em branco, se preferir não vincular a nenhum."
+            >
               <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
             </Tooltip>
             <select

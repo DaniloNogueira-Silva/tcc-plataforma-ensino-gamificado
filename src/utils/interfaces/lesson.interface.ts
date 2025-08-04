@@ -4,7 +4,8 @@ export interface ILesson {
   content: string;
   points: number;
   due_date: string;
-  links: string[];
+  file?: string | null;
+  links?: string[];
   type: string;
   grade: number;
   lesson_plan_ids: string[];

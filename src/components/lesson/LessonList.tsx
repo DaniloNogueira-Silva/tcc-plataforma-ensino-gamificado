@@ -32,13 +32,7 @@ export default function LessonList({ lessonPlanId }: LessonListProps) {
           lessonId={lesson._id}
           name={lesson.name}
           content={lesson.content}
-          points={lesson.points}
-          dueDate={lesson.due_date}
-          links={lesson.links}
           type={lesson.type}
-          grade={lesson.grade}
-          lessonPlanId={lesson.lesson_plan_ids}
-          onUpdateSuccess={fetchData}
         />
       ))}
     </div>

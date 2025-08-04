@@ -167,7 +167,8 @@ export class HttpRequest {
     type: string,
     grade: number,
     teacher_id: string,
-    links?: string,
+    file?: string,
+    links?: string[],
     lesson_plan_ids?: string[]
   ): Promise<ILesson | null> {
     try {
@@ -182,6 +183,7 @@ export class HttpRequest {
           type,
           grade,
           teacher_id,
+          file,
           links,
           lesson_plan_ids,
         },
@@ -264,7 +266,8 @@ export class HttpRequest {
     name?: string,
     due_date?: string,
     content?: string,
-    links?: string,
+    file?: string,
+    links?: string[],
     type?: string,
     grade?: number,
     lesson_plan_ids?: string[]
@@ -278,6 +281,7 @@ export class HttpRequest {
           name,
           due_date,
           content,
+          file,
           links,
           type,
           grade,
@@ -304,7 +308,8 @@ export class HttpRequest {
     content?: string,
     type?: string,
     grade?: number,
-    links?: string,
+    file?: string,
+    links?: string[],
     lesson_plan_ids?: string[]
   ): Promise<IExercise | null> {
     try {
@@ -318,6 +323,7 @@ export class HttpRequest {
           content,
           type,
           grade,
+          file,
           links,
           lesson_plan_ids,
         },

@@ -157,10 +157,10 @@ export default function DetailsPage() {
         lesson.name,
         dueDate,
         lesson.content || "",
-        lesson.links || "",
-        points,
         lesson.type || "",
         grade,
+        lesson.file,
+        lesson.links,
         [lessonPlanId]
       );
     } else {
