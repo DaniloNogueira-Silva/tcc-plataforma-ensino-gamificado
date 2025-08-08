@@ -3,5 +3,5 @@ export interface IAvatar {
     user_id: string;
     torso: string;
     head: string;
-    eyes: string;
+    arm: string;
 }

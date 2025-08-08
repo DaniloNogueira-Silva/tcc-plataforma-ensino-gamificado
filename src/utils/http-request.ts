@@ -3,16 +3,17 @@ import {
   ILessonPlan,
   ILessonPlanByRole,
 } from "./interfaces/lesson-plan.interface";
-import { IExerciseList } from "./interfaces/exercise_list.interface";
+
 import { IAvatar } from "./interfaces/avatar.interface";
+import { IExerciseList } from "./interfaces/exercise_list.interface";
+import { IExerciseListAttempt } from "./interfaces/exercise_list_attempt.interface";
 import { ILesson } from "./interfaces/lesson.interface";
+import { IRanking } from "./interfaces/ranking.interface";
+import { IUploadResponse } from "./interfaces/upload.interface";
 import { IUser } from "./interfaces/user.interface";
 import { TokenPayload } from "@/app/(admin)/(home)/exercise/form/page";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import { IRanking } from "./interfaces/ranking.interface";
-import { IExerciseListAttempt } from "./interfaces/exercise_list_attempt.interface";
-import { IUploadResponse } from "./interfaces/upload.interface";
 
 export class HttpRequest {
   async getToken(): Promise<string | undefined> {
@@ -1079,7 +1080,6 @@ export class HttpRequest {
   async createAvatar(avatar: {
     torso: string;
     head: string;
-    eyes: string;
   }): Promise<IAvatar | null> {
     try {
       const token = await this.getToken();
@@ -1118,7 +1118,7 @@ export class HttpRequest {
           },
         }
       );
-
+      console.log(response);
       return response.data;
     } catch (error) {
       console.error("Erro ao buscar avatar:", error);

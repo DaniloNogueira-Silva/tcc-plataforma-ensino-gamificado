@@ -13,8 +13,8 @@ import {
 import Button from "../ui/button/Button";
 import { HttpRequest } from "@/utils/http-request";
 import { ILesson } from "@/utils/interfaces/lesson.interface";
-import { useRouter } from "next/navigation";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
+import { useRouter } from "next/navigation";
 
 export default function LessonTable() {
   const [lessons, setLessons] = useState<ILesson[]>([]);
@@ -33,7 +33,7 @@ export default function LessonTable() {
           httpRequest.getLessonPlansByRole(),
           httpRequest.getAllLessonPlanContent(),
         ]);
-      setLessons(foundLessons);
+      setLessons(foundLessons || []);
       setLessonPlans(foundLessonPlans);
       setLessonPlanContents(foundLessonPlanContents);
     };

@@ -8,9 +8,9 @@ import { IAvatar } from "@/utils/interfaces/avatar.interface";
 import { Modal } from "../ui/modal";
 import { useModal } from "../../hooks/useModal";
 
-const torsoOptions = ["torso_dourado", "torso_prata"];
-const headOptions = ["cabelo_1", "capacete_dourado", "capacete_prata"];
-const eyeOptions = ["olho_1", "olho_2", "olho_3"];
+const torsoOptions = ["dark_armor", "steel_armor", "dragon_armor", "florest_armor"];
+const headOptions = ["dark_helmet", "steel_helmet", "dragon_helmet", "florest_helmet"];
+const armOptions = ["dark_arm", "steel_arm", "dragon_arm", "florest_arm"];
 
 export default function UserAvatarCard() {
   const { isOpen, openModal, closeModal } = useModal();
@@ -19,22 +19,15 @@ export default function UserAvatarCard() {
   // Estados para edição na modal
   const [torsoIndex, setTorsoIndex] = useState(0);
   const [headIndex, setHeadIndex] = useState(0);
-  const [eyeIndex, setEyeIndex] = useState(0);
+  const [armIndex, setArmIndex] = useState(0);
 
   // Estados para opções salvas e exibidas fora da modal
   const [savedTorso, setSavedTorso] = useState(torsoOptions[0]);
   const [savedHead, setSavedHead] = useState(headOptions[0]);
-  const [savedEye, setSavedEye] = useState(eyeOptions[0]);
+  const [savedArm, setSavedArm] = useState(armOptions[0]);
 
   // Guarda avatar salvo retornado da API (para saber se deve criar ou atualizar)
   const [avatarFromApi, setAvatarFromApi] = useState<IAvatar | null>(null);
-
-  // Helpers para saber se tem cabelo e qual olho mostrar
-  const isHair = headOptions[headIndex].startsWith("cabelo");
-  const currentEye = isHair ? eyeOptions[eyeIndex] : null;
-
-  const isSavedHair = savedHead.startsWith("cabelo");
-  const savedEyeFinal = isSavedHair ? savedEye : null;
 
   useEffect(() => {
     async function loadAvatar() {
@@ -46,16 +39,15 @@ export default function UserAvatarCard() {
           // Atualiza os estados salvos para renderizar o avatar na tela
           setSavedTorso(avatar.torso);
           setSavedHead(avatar.head);
-          setSavedEye(avatar.eyes);
+          setSavedArm(avatar.arm);
 
           // Também atualiza os estados da modal para permitir edição com os valores atuais
           const torsoIdx = torsoOptions.indexOf(avatar.torso);
           const headIdx = headOptions.indexOf(avatar.head);
-          const eyeIdx = eyeOptions.indexOf(avatar.eyes);
-
+          const armIdx = armOptions.indexOf(avatar.arm);
+          if (armIdx !== -1) setArmIndex(armIdx);
           if (torsoIdx !== -1) setTorsoIndex(torsoIdx);
           if (headIdx !== -1) setHeadIndex(headIdx);
-          if (eyeIdx !== -1) setEyeIndex(eyeIdx);
         }
       } catch (error) {
         console.error("Erro ao carregar avatar no componente:", error);
@@ -78,21 +70,17 @@ export default function UserAvatarCard() {
     setIndex(newIndex);
   };
 
-  // Salvar no backend: cria ou atualiza conforme existência
   async function handleSave() {
     const avatarToSave = {
       torso: torsoOptions[torsoIndex],
       head: headOptions[headIndex],
-      eyes: headOptions[headIndex].startsWith("cabelo") ? eyeOptions[eyeIndex] : "",
     };
 
     try {
       let savedAvatar: IAvatar | null = null;
       if (!avatarFromApi) {
-        // cria
         savedAvatar = await http.createAvatar(avatarToSave);
       } else {
-        // atualiza - envia o id também para garantir
         savedAvatar = await http.updateAvatar({ ...avatarFromApi, ...avatarToSave });
       }
 
@@ -100,12 +88,10 @@ export default function UserAvatarCard() {
         setAvatarFromApi(savedAvatar);
         setSavedTorso(savedAvatar.torso);
         setSavedHead(savedAvatar.head);
-        setSavedEye(savedAvatar.eyes);
         closeModal();
       }
     } catch (error) {
       console.error("Erro ao salvar avatar:", error);
-      // Aqui pode exibir uma notificação de erro se quiser
     }
   }
 
@@ -115,29 +101,17 @@ export default function UserAvatarCard() {
       <div className="p-4 border border-gray-200 rounded-2xl dark:border-gray-800 w-full max-w-sm flex flex-col items-center gap-4">
         <div className="relative w-56 h-56">
           <img
-            src={`/images/avatar_components/${savedTorso}.svg`}
+            src={`/images/avatar_components/${savedTorso}.png`}
             alt="torso"
             className="absolute w-full h-full object-contain"
+            style={{ top: "17%", position: "absolute", width: "90%", right: "4.5%" }}
           />
           <img
-            src={`/images/avatar_components/${savedHead}.svg`}
+            src={`/images/avatar_components/${savedHead}.png`}
             alt="head"
             className="absolute w-full h-full object-contain"
-            style={{ top: "-20%", position: "absolute", width: "60%", right: "20%" }}
+            style={{ top: "-30%", position: "absolute", width: "50%", right: "25%" }}
           />
-          {savedEyeFinal && (
-            <img
-              src={`/images/avatar_components/${savedEyeFinal}.svg`}
-              alt="eyes"
-              className="absolute object-contain"
-              style={{
-                width: "40%",
-                left: "30%",
-                top: "22%",
-                transform: "scale(0.5)",
-              }}
-            />
-          )}
         </div>
 
         <Button onClick={openModal}>Editar Avatar</Button>
@@ -148,29 +122,18 @@ export default function UserAvatarCard() {
         <div className="w-full max-w-md rounded-3xl bg-white p-6 dark:bg-gray-900 flex flex-col gap-6 items-center">
           <div className="relative w-56 h-56">
             <img
-              src={`/images/avatar_components/${torsoOptions[torsoIndex]}.svg`}
+              src={`/images/avatar_components/${torsoOptions[torsoIndex]}.png`}
               alt="torso"
               className="absolute w-full h-full object-contain"
+              style={{ top: "17%", position: "absolute", width: "90%", right: "4.5%" }}
+
             />
             <img
-              src={`/images/avatar_components/${headOptions[headIndex]}.svg`}
+              src={`/images/avatar_components/${headOptions[headIndex]}.png`}
               alt="head"
               className="absolute w-full h-full object-contain"
-              style={{ top: "-20%", position: "absolute", width: "60%", right: "20%" }}
+              style={{ top: "-30%", position: "absolute", width: "50%", right: "25%" }}
             />
-            {currentEye && (
-              <img
-                src={`/images/avatar_components/${currentEye}.svg`}
-                alt="eyes"
-                className="absolute object-contain"
-                style={{
-                  width: "40%",
-                  left: "30%",
-                  top: "22%",
-                  transform: "scale(0.5)",
-                }}
-              />
-            )}
           </div>
 
           {/* Controles */}
@@ -190,16 +153,6 @@ export default function UserAvatarCard() {
                 <button onClick={() => changeIndex(headIndex, setHeadIndex, headOptions, "next")}>→</button>
               </div>
             </div>
-
-            {isHair && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Olhos</span>
-                <div className="flex gap-2">
-                  <button onClick={() => changeIndex(eyeIndex, setEyeIndex, eyeOptions, "prev")}>←</button>
-                  <button onClick={() => changeIndex(eyeIndex, setEyeIndex, eyeOptions, "next")}>→</button>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Botão salvar */}

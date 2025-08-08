@@ -25,7 +25,7 @@ export default function UserTrophiesCard({ user }: UserTrophiesCardProps) {
       </h3>
 
       <div className="flex flex-wrap gap-6">
-        {user.trophies.map((trophy, index) => {
+        {user?.trophies?.map((trophy, index) => {
           const imageSrc = trophyImageMap[trophy.name] || "/images/trophies/default.png";
 
           return (
