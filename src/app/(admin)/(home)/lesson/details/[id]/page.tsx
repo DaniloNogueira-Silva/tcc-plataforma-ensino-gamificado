@@ -16,6 +16,10 @@ const LessonDetailsPage = () => {
   const [lessonPlanName, setLessonPlanName] = useState<string | null>(null);
   const [studentFile, setStudentFile] = useState<File | null>(null);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const [userType, setUserType] = useState<string | null>(null);
+  const [submittedWorks, setSubmittedWorks] = useState<
+    { name: string; filePath: string }[]
+  >([]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setStudentFile(e.target.files?.[0] || null);
@@ -26,7 +30,8 @@ const LessonDetailsPage = () => {
     if (!studentFile) return;
     try {
       const httpRequest = new HttpRequest();
-      await httpRequest.uploadFile(studentFile);
+      const data = await httpRequest.submitLessonWork(lessonId, studentFile);
+      console.log(data);
       setUploadMessage("Arquivo enviado com sucesso!");
       setStudentFile(null);
     } catch (error) {
@@ -60,10 +65,65 @@ const LessonDetailsPage = () => {
       } catch (error) {
         console.error("Erro ao buscar plano de aula:", error);
       }
+      try {
+        await httpRequest.markLessonCompleted(lessonId);
+      } catch (error) {
+        console.error("Erro ao marcar aula como vista:", error);
+      }
     }
 
     fetchLesson();
   }, [lessonId]);
+
+  useEffect(() => {
+    const fetchUserType = async () => {
+      const httpRequest = new HttpRequest();
+      try {
+        const user = await httpRequest.getUserByRole();
+        setUserType(user.role);
+      } catch (error) {
+        console.error("Erro ao buscar papel do usuário:", error);
+      }
+    };
+    fetchUserType();
+  }, []);
+
+  useEffect(() => {
+    const fetchSubmittedWorks = async () => {
+      if (
+        userType === "TEACHER" &&
+        lessonPlanId &&
+        lesson?.type === "school_work"
+      ) {
+        const httpRequest = new HttpRequest();
+        try {
+          const students: { _id: string; name: string }[] =
+            await httpRequest.findAllStudentsByLessonPlanId(lessonPlanId);
+          const delivered: { name: string; filePath: string }[] = [];
+          for (const s of students) {
+            try {
+              const progress = await httpRequest.getSubmittedWork(
+                lessonId,
+                s._id
+              );
+              console.log(progress);
+              if (
+                progress &&
+                progress.type === "LESSON_WORK" &&
+                progress.file_path
+              ) {
+                delivered.push({ name: s.name, filePath: progress.file_path });
+              }
+            } catch {}
+          }
+          setSubmittedWorks(delivered);
+        } catch (error) {
+          console.error("Erro ao buscar trabalhos enviados:", error);
+        }
+      }
+    };
+    fetchSubmittedWorks();
+  }, [userType, lessonPlanId, lessonId, lesson]);
 
   function getFileNameFromUrl(url?: string): string {
     if (!url) return "Arquivo";
@@ -116,20 +176,17 @@ const LessonDetailsPage = () => {
           {lesson.content}
         </p>
 
-        {/* --- CORREÇÃO NA LÓGICA DE RENDERIZAÇÃO CONDICIONAL --- */}
-        {/* Agora verifica o .length de ambos os arrays */}
         {((lesson.file && lesson.file.length > 0) || cleanLinks.length > 0) && (
           <div className="px-4 pt-5">
             <h2 className="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3">
               Recursos
             </h2>
             <div className="space-y-3">
-              {/* --- CORREÇÃO: VERIFICA O .length E USA .map() --- */}
               {lesson.file &&
                 lesson.file.length > 0 &&
                 lesson.file.map((fileUrl) => (
                   <div
-                    key={fileUrl} // Usa a URL do arquivo como chave única
+                    key={fileUrl}
                     className="flex items-center gap-4 bg-slate-50 p-3 rounded-lg justify-between"
                   >
                     <div className="flex items-center gap-4 overflow-hidden">
@@ -167,7 +224,6 @@ const LessonDetailsPage = () => {
                   </div>
                 ))}
 
-              {/* A lógica para os links já estava correta, pois usava .length */}
               {cleanLinks.length > 0 && (
                 <ul className="list-disc list-inside space-y-2 pt-2">
                   {cleanLinks.map((link, idx) => (
@@ -188,7 +244,7 @@ const LessonDetailsPage = () => {
           </div>
         )}
 
-        {lesson.type === "school_work" && (
+        {lesson.type === "school_work" && userType === "STUDENT" && (
           <form
             onSubmit={handleUpload}
             className="flex flex-col gap-3 px-4 pt-5"
@@ -216,6 +272,36 @@ const LessonDetailsPage = () => {
               Enviar
             </button>
           </form>
+        )}
+
+        {lesson.type === "school_work" && userType === "TEACHER" && (
+          <div className="px-4 pt-5">
+            <h2 className="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3">
+              Trabalhos Enviados
+            </h2>
+            {submittedWorks.length > 0 ? (
+              <ul className="space-y-2">
+                {submittedWorks.map((s) => (
+                  <li
+                    key={s.filePath}
+                    className="flex items-center justify-between bg-slate-50 p-3 rounded-lg"
+                  >
+                    <span className="text-[#0e141b]">{s.name}</span>
+                    <a
+                      href={s.filePath}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-4 bg-[#e7edf3] text-[#0e141b] text-sm font-medium leading-normal"
+                    >
+                      Baixar
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-[#6a7581]">Nenhum trabalho enviado.</p>
+            )}
+          </div>
         )}
       </div>
     </div>

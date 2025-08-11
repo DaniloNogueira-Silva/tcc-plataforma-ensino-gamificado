@@ -11,6 +11,7 @@ import { ILesson } from "./interfaces/lesson.interface";
 import { IRanking } from "./interfaces/ranking.interface";
 import { IUploadResponse } from "./interfaces/upload.interface";
 import { IUser } from "./interfaces/user.interface";
+import { IUserProgress } from "./interfaces/user-progress.interface";
 import { TokenPayload } from "@/app/(admin)/(home)/exercise/form/page";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
@@ -402,6 +403,92 @@ export class HttpRequest {
     } catch (error) {
       console.error("Erro ao deletar aula:", error);
       throw new Error("Ocorreu um erro ao deletar aula: " + error);
+    }
+  }
+
+  async markLessonCompleted(lessonId: string): Promise<void> {
+    try {
+      const token = await this.getToken();
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/lessons/${lessonId}/mark-completed`,
+        null,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Erro ao marcar aula como vista:", error);
+      throw new Error("Ocorreu um erro ao marcar aula como vista: " + error);
+    }
+  }
+
+  async submitLessonWork(lessonId: string, file: File): Promise<IUserProgress> {
+    try {
+      const token = await this.getToken();
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/lessons/${lessonId}/submit-work`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao enviar trabalho:", error);
+      throw new Error("Ocorreu um erro ao enviar trabalho: " + error);
+    }
+  }
+
+  async getSubmittedWork(
+    lessonId: string,
+    userId: string
+  ): Promise<IUserProgress> {
+    try {
+      const token = await this.getToken();
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/lessons/${lessonId}/submissions/${userId}/file`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar entrega do aluno:", error);
+      throw new Error("Ocorreu um erro ao buscar entrega do aluno: " + error);
+    }
+  }
+
+  async findOneByLessonAndUser(
+    lessonId: string,
+    userId: string
+  ): Promise<IUserProgress> {
+    try {
+      const token = await this.getToken();
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-progress/lesson/${lessonId}/user/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar progresso do aluno na aula:", error);
+      throw new Error(
+        "Ocorreu um erro ao buscar progresso do aluno na aula: " + error
+      );
     }
   }
 

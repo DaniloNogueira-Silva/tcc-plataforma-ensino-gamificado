@@ -26,13 +26,14 @@ export default function LessonList({ lessonPlanId }: LessonListProps) {
 
   return (
     <div className="space-y-4 px-4">
-      {lessons.map((lesson, i) => (
+      {lessons.map((lesson) => (
         <LessonCard
-          key={i}
+          key={lesson._id}
           lessonId={lesson._id}
           name={lesson.name}
           content={lesson.content}
           type={lesson.type}
+          lessonPlanId={lessonPlanId}
         />
       ))}
     </div>

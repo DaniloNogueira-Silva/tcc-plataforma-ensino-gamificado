@@ -5,6 +5,8 @@ export interface IUserProgressWithUser {
   external_id: string;
   type: string;
   points: number;
+  coins?: number;
+  file_path?: string;
   createdAt: string;
   updatedAt: string;
   user?: {
@@ -26,6 +28,8 @@ export interface IUserProgress {
   external_id: string;
   type: string;
   points: number;
+  coins?: number;
+  file_path?: string;
   createdAt: string;
   updatedAt: string;
 }
