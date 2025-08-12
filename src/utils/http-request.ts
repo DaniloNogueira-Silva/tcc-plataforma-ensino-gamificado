@@ -471,7 +471,8 @@ export class HttpRequest {
 
   async findOneByLessonAndUser(
     lessonId: string,
-    userId: string
+    userId: string,
+    type: string
   ): Promise<IUserProgress> {
     try {
       const token = await this.getToken();
@@ -481,6 +482,9 @@ export class HttpRequest {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          params: {
+            type,
+          },
         }
       );
       return response.data;
@@ -489,6 +493,26 @@ export class HttpRequest {
       throw new Error(
         "Ocorreu um erro ao buscar progresso do aluno na aula: " + error
       );
+    }
+  }
+
+  async findAllStudentsByLessonId(lessonId: string) {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-progress/lesson/${lessonId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar alunos da aula:", error);
+      throw new Error("Ocorreu um erro ao buscar alunos da aula: " + error);
     }
   }
 

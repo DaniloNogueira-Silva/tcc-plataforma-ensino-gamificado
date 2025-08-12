@@ -7,6 +7,8 @@ import { ILesson } from "@/utils/interfaces/lesson.interface";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import LessonPlanBreadcrumb from "@/components/ui/breadcrumb/LessonPlanBreadcrumb";
 import FileInput from "@/components/form/input/FileInput";
+import { TokenPayload } from "../../../exercise/form/page";
+import { jwtDecode } from "jwt-decode";
 
 const LessonDetailsPage = () => {
   const params = useParams();
@@ -20,6 +22,7 @@ const LessonDetailsPage = () => {
   const [submittedWorks, setSubmittedWorks] = useState<
     { name: string; filePath: string }[]
   >([]);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setStudentFile(e.target.files?.[0] || null);
@@ -30,10 +33,26 @@ const LessonDetailsPage = () => {
     if (!studentFile) return;
     try {
       const httpRequest = new HttpRequest();
+      const token = localStorage.getItem("token");
+      const decoded = jwtDecode<TokenPayload>(token);
+      try {
+        const progress = await httpRequest.findOneByLessonAndUser(
+          lessonId,
+          decoded._id,
+          "SCHOOL_WORK"
+        );
+        if (progress && progress.file_path) {
+          setUploadMessage("Você já enviou este trabalho.");
+          setStudentFile(null);
+          setHasSubmitted(true);
+          return;
+        }
+      } catch {}
       const data = await httpRequest.submitLessonWork(lessonId, studentFile);
       console.log(data);
       setUploadMessage("Arquivo enviado com sucesso!");
       setStudentFile(null);
+      setHasSubmitted(true);
     } catch (error) {
       console.error("Erro ao enviar arquivo:", error);
       setUploadMessage("Falha ao enviar arquivo.");
@@ -65,11 +84,6 @@ const LessonDetailsPage = () => {
       } catch (error) {
         console.error("Erro ao buscar plano de aula:", error);
       }
-      try {
-        await httpRequest.markLessonCompleted(lessonId);
-      } catch (error) {
-        console.error("Erro ao marcar aula como vista:", error);
-      }
     }
 
     fetchLesson();
@@ -90,29 +104,21 @@ const LessonDetailsPage = () => {
 
   useEffect(() => {
     const fetchSubmittedWorks = async () => {
-      if (
-        userType === "TEACHER" &&
-        lessonPlanId &&
-        lesson?.type === "school_work"
-      ) {
+      if (userType === "TEACHER" && lesson?.type === "school_work") {
         const httpRequest = new HttpRequest();
         try {
           const students: { _id: string; name: string }[] =
-            await httpRequest.findAllStudentsByLessonPlanId(lessonPlanId);
+            await httpRequest.findAllStudentsByLessonId(lessonId);
           const delivered: { name: string; filePath: string }[] = [];
+          console.log(students);
           for (const s of students) {
             try {
               const progress = await httpRequest.getSubmittedWork(
                 lessonId,
                 s._id
               );
-              console.log(progress);
-              if (
-                progress &&
-                progress.type === "LESSON_WORK" &&
-                progress.file_path
-              ) {
-                delivered.push({ name: s.name, filePath: progress.file_path });
+              if (progress && progress.url) {
+                delivered.push({ name: s.name, filePath: progress.url });
               }
             } catch {}
           }
@@ -123,7 +129,27 @@ const LessonDetailsPage = () => {
       }
     };
     fetchSubmittedWorks();
-  }, [userType, lessonPlanId, lessonId, lesson]);
+  }, [userType, lessonId, lesson]);
+
+  useEffect(() => {
+    const checkSubmission = async () => {
+      if (userType === "STUDENT" && lesson?.type === "school_work") {
+        const httpRequest = new HttpRequest();
+        try {
+          const progress = await httpRequest.findOneByLessonAndUser(
+            lessonId,
+            "SCHOOL_WORK"
+          );
+          if (progress && progress.file_path) {
+            setHasSubmitted(true);
+          }
+        } catch (error) {
+          console.error("Erro ao verificar envio do trabalho:", error);
+        }
+      }
+    };
+    checkSubmission();
+  }, [userType, lessonId, lesson]);
 
   function getFileNameFromUrl(url?: string): string {
     if (!url) return "Arquivo";
@@ -244,35 +270,41 @@ const LessonDetailsPage = () => {
           </div>
         )}
 
-        {lesson.type === "school_work" && userType === "STUDENT" && (
-          <form
-            onSubmit={handleUpload}
-            className="flex flex-col gap-3 px-4 pt-5"
-          >
-            <h2 className="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3">
-              Enviar Trabalho
-            </h2>
-            <FileInput onChange={handleFileChange} />
-            {uploadMessage && (
-              <p
-                className={`text-sm ${
-                  uploadMessage.includes("sucesso")
-                    ? "text-green-600"
-                    : "text-red-600"
-                }`}
-              >
-                {uploadMessage}
-              </p>
-            )}
-            <button
-              type="submit"
-              disabled={!studentFile}
-              className="flex h-10 w-fit items-center justify-center rounded-lg bg-blue-600 px-6 text-sm font-medium text-white transition-opacity disabled:opacity-50 hover:bg-blue-700"
+        {lesson.type === "school_work" &&
+          userType === "STUDENT" &&
+          (hasSubmitted ? (
+            <p className="text-sm text-[#6a7581] px-4 pt-5">
+              Você já enviou este trabalho.
+            </p>
+          ) : (
+            <form
+              onSubmit={handleUpload}
+              className="flex flex-col gap-3 px-4 pt-5"
             >
-              Enviar
-            </button>
-          </form>
-        )}
+              <h2 className="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3">
+                Enviar Trabalho
+              </h2>
+              <FileInput onChange={handleFileChange} />
+              {uploadMessage && (
+                <p
+                  className={`text-sm ${
+                    uploadMessage.includes("sucesso")
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {uploadMessage}
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={!studentFile}
+                className="flex h-10 w-fit items-center justify-center rounded-lg bg-blue-600 px-6 text-sm font-medium text-white transition-opacity disabled:opacity-50 hover:bg-blue-700"
+              >
+                Enviar
+              </button>
+            </form>
+          ))}
 
         {lesson.type === "school_work" && userType === "TEACHER" && (
           <div className="px-4 pt-5">

@@ -11,7 +11,7 @@ type LessonCardProps = {
   lessonPlanId: string;
   name: string;
   content: string;
-  type: string; // "lesson" | "school_work" | ...
+  type: string; 
 };
 
 const LessonCard: React.FC<LessonCardProps> = ({
@@ -24,15 +24,11 @@ const LessonCard: React.FC<LessonCardProps> = ({
   const router = useRouter();
 
   const [userType, setUserType] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
 
-  // 1) se já marcou alguma vez (controla XP 1x)
   const [hasEverCompleted, setHasEverCompleted] = useState(false);
-  // 2) estado VISUAL do checkbox (pode alternar livremente; não persiste no servidor)
   const [checked, setChecked] = useState(false);
   const [isMarking, setIsMarking] = useState(false);
 
-  // professor (trabalho)
   const [allStudents, setAllStudents] = useState<SimpleUser[]>([]);
   const [deliveredStudents, setDeliveredStudents] = useState<SimpleUser[]>([]);
   const [showDeliveries, setShowDeliveries] = useState(false);
@@ -58,15 +54,18 @@ const LessonCard: React.FC<LessonCardProps> = ({
       const http = new HttpRequest();
       const me = await http.getUserByRole();
       setUserType(me.role);
-      setUserId(me._id ?? null);
 
-      // STUDENT em LESSON: consulta inicial para saber se já existe marcação
       if (me.role === "STUDENT" && !isWork) {
         try {
-          const progress = await http.findOneByLessonAndUser(lessonId, me._id);
-          const exists = !!progress; // se retornar algo → já marcou
-          setHasEverCompleted(exists); // controla XP 1x
-          setChecked(exists); // estado visual começa marcado se já existia
+          const progress = await http.findOneByLessonAndUser(
+            lessonId,
+            me._id,
+            "LESSON"
+          );
+          console.log(progress);
+          const exists = !!progress;
+          setHasEverCompleted(exists);
+          setChecked(exists);
         } catch (e) {
           console.error("Erro ao buscar progresso do aluno na aula:", e);
           setHasEverCompleted(false);
@@ -74,7 +73,6 @@ const LessonCard: React.FC<LessonCardProps> = ({
         }
       }
 
-      // TEACHER em WORK: carregar entregas
       if (me.role === "TEACHER" && isWork) {
         try {
           const students: SimpleUser[] =
@@ -98,37 +96,30 @@ const LessonCard: React.FC<LessonCardProps> = ({
     };
 
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lessonId, lessonPlanId, isWork]);
 
   const handleCardClick = () => router.push(`/lesson/details/${lessonId}`);
 
-  // Clique do aluno no "checkbox":
-  // - Se NUNCA marcou e está marcando agora -> chama markLessonCompleted (dá 5 XP).
-  // - Depois disso, alterna só visualmente (sem bater no back).
   const onToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isMarking) return;
 
     const next = !checked;
 
-    // otimista: alterna o visual já
     setChecked(next);
 
     if (!hasEverCompleted && next) {
       setIsMarking(true);
       try {
-        await new HttpRequest().markLessonCompleted(lessonId); // XP 1x no back
+        await new HttpRequest().markLessonCompleted(lessonId); 
         setHasEverCompleted(true);
       } catch (error) {
         console.error("Erro ao marcar como lido:", error);
-        // rollback visual se falhar a primeira marcação
         setChecked(false);
       } finally {
         setIsMarking(false);
       }
     }
-    // se já tinha marcado alguma vez, não chamamos nada (apenas visual)
   };
 
   const typeLabels: Record<string, string> = {
@@ -165,7 +156,6 @@ const LessonCard: React.FC<LessonCardProps> = ({
             </button>
           )}
 
-          {/* STUDENT: somente em LESSON (em WORK não mostra nem chama nada) */}
           {userType === "STUDENT" && !isWork && (
             <button
               onClick={onToggle}
