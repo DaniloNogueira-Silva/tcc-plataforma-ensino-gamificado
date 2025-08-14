@@ -19,14 +19,14 @@ export default function UserAvatarCard() {
   // Estados para edição na modal
   const [torsoIndex, setTorsoIndex] = useState(0);
   const [headIndex, setHeadIndex] = useState(0);
-  const [armIndex, setArmIndex] = useState(0);
+  const [armIndex, setArmIndex] = useState(0); // Já existia, agora será usado
 
   // Estados para opções salvas e exibidas fora da modal
   const [savedTorso, setSavedTorso] = useState(torsoOptions[0]);
   const [savedHead, setSavedHead] = useState(headOptions[0]);
-  const [savedArm, setSavedArm] = useState(armOptions[0]);
+  const [savedArm, setSavedArm] = useState(armOptions[0]); // Já existia, agora será usado
 
-  // Guarda avatar salvo retornado da API (para saber se deve criar ou atualizar)
+  // Guarda avatar salvo retornado da API
   const [avatarFromApi, setAvatarFromApi] = useState<IAvatar | null>(null);
 
   useEffect(() => {
@@ -36,18 +36,18 @@ export default function UserAvatarCard() {
         if (avatar) {
           setAvatarFromApi(avatar);
 
-          // Atualiza os estados salvos para renderizar o avatar na tela
+          // Atualiza os estados salvos
           setSavedTorso(avatar.torso);
           setSavedHead(avatar.head);
-          setSavedArm(avatar.arm);
+          setSavedArm(avatar.arm); // <-- ADICIONADO AQUI
 
-          // Também atualiza os estados da modal para permitir edição com os valores atuais
+          // Atualiza os estados da modal
           const torsoIdx = torsoOptions.indexOf(avatar.torso);
           const headIdx = headOptions.indexOf(avatar.head);
-          const armIdx = armOptions.indexOf(avatar.arm);
-          if (armIdx !== -1) setArmIndex(armIdx);
+          const armIdx = armOptions.indexOf(avatar.arm); // <-- ADICIONADO AQUI
           if (torsoIdx !== -1) setTorsoIndex(torsoIdx);
           if (headIdx !== -1) setHeadIndex(headIdx);
+          if (armIdx !== -1) setArmIndex(armIdx); // <-- ADICIONADO AQUI
         }
       } catch (error) {
         console.error("Erro ao carregar avatar no componente:", error);
@@ -55,7 +55,7 @@ export default function UserAvatarCard() {
     }
 
     loadAvatar();
-  }, []);
+  }, []); // O array de dependências vazio está correto aqui
 
   const changeIndex = (
     currentIndex: number,
@@ -74,6 +74,7 @@ export default function UserAvatarCard() {
     const avatarToSave = {
       torso: torsoOptions[torsoIndex],
       head: headOptions[headIndex],
+      arm: armOptions[armIndex],
     };
 
     try {
@@ -81,13 +82,14 @@ export default function UserAvatarCard() {
       if (!avatarFromApi) {
         savedAvatar = await http.createAvatar(avatarToSave);
       } else {
-        savedAvatar = await http.updateAvatar({ ...avatarFromApi, ...avatarToSave });
+        savedAvatar = await http.updateAvatar({ id: avatarFromApi.id, ...avatarToSave });
       }
 
       if (savedAvatar) {
         setAvatarFromApi(savedAvatar);
         setSavedTorso(savedAvatar.torso);
         setSavedHead(savedAvatar.head);
+        setSavedArm(savedAvatar.arm);
         closeModal();
       }
     } catch (error) {
@@ -95,49 +97,71 @@ export default function UserAvatarCard() {
     }
   }
 
+  const AvatarDisplay = ({ torso, head, arm }: { torso: string; head: string; arm: string }) => (
+    <div className="relative w-56 h-56">
+      {/* Braços renderizados primeiro para ficarem atrás do torso */}
+      {/* Braço Esquerdo (imagem original) */}
+      <img
+        src={`/images/avatar_components/${arm}.png`}
+        alt="left arm"
+        className="absolute w-full h-full object-contain"
+        style={{ top: "33%", left: "-5%", width: "62%" }}
+      />
+      {/* Braço Direito (imagem espelhada) */}
+      <img
+        src={`/images/avatar_components/${arm}.png`}
+        alt="right arm"
+        className="absolute w-full h-full object-contain"
+        style={{ top: "33%", right: "-6%", width: "62%", transform: "scaleX(-1)" }}
+      />
+      {/* Torso */}
+      <img
+        src={`/images/avatar_components/${torso}.png`}
+        alt="torso"
+        className="absolute w-full h-full object-contain"
+        style={{ top: "17%", right: "4.5%", width: "90%" }}
+      />
+      {/* Cabeça */}
+      <img
+        src={`/images/avatar_components/${head}.png`}
+        alt="head"
+        className="absolute w-full h-full object-contain"
+        style={{ top: "-30%", right: "25%", width: "50%" }}
+      />
+    </div>
+  );
+
   return (
     <>
-      {/* Avatar exibido com as opções salvas */}
+      {/* Card de exibição do avatar salvo */}
       <div className="p-4 border border-gray-200 rounded-2xl dark:border-gray-800 w-full max-w-sm flex flex-col items-center gap-4">
-        <div className="relative w-56 h-56">
-          <img
-            src={`/images/avatar_components/${savedTorso}.png`}
-            alt="torso"
-            className="absolute w-full h-full object-contain"
-            style={{ top: "17%", position: "absolute", width: "90%", right: "4.5%" }}
-          />
-          <img
-            src={`/images/avatar_components/${savedHead}.png`}
-            alt="head"
-            className="absolute w-full h-full object-contain"
-            style={{ top: "-30%", position: "absolute", width: "50%", right: "25%" }}
-          />
-        </div>
-
-        <Button onClick={openModal}>Editar Avatar</Button>
+        <AvatarDisplay torso={savedTorso} head={savedHead} arm={savedArm} />
+        <Button onClick={openModal} className="relative z-10"> {/* <-- ALTERAÇÃO AQUI */}
+          Editar Avatar
+        </Button>
       </div>
 
       {/* Modal de edição */}
       <Modal isOpen={isOpen} onClose={closeModal} className="max-w-md m-4">
         <div className="w-full max-w-md rounded-3xl bg-white p-6 dark:bg-gray-900 flex flex-col gap-6 items-center">
-          <div className="relative w-56 h-56">
-            <img
-              src={`/images/avatar_components/${torsoOptions[torsoIndex]}.png`}
-              alt="torso"
-              className="absolute w-full h-full object-contain"
-              style={{ top: "17%", position: "absolute", width: "90%", right: "4.5%" }}
+          <AvatarDisplay
+            torso={torsoOptions[torsoIndex]}
+            head={headOptions[headIndex]}
+            arm={armOptions[armIndex]}
+          />
 
-            />
-            <img
-              src={`/images/avatar_components/${headOptions[headIndex]}.png`}
-              alt="head"
-              className="absolute w-full h-full object-contain"
-              style={{ top: "-30%", position: "absolute", width: "50%", right: "25%" }}
-            />
-          </div>
-
-          {/* Controles */}
+          {/* Controles de edição */}
           <div className="flex flex-col gap-4 w-full">
+            {/* Controle da Cabeça */}
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Cabeça</span>
+              <div className="flex gap-2">
+                <button onClick={() => changeIndex(headIndex, setHeadIndex, headOptions, "prev")}>←</button>
+                <button onClick={() => changeIndex(headIndex, setHeadIndex, headOptions, "next")}>→</button>
+              </div>
+            </div>
+
+            {/* Controle do Torso */}
             <div className="flex justify-between items-center">
               <span className="text-sm">Torso</span>
               <div className="flex gap-2">
@@ -146,16 +170,16 @@ export default function UserAvatarCard() {
               </div>
             </div>
 
+            {/* Controle dos Braços - ADICIONADO */}
             <div className="flex justify-between items-center">
-              <span className="text-sm">Cabeça</span>
+              <span className="text-sm">Braços</span>
               <div className="flex gap-2">
-                <button onClick={() => changeIndex(headIndex, setHeadIndex, headOptions, "prev")}>←</button>
-                <button onClick={() => changeIndex(headIndex, setHeadIndex, headOptions, "next")}>→</button>
+                <button onClick={() => changeIndex(armIndex, setArmIndex, armOptions, "prev")}>←</button>
+                <button onClick={() => changeIndex(armIndex, setArmIndex, armOptions, "next")}>→</button>
               </div>
             </div>
           </div>
 
-          {/* Botão salvar */}
           <Button onClick={handleSave}>Salvar</Button>
         </div>
       </Modal>

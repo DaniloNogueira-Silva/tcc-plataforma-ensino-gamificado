@@ -9,6 +9,7 @@ import { IExerciseList } from "./interfaces/exercise_list.interface";
 import { IExerciseListAttempt } from "./interfaces/exercise_list_attempt.interface";
 import { ILesson } from "./interfaces/lesson.interface";
 import { IRanking } from "./interfaces/ranking.interface";
+import { IShopItem } from "./interfaces/shop_item.interface";
 import { IUploadResponse } from "./interfaces/upload.interface";
 import { IUser } from "./interfaces/user.interface";
 import { IUserProgress } from "./interfaces/user-progress.interface";
@@ -1241,6 +1242,8 @@ export class HttpRequest {
     try {
       const token = await this.getToken();
       if (!token) return null;
+      const decoded = jwtDecode<TokenPayload>(token);
+      avatar.user_id = decoded._id;
       const response = await axios.patch(
         `${process.env.NEXT_PUBLIC_GAME_BACKEND_URL}/avatar`,
         avatar,
@@ -1318,6 +1321,49 @@ export class HttpRequest {
       throw new Error(
         "Ocorreu um erro ao buscar ranking do plano de aula: " + error
       );
+    }
+  }
+
+  async buyItem(shopItem: string): Promise<IShopItem | null> {
+    try {
+      const token = await this.getToken();
+
+      if (!token) return null;
+
+      const decoded = jwtDecode<TokenPayload>(token);
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_GAME_BACKEND_URL}/shop/${shopItem}/buy`,
+        { userId: decoded._id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao criar avatar:", error);
+      throw new Error("Ocorreu um erro ao criar avatar" + error);
+    }
+  }
+
+  async getAllItems(): Promise<IShopItem[]> {
+    try {
+      const token = await this.getToken();
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_GAME_BACKEND_URL}/shop`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar avatar:", error);
+      throw new Error("Ocorreu um erro ao buscar avatar" + error);
     }
   }
 }
