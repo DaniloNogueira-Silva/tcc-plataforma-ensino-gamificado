@@ -11,7 +11,7 @@ export default function ShopPage() {
   const http = useMemo(() => new HttpRequest(), []);
   const [items, setItems] = useState<IShopItem[]>([]);
   const [character, setCharacter] = useState<IUserCharacter | null>(null);
-  const [filter, setFilter] = useState<string>("ALL");
+  const [filter, setFilter] = useState<string>("TUDO");
 
   useEffect(() => {
     async function load() {
@@ -33,9 +33,9 @@ export default function ShopPage() {
     setCharacter(updated);
   };
 
-  const types = ["ALL", "COMUM", "INCOMUM", "RARO", "ÉPICO", "LENDÁRIO"];
+  const types = ["TUDO", "COMUM", "INCOMUM", "RARO", "ÉPICO", "LENDÁRIO"];
   const filteredItems =
-    filter === "ALL" ? items : items.filter((i) => i.type === filter);
+    filter === "TUDO" ? items : items.filter((i) => i.type === filter);
 
   return (
     <div>

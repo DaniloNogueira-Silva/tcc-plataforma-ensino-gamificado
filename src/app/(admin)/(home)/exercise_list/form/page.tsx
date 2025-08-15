@@ -145,7 +145,7 @@ const ExerciseListForm = () => {
             />
           </div>
 
-          <div className="col-span-2">
+          <div className="col-span-1">
             <Label>Exercícios*</Label>
             <MultiSelect
               options={exerciseOptions}
@@ -155,7 +155,7 @@ const ExerciseListForm = () => {
             />
           </div>
 
-          <div className="col-span-2">
+          <div className="col-span-1">
             <Label>Plano de Aula</Label>
             <MultiSelect
               options={lessonPlanOptions}

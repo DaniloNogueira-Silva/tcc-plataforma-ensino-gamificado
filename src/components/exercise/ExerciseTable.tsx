@@ -153,7 +153,7 @@ export default function ExerciseTable() {
           <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
             {exercises.map((exercise) => (
               <TableRow key={exercise._id}>
-                <TableCell className="px-5 py-4 text-start text-gray-800 text-theme-sm dark:text-white/90">
+                <TableCell className="px-5 py-4 text-start text-gray-800 text-theme-sm dark:text-white/90 line-clamp-3 break-words max-w-xl">
                   {exercise.statement}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">

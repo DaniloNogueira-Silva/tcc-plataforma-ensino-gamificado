@@ -439,26 +439,6 @@ export default function DetailsPage() {
               />
             </div>
 
-            <div className="flex flex-col space-y-2">
-              <label className="text-sm">Pontos</label>
-              <input
-                type="number"
-                value={points}
-                onChange={(e) => setPoints(Number(e.target.value))}
-                className="p-2 border rounded"
-              />
-            </div>
-
-            <div className="flex flex-col space-y-2">
-              <label className="text-sm">Nota</label>
-              <input
-                type="number"
-                value={grade}
-                onChange={(e) => setGrade(Number(e.target.value))}
-                className="p-2 border rounded"
-              />
-            </div>
-
             <div className="flex justify-end space-x-2 mt-4">
               <button
                 className="px-4 py-2 bg-gray-400 rounded"
@@ -483,26 +463,6 @@ export default function DetailsPage() {
                 id="exercise-due-date-picker"
                 defaultDate={dueDate || undefined}
                 onChange={(_, dateStr) => setDueDate(dateStr)}
-              />
-            </div>
-
-            <div className="flex flex-col space-y-2">
-              <label className="text-sm">Pontos</label>
-              <input
-                type="number"
-                value={points}
-                onChange={(e) => setPoints(Number(e.target.value))}
-                className="p-2 border rounded"
-              />
-            </div>
-
-            <div className="flex flex-col space-y-2">
-              <label className="text-sm">Nota</label>
-              <input
-                type="number"
-                value={grade}
-                onChange={(e) => setGrade(Number(e.target.value))}
-                className="p-2 border rounded"
               />
             </div>
 

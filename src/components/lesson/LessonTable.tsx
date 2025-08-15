@@ -93,11 +93,6 @@ export default function LessonTable() {
     return grade;
   };
 
-  const formatPoints = (points?: number | null) => {
-    if (!points || points === 0) return "Sem pontos atribuídos";
-    return points;
-  };
-
   const handleEdit = (lesson: ILesson) => {
     router.push(`/lesson/form?id=${lesson._id}`);
   };
@@ -152,12 +147,6 @@ export default function LessonTable() {
                 isHeader
                 className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400"
               >
-                Pontos
-              </TableCell>
-              <TableCell
-                isHeader
-                className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400"
-              >
                 Tipo
               </TableCell>
               <TableCell
@@ -178,7 +167,7 @@ export default function LessonTable() {
           <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
             {lessons.map((lesson) => (
               <TableRow key={lesson._id}>
-                <TableCell className="px-5 py-4 text-start text-gray-800 text-theme-sm dark:text-white/90">
+                <TableCell className="px-5 py-4 text-start text-gray-800 text-theme-sm dark:text-white/90 line-clamp-3 break-words max-w-md">
                   {lesson.name}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
@@ -207,11 +196,8 @@ export default function LessonTable() {
                     "-"
                   )}
                 </TableCell>
-                <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
+                <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400 line-clamp-4 break-words">
                   {lesson.links?.join(", ")}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
-                  {formatPoints(lesson.points)}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
                   {typeLabels[lesson.type] || lesson.type}

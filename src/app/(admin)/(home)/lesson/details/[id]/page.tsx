@@ -185,7 +185,7 @@ const LessonDetailsPage = () => {
         />
         <div className="flex flex-wrap justify-between gap-3 p-4">
           <div className="flex min-w-72 flex-col gap-3">
-            <h1 className="text-[#0e141b] tracking-light text-[32px] font-bold leading-tight">
+            <h1 className="text-[#0e141b] tracking-light text-[32px] font-bold leading-tight line-clamp-3">
               {lesson.name}
             </h1>
             {formattedDate && lesson.type !== "reading" && (

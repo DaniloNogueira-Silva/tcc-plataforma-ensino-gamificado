@@ -242,7 +242,7 @@ const LessonForm = ({
             <Tooltip
               position="right"
               width="330px"
-              content="Isso define a qual plano de aula o exercício será atribuído. Pode ser deixado em branco, se preferir não vincular a nenhum."
+              content="Isso define a qual plano de aula o exercício será atribuído. Pode ser não selecionar, se preferir não vincular a nenhum por enquanto."
             >
               <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
             </Tooltip>

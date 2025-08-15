@@ -127,9 +127,9 @@ const ExerciseListCard: React.FC<ExerciseListCardProps> = ({
               )}
               <span className="truncate">
                 {completed
-                  ? "Completado"
+                  ? "Entregado"
                   : deadlinePassed
-                  ? "Não feito"
+                  ? "Não respondeu"
                   : "Não entregue"}
               </span>
             </button>

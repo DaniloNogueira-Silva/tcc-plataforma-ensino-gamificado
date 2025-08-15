@@ -94,7 +94,7 @@ export default function LessonPlan() {
                         <Label>Nome</Label>
                         <Input
                             type="text"
-                            placeholder="Emirhan"
+                            placeholder="Matemática 9º"
                             onChange={(e) => setName(e.target.value)}
                         />
                     </div>
