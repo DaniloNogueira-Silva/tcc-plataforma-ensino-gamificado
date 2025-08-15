@@ -12,6 +12,7 @@ import { IRanking } from "./interfaces/ranking.interface";
 import { IShopItem } from "./interfaces/shop_item.interface";
 import { IUploadResponse } from "./interfaces/upload.interface";
 import { IUser } from "./interfaces/user.interface";
+import { IUserCharacter } from "./interfaces/user.character";
 import { IUserProgress } from "./interfaces/user-progress.interface";
 import { TokenPayload } from "@/app/(admin)/(home)/exercise/form/page";
 import axios from "axios";
@@ -1324,13 +1325,13 @@ export class HttpRequest {
     }
   }
 
-  async getUserCharacter(): Promise<IUserProgress | null> {
+  async getUserCharacter(): Promise<IUserCharacter | null> {
     try {
       const token = await this.getToken();
       if (!token) return null;
       const decoded = jwtDecode<TokenPayload>(token);
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_GAME_BACKEND_URL}/user-character/${decoded._id}`,
+        `${process.env.NEXT_PUBLIC_GAME_BACKEND_URL}/user-character/user/${decoded._id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

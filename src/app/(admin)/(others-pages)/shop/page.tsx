@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+
 import Button from "@/components/ui/button/Button";
 import { HttpRequest } from "@/utils/http-request";
 import { IShopItem } from "@/utils/interfaces/shop_item.interface";
-import { IUserProgress } from "@/utils/interfaces/user-progress.interface";
+import { IUserCharacter } from "@/utils/interfaces/user.character";
 
 export default function ShopPage() {
   const http = useMemo(() => new HttpRequest(), []);
   const [items, setItems] = useState<IShopItem[]>([]);
-  const [character, setCharacter] = useState<IUserProgress | null>(null);
+  const [character, setCharacter] = useState<IUserCharacter | null>(null);
   const [filter, setFilter] = useState<string>("ALL");
 
   useEffect(() => {
