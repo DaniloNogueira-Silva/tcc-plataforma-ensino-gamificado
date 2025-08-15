@@ -5,6 +5,9 @@ export interface IUserProgressWithUser {
   external_id: string;
   type: string;
   points: number;
+  answer?: string;
+  final_grade?: number;
+  items?: string[];
   coins?: number;
   file_path?: string;
   createdAt: string;
@@ -28,6 +31,9 @@ export interface IUserProgress {
   external_id: string;
   type: string;
   points: number;
+  answer?: string;
+  final_grade?: number;
+  items?: string[];
   coins?: number;
   file_path?: string;
   createdAt: string;

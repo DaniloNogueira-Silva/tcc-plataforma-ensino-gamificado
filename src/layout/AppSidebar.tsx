@@ -7,6 +7,7 @@ import {
   PageIcon,
   TaskIcon,
   UserCircleIcon,
+  DollarLineIcon,
 } from "../icons/index";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
@@ -37,6 +38,11 @@ const navItems: NavItem[] = [
     icon: <PageIcon />,
     name: "Aulas",
     path: "/lesson",
+  },
+  {
+    icon: <DollarLineIcon />,
+    name: "Loja",
+    path: "/shop",
   },
   {
     icon: <UserCircleIcon />,

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 
 import Button from "../ui/button/Button";
 import { HttpRequest } from "@/utils/http-request";
@@ -8,23 +8,24 @@ import { IAvatar } from "@/utils/interfaces/avatar.interface";
 import { Modal } from "../ui/modal";
 import { useModal } from "../../hooks/useModal";
 
-const torsoOptions = ["dark_armor", "steel_armor", "dragon_armor", "florest_armor"];
-const headOptions = ["dark_helmet", "steel_helmet", "dragon_helmet", "florest_helmet"];
-const armOptions = ["dark_arm", "steel_arm", "dragon_arm", "florest_arm"];
-
 export default function UserAvatarCard() {
   const { isOpen, openModal, closeModal } = useModal();
-  const http = new HttpRequest();
+  const http = useMemo(() => new HttpRequest(), []);
+
+  // Opções de partes do avatar carregadas da loja
+  const [torsoOptions, setTorsoOptions] = useState<string[]>([]);
+  const [headOptions, setHeadOptions] = useState<string[]>([]);
+  const [armOptions, setArmOptions] = useState<string[]>([]);
 
   // Estados para edição na modal
   const [torsoIndex, setTorsoIndex] = useState(0);
   const [headIndex, setHeadIndex] = useState(0);
-  const [armIndex, setArmIndex] = useState(0); // Já existia, agora será usado
+  const [armIndex, setArmIndex] = useState(0);
 
   // Estados para opções salvas e exibidas fora da modal
-  const [savedTorso, setSavedTorso] = useState(torsoOptions[0]);
-  const [savedHead, setSavedHead] = useState(headOptions[0]);
-  const [savedArm, setSavedArm] = useState(armOptions[0]); // Já existia, agora será usado
+  const [savedTorso, setSavedTorso] = useState("");
+  const [savedHead, setSavedHead] = useState("");
+  const [savedArm, setSavedArm] = useState("");
 
   // Guarda avatar salvo retornado da API
   const [avatarFromApi, setAvatarFromApi] = useState<IAvatar | null>(null);
@@ -32,22 +33,51 @@ export default function UserAvatarCard() {
   useEffect(() => {
     async function loadAvatar() {
       try {
-        const avatar = await http.getAvatarByUserId();
+        const [avatar, allItems, userChar] = await Promise.all([
+          http.getAvatarByUserId(),
+          http.getAllItems(),
+          http.getUserCharacter(),
+        ]);
+
+        let torso: string[] = [];
+        let head: string[] = [];
+        let arm: string[] = [];
+
+        if (userChar && userChar.items) {
+          const purchased = allItems.filter((item) =>
+            userChar.items?.includes(item._id)
+          );
+          torso = purchased
+            .filter((i) => i.label.includes("armor"))
+            .map((i) => i.label);
+          head = purchased
+            .filter((i) => i.label.includes("helmet"))
+            .map((i) => i.label);
+          arm = purchased
+            .filter((i) => i.label.includes("arm"))
+            .map((i) => i.label);
+
+          setTorsoOptions(torso);
+          setHeadOptions(head);
+          setArmOptions(arm);
+        }
+
         if (avatar) {
           setAvatarFromApi(avatar);
-
-          // Atualiza os estados salvos
           setSavedTorso(avatar.torso);
           setSavedHead(avatar.head);
-          setSavedArm(avatar.arm); // <-- ADICIONADO AQUI
+          setSavedArm(avatar.arm);
 
-          // Atualiza os estados da modal
-          const torsoIdx = torsoOptions.indexOf(avatar.torso);
-          const headIdx = headOptions.indexOf(avatar.head);
-          const armIdx = armOptions.indexOf(avatar.arm); // <-- ADICIONADO AQUI
+          const torsoIdx = torso.indexOf(avatar.torso);
+          const headIdx = head.indexOf(avatar.head);
+          const armIdx = arm.indexOf(avatar.arm);
           if (torsoIdx !== -1) setTorsoIndex(torsoIdx);
           if (headIdx !== -1) setHeadIndex(headIdx);
-          if (armIdx !== -1) setArmIndex(armIdx); // <-- ADICIONADO AQUI
+          if (armIdx !== -1) setArmIndex(armIdx);
+        } else {
+          if (torso.length) setSavedTorso(torso[0]);
+          if (head.length) setSavedHead(head[0]);
+          if (arm.length) setSavedArm(arm[0]);
         }
       } catch (error) {
         console.error("Erro ao carregar avatar no componente:", error);
@@ -55,7 +85,7 @@ export default function UserAvatarCard() {
     }
 
     loadAvatar();
-  }, []); // O array de dependências vazio está correto aqui
+  }, [http]);
 
   const changeIndex = (
     currentIndex: number,
@@ -63,6 +93,7 @@ export default function UserAvatarCard() {
     options: string[],
     direction: "prev" | "next"
   ) => {
+    if (options.length === 0) return;
     const newIndex =
       direction === "next"
         ? (currentIndex + 1) % options.length
@@ -145,9 +176,9 @@ export default function UserAvatarCard() {
       <Modal isOpen={isOpen} onClose={closeModal} className="max-w-md m-4">
         <div className="w-full max-w-md rounded-3xl bg-white p-6 dark:bg-gray-900 flex flex-col gap-6 items-center">
           <AvatarDisplay
-            torso={torsoOptions[torsoIndex]}
-            head={headOptions[headIndex]}
-            arm={armOptions[armIndex]}
+            torso={torsoOptions[torsoIndex] || ""}
+            head={headOptions[headIndex] || ""}
+            arm={armOptions[armIndex] || ""}
           />
 
           {/* Controles de edição */}

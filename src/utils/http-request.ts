@@ -1324,6 +1324,28 @@ export class HttpRequest {
     }
   }
 
+  async getUserCharacter(): Promise<IUserProgress | null> {
+    try {
+      const token = await this.getToken();
+      if (!token) return null;
+      const decoded = jwtDecode<TokenPayload>(token);
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_GAME_BACKEND_URL}/user-character/${decoded._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar personagem do usuário:", error);
+      throw new Error(
+        "Ocorreu um erro ao buscar personagem do usuário: " + error
+      );
+    }
+  }
+
   async buyItem(shopItem: string): Promise<IShopItem | null> {
     try {
       const token = await this.getToken();
