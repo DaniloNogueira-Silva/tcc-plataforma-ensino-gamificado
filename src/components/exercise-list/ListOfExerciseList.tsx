@@ -19,7 +19,9 @@ export default function ListOfExerciseList({
     const result = await httpRequest.getAllExerciseListByLessonPlanId(
       lessonPlanId
     );
-    const sorted = result.sort((a, b) => b._id.localeCompare(a._id));
+    const sorted = result.sort((a: IExerciseList, b: IExerciseList) =>
+      b._id.localeCompare(a._id)
+    );
     setLists(sorted);
   };
 

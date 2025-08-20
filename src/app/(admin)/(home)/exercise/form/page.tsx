@@ -380,28 +380,7 @@ const ExerciseFormPage = () => {
           )}
         </div>
 
-        <div className="mt-4 flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={showAnswer}
-            onChange={(e) => setShowAnswer(e.target.checked)}
-            className="dark:bg-navy-800 dark:text-white"
-            id="showAnswerCheckbox"
-          />
-          <label
-            htmlFor="showAnswerCheckbox"
-            className="text-sm font-medium text-gray-800 dark:text-white cursor-pointer"
-          >
-            Mostrar Resposta ao Aluno
-          </label>
-          <Tooltip
-            position="right"
-            width="330px"
-            content="Aqui você define se o aluno verá a resposta após responder."
-          >
-            <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
-          </Tooltip>
-        </div>
+       
 
         <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 mt-6">
           <div className="col-span-1">

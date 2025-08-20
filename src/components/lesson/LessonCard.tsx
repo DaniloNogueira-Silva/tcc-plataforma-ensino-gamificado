@@ -11,7 +11,7 @@ type LessonCardProps = {
   lessonPlanId: string;
   name: string;
   content: string;
-  type: string; 
+  type: string;
 };
 
 const LessonCard: React.FC<LessonCardProps> = ({
@@ -84,9 +84,7 @@ const LessonCard: React.FC<LessonCardProps> = ({
         }
 
         try {
-          const submissions = await http.findAllStudentsByLessonId(
-            lessonId
-          );
+          const submissions = await http.findAllStudentsByLessonId(lessonId);
           setDeliveredStudents(normalizeUsers(submissions));
         } catch (e) {
           setDeliveredStudents([]);
@@ -111,7 +109,7 @@ const LessonCard: React.FC<LessonCardProps> = ({
     if (!hasEverCompleted && next) {
       setIsMarking(true);
       try {
-        await new HttpRequest().markLessonCompleted(lessonId); 
+        await new HttpRequest().markLessonCompleted(lessonId);
         setHasEverCompleted(true);
       } catch (error) {
         console.error("Erro ao marcar como lido:", error);
@@ -135,7 +133,7 @@ const LessonCard: React.FC<LessonCardProps> = ({
             <p className="text-[#6a7581] text-sm font-normal leading-normal">
               {typeLabels[type] || type}
             </p>
-            <p className="text-[#121416] text-base font-bold leading-tight line-clamp-1">
+            <p className="text-[#121416] text-base font-bold leading-tight break-words line-clamp-1">
               {name}
             </p>
             <p className="text-[#6a7581] text-sm font-normal leading-normal break-words line-clamp-3">
