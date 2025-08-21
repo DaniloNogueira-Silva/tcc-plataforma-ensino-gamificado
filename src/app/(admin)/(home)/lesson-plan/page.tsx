@@ -21,13 +21,17 @@ export default function LessonPlan() {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [name, setName] = useState("");
     const [error, setError] = useState<string | null>(null);
+    const [userRole, setUserRole] = useState<string | null>(null);
 
     const loadImages = () => {
-        setImages([ 
+        setImages([
             "/images/brand/node.svg",
             "/images/brand/math.svg",
             "/images/brand/language.svg",
             "/images/brand/history.svg",
+            "/images/brand/science.svg",
+            "/images/brand/geography.svg",
+            "/images/brand/art.svg",
         ]);
     };
 
@@ -64,7 +68,17 @@ export default function LessonPlan() {
     };
 
     useEffect(() => {
-        loadImages();
+        const init = async () => {
+            loadImages();
+            try {
+                const http = new HttpRequest();
+                const user = await http.getUserByRole();
+                setUserRole(user.role);
+            } catch (e) {
+                console.error("Erro ao buscar usuário:", e);
+            }
+        };
+        init();
     }, []);
 
     return (
@@ -72,11 +86,13 @@ export default function LessonPlan() {
             <div className="col-span-12">
                 <LessonPlanList />
             </div>
-            <div className="col-span-12">
-                <Button size="sm" variant="primary" endIcon={<DocsIcon />} onClick={() => setIsOpen(true)}>
-                    Adicionar plano de aula
-                </Button>
-            </div>
+            {userRole === "TEACHER" && (
+                <div className="col-span-12">
+                    <Button size="sm" variant="primary" endIcon={<DocsIcon />} onClick={() => setIsOpen(true)}>
+                        Adicionar plano de aula
+                    </Button>
+                </div>
+            )}
 
             {error && <div className="text-red-500 text-sm">{error}</div>}
 

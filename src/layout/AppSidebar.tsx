@@ -10,6 +10,7 @@ import {
   DollarLineIcon,
 } from "../icons/index";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { HttpRequest } from "@/utils/http-request";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -54,6 +55,30 @@ const navItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const http = new HttpRequest();
+        const user = await http.getUserByRole();
+        setUserRole(user.role);
+      } catch (e) {
+        console.error("Erro ao buscar usuário:", e);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const roleLabel =
+    userRole === "TEACHER" ? "Professor" : userRole === "STUDENT" ? "Aluno" : "";
+
+  const filteredNavItems =
+    userRole === "STUDENT"
+      ? navItems.filter(
+          (nav) => nav.name !== "Exercícios" && nav.name !== "Aulas"
+        )
+      : navItems;
 
   const renderMenuItems = (
     navItems: NavItem[],
@@ -289,11 +314,13 @@ const AppSidebar: React.FC = () => {
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(navItems, "main")}
+              {renderMenuItems(filteredNavItems, "main")}
             </div>
           </div>
         </nav>
-        {isExpanded || isHovered || isMobileOpen}
+        {(isExpanded || isHovered || isMobileOpen) && roleLabel && (
+          <div className="mt-auto p-3 text-xs text-gray-500">{roleLabel}</div>
+        )}
       </div>
     </aside>
   );
