@@ -42,12 +42,6 @@ export default function ExerciseTable() {
     fetchData();
   }, []);
 
-  function formatDate(dateString?: string): string {
-    if (!dateString) return "Sem data de entrega";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("pt-BR");
-  }
-
   function getLessonPlanNamesByExercise(exerciseId: string): string {
     const associatedPlans = lessonPlanContents.filter(
       (assoc) => assoc.content_id === exerciseId
@@ -109,12 +103,6 @@ export default function ExerciseTable() {
                 isHeader
                 className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400"
               >
-                Data de Entrega
-              </TableCell>
-              <TableCell
-                isHeader
-                className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400"
-              >
                 Nota
               </TableCell>
               <TableCell
@@ -149,9 +137,6 @@ export default function ExerciseTable() {
               <TableRow key={exercise._id}>
                 <TableCell className="px-5 py-4 text-start text-gray-800 text-theme-sm dark:text-white/90 line-clamp-3 break-words max-w-xl">
                   {exercise.statement}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
-                  {formatDate(exercise.due_date)}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
                   {exercise.grade}

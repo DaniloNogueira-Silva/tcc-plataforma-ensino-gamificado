@@ -22,20 +22,19 @@ export default function DetailsPage() {
   const [addMode, setAddMode] = useState<
     "lesson" | "exercise" | "exerciseList" | null
   >(null);
-
   const [availableLessons, setAvailableLessons] = useState<ILesson[]>([]);
   const [availableExercises, setAvailableExercises] = useState<IExercise[]>([]);
   const [availableExerciseLists, setAvailableExerciseLists] = useState<
     IExerciseList[]
   >([]);
   const [expandedLists, setExpandedLists] = useState<string[]>([]);
-  const [selectedLesson, setSelectedLesson] = useState<ILesson | null>(null);
-  const [selectedExercise, setSelectedExercise] = useState<IExercise | null>(
-    null
-  );
-  const [dueDate, setDueDate] = useState("");
-  const [points, setPoints] = useState(0);
-  const [grade, setGrade] = useState(0);
+
+  const [selectedItem, setSelectedItem] = useState<{
+    item: ILesson | IExercise | IExerciseList;
+    type: "school_work" | "exercise_list" | "exercise";
+  } | null>(null);
+
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [userType, setUserType] = useState<string>("");
   const [activeTab, setActiveTab] = useState<
     "lessons" | "exercises" | "ranking"
@@ -67,6 +66,7 @@ export default function DetailsPage() {
   function closeAddModal() {
     setShowAddModal(false);
     setAddMode(null);
+    setSelectedItem(null);
   }
 
   const toggleList = (id: string) => {
@@ -104,101 +104,96 @@ export default function DetailsPage() {
     item: ILesson | IExercise | IExerciseList
   ) {
     try {
-      if (type === "lesson") {
-        const lesson = item as ILesson;
-
-        if (lesson.type === "reading") {
-          await updateItem("lesson", lesson);
-          setShowAddModal(false);
-          window.location.reload();
-        } else {
-          setSelectedLesson(lesson);
-          setDueDate("");
-          setPoints(0);
-          setGrade(0);
-        }
-      } else if (type === "exercise") {
-        const exercise = item as IExercise;
-        setSelectedExercise(exercise);
-        setDueDate("");
-        setPoints(0);
-        setGrade(0);
-      } else {
-        const list = item as IExerciseList;
-        await httpRequest.updateExerciseListAndLessonPlans(
-          list._id,
-          list.name,
-          list.content,
-          list.teacher_id,
-          list.exercises_ids,
-          [...(list.lesson_plan_ids || []), lessonPlanId],
-          list.type,
-          list.due_date,
-          list.points
+      if (type === "lesson" && (item as ILesson).type !== "school_work") {
+        await httpRequest.createLessonPlanContent(
+          lessonPlanId,
+          item._id,
+          "lesson"
         );
         setShowAddModal(false);
         window.location.reload();
-      }
+      } else {
+        let contentType: "school_work" | "exercise_list" | "exercise";
 
-      setAddMode(null);
+        if (type === "lesson") {
+          contentType = "school_work";
+        } else if (type === "exerciseList") {
+          contentType = "exercise_list";
+        } else {
+          contentType = "exercise";
+        }
+
+        setSelectedItem({ item, type: contentType });
+        setDueDate(undefined);
+        setAddMode(null);
+      }
     } catch (error) {
       console.error("Erro ao adicionar item:", error);
     }
   }
 
-  async function updateItem(
-    type: "lesson" | "exercise",
-    item: ILesson | IExercise
-  ) {
-    if (type === "lesson") {
-      const lesson = item as ILesson;
-      await httpRequest.updateLessonAndLessonPlans(
-        lesson._id,
-        lesson.name,
-        dueDate,
-        lesson.content || "",
-        lesson.type || "",
-        grade,
-        lesson.file,
-        lesson.links,
-        [lessonPlanId]
-      );
-    } else {
-      const exercise = item as IExercise;
-      await httpRequest.updateExerciseAndLessonPlans(
-        exercise._id,
-        exercise.statement || "",
-        exercise.type || "",
-        exercise.answer || "",
-        exercise.showAnswer || false,
-        exercise.type === "multiple_choice"
-          ? exercise.multiple_choice_options
-          : undefined,
-        exercise.type === "true_false"
-          ? exercise.true_false_options
-          : undefined,
-        [lessonPlanId],
-        dueDate,
-        points,
-        grade
-      );
-    }
-  }
-
   async function handleSave() {
-    if (selectedLesson) {
-      await updateItem("lesson", selectedLesson);
-      setSelectedLesson(null);
-    }
+    if (!selectedItem) return;
 
-    if (selectedExercise) {
-      await updateItem("exercise", selectedExercise);
-      setSelectedExercise(null);
-    }
+    try {
+      const { item, type } = selectedItem;
+      await httpRequest.createLessonPlanContent(
+        lessonPlanId,
+        item._id,
+        type,
+        dueDate
+      );
 
-    setShowAddModal(false);
-    window.location.reload();
+      setSelectedItem(null);
+      setShowAddModal(false);
+      window.location.reload();
+    } catch (error) {
+      console.error("Erro ao salvar item no plano de aula:", error);
+    }
   }
+
+  const renderConfigurationModal = () => {
+    if (!selectedItem) return null;
+
+    const { item } = selectedItem;
+    const title =
+      "name" in item
+        ? item.name
+        : "statement" in item
+        ? item.statement
+        : "Configurar item";
+
+    return (
+      <div className="mt-6 space-y-4">
+        <h4 className="text-lg font-semibold dark:text-white break-words">
+          {title}
+        </h4>
+
+        <div className="flex flex-col space-y-2">
+          <label className="text-sm">Data de entrega</label>
+          <DatePicker
+            id="item-due-date-picker"
+            onChange={(_, dateStr) => setDueDate(new Date(dateStr))}
+          />
+        </div>
+
+        <div className="flex justify-end space-x-2 mt-4">
+          <button
+            className="px-4 py-2 bg-gray-400 rounded"
+            onClick={() => setSelectedItem(null)}
+          >
+            Cancelar
+          </button>
+          <button
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            onClick={handleSave}
+          >
+            Salvar
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="px-40 flex flex-1 justify-center py-5">
@@ -275,7 +270,7 @@ export default function DetailsPage() {
         onClose={closeAddModal}
         className="max-w-[768px] p-5 lg:p-10"
       >
-        {!addMode && !selectedLesson && !selectedExercise && (
+        {!addMode && !selectedItem && (
           <div>
             <h4 className="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">
               Deseja adicionar aulas ou exercícios?
@@ -315,7 +310,7 @@ export default function DetailsPage() {
                   key={lesson._id}
                   className="flex justify-between items-center py-3"
                 >
-                  <span className="text-gray-900 dark:text-white">
+                  <span className="text-gray-900 dark:text-white break-words line-clamp-2">
                     {lesson.name || "Sem título"}
                   </span>
                   <button
@@ -352,7 +347,7 @@ export default function DetailsPage() {
                   {availableExerciseLists.map((list) => (
                     <li key={list._id} className="py-2">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-900 dark:text-white line-clamp-1">
+                        <span className="text-gray-900 dark:text-white break-words line-clamp-2">
                           {list.name} (Lista)
                         </span>
                         <div className="flex items-center gap-2">
@@ -379,7 +374,7 @@ export default function DetailsPage() {
                           {list.exercises?.map((ex) => (
                             <li
                               key={ex._id}
-                              className="text-sm text-gray-700 dark:text-gray-300 line-clamp-1"
+                              className="text-sm text-gray-700 dark:text-gray-300 break-words line-clamp-2"
                             >
                               {ex.statement}
                             </li>
@@ -399,7 +394,7 @@ export default function DetailsPage() {
                   key={exercise._id}
                   className="flex justify-between items-center py-3"
                 >
-                  <span className="text-gray-900 dark:text-white line-clamp-1">
+                  <span className="text-gray-900 dark:text-white break-words line-clamp-2">
                     {exercise.statement || "Sem título"}
                   </span>
                   <button
@@ -424,64 +419,7 @@ export default function DetailsPage() {
           </div>
         )}
 
-        {selectedLesson && (
-          <div className="mt-6 space-y-4">
-            <h4 className="text-lg font-semibold dark:text-white">
-              Configurar Aula: {selectedLesson.name}
-            </h4>
-
-            <div className="flex flex-col space-y-2">
-              <label className="text-sm">Data de entrega</label>
-              <DatePicker
-                id="lesson-due-date-picker"
-                defaultDate={dueDate || undefined}
-                onChange={(_, dateStr) => setDueDate(dateStr)}
-              />
-            </div>
-
-            <div className="flex justify-end space-x-2 mt-4">
-              <button
-                className="px-4 py-2 bg-gray-400 rounded"
-                onClick={() => setSelectedLesson(null)}
-              >
-                Cancelar
-              </button>
-              <button onClick={handleSave}>Salvar</button>
-            </div>
-          </div>
-        )}
-
-        {selectedExercise && (
-          <div className="mt-6 space-y-4">
-            <h4 className="text-lg font-semibold dark:text-white">
-              Adicionar Exercício: {selectedExercise.statement}
-            </h4>
-
-            <div className="flex flex-col space-y-2">
-              <label className="text-sm">Data de entrega</label>
-              <DatePicker
-                id="exercise-due-date-picker"
-                defaultDate={dueDate || undefined}
-                onChange={(_, dateStr) => setDueDate(dateStr)}
-              />
-            </div>
-
-            <div className="flex justify-end space-x-2 mt-4">
-              <button
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                onClick={() => setSelectedExercise(null)}
-              >
-                Cancelar
-              </button>
-              <button
-                className="bg-purple-500 text-white rounded hover:bg-purple-600"
-                onClick={handleSave}
-              >
-                Confirmar
-              </button>
-            </div>
-          </div>
-        )}
+        {selectedItem && renderConfigurationModal()}
       </Modal>
     </div>
   );

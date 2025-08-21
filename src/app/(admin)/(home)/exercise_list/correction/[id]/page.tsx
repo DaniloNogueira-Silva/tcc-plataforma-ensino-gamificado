@@ -2,24 +2,15 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useCorrectionData } from "./useCorrectionData";
-import { IExerciseListAttempt } from "@/utils/interfaces/exercise_list_attempt.interface";
 import Notification from "@/components/ui/notification/Notification";
 import { HttpRequest } from "@/utils/http-request";
 
-import StudentListSidebar from "@/components/exercise-list/StudentListSidebar";
-import CorrectionPanel from "@/components/exercise-list/CorrectionPanel";
-import SummarySidebar from "@/components/exercise-list/SummarySidebar";
+import StudentListSidebar from "@/components/correction/StudentListSidebar";
+import CorrectionPanel from "@/components/correction/CorrectionPanel";
+import SummarySidebar from "@/components/correction/SummarySidebar";
 import LessonPlanBreadcrumb from "@/components/ui/breadcrumb/LessonPlanBreadCrumb";
-
-export interface StudentAnswer {
-  _id: string;
-  user_id: { _id: string; name: string };
-  final_grade?: number;
-  attempts: IExerciseListAttempt[];
-}
-export interface ExerciseGradeMap {
-  [exerciseId: string]: string;
-}
+import { ExerciseGradeMap } from "@/utils/interfaces/correction.types";
+import { IExerciseListAttempt } from "@/utils/interfaces/exercise_list_attempt.interface";
 
 const ExerciseListCorrectionPage = () => {
   const params = useParams();
@@ -34,7 +25,6 @@ const ExerciseListCorrectionPage = () => {
     error,
   } = useCorrectionData(listId);
 
-  // 2. Estados que controlam a UI da página
   const [selectedStudentIndex, setSelectedStudentIndex] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [exerciseGrades, setExerciseGrades] = useState<ExerciseGradeMap>({});
@@ -42,7 +32,6 @@ const ExerciseListCorrectionPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
 
-  // 3. Lógica para carregar notas e modo de edição quando o aluno muda
   useEffect(() => {
     if (!exerciseList || !studentsAnswers || studentsAnswers.length === 0)
       return;
@@ -53,8 +42,8 @@ const ExerciseListCorrectionPage = () => {
     setIsEditingMode(!isGraded);
 
     const initialGrades = exerciseList.exercises?.reduce((acc, exercise) => {
-      const attempt = student.attempts.find(
-        (a) => a.exercise_id === exercise._id
+      const attempt = student.attempts?.find(
+        (a: IExerciseListAttempt) => a.exercise_id === exercise._id
       );
       const grade = attempt?.grade;
       acc[exercise._id] = grade != null ? String(grade).replace(".", ",") : "0";
@@ -65,7 +54,6 @@ const ExerciseListCorrectionPage = () => {
     setCurrentQuestionIndex(0);
   }, [selectedStudentIndex, exerciseList, studentsAnswers]);
 
-  // 4. Funções de Handler que serão passadas como props
   const handleSelectStudent = (index: number) => {
     setSelectedStudentIndex(index);
   };
@@ -92,8 +80,8 @@ const ExerciseListCorrectionPage = () => {
 
     const gradesToSubmit = Object.entries(exerciseGrades)
       .map(([exerciseId, gradeStr]) => {
-        const attempt = currentStudent.attempts.find(
-          (a) => a.exercise_id === exerciseId
+        const attempt = currentStudent.attempts?.find(
+          (a: IExerciseListAttempt) => a.exercise_id === exerciseId
         );
         const grade = parseFloat(gradeStr.replace(",", ".")) || 0;
         return { attemptId: attempt?._id, grade };
@@ -107,17 +95,18 @@ const ExerciseListCorrectionPage = () => {
         )
       );
 
-      // Atualiza o estado local para refletir as mudanças sem precisar recarregar a página
       const updatedStudents = [...studentsAnswers];
       const studentToUpdate = updatedStudents[selectedStudentIndex];
-      const newAttempts = studentToUpdate.attempts.map((attempt) => {
-        const submitted = gradesToSubmit.find(
-          (g) => g.attemptId === attempt._id
-        );
-        return submitted ? { ...attempt, grade: submitted.grade } : attempt;
-      });
+      const newAttempts = studentToUpdate.attempts.map(
+        (attempt: IExerciseListAttempt) => {
+          const submitted = gradesToSubmit.find(
+            (g) => g.attemptId === attempt._id
+          );
+          return submitted ? { ...attempt, grade: submitted.grade } : attempt;
+        }
+      );
       const totalEarned = newAttempts.reduce(
-        (sum, att) => sum + (att.grade || 0),
+        (sum: number, att: IExerciseListAttempt) => sum + (att.grade || 0),
         0
       );
       const totalPossible = exerciseList.exercises.reduce(
@@ -144,7 +133,6 @@ const ExerciseListCorrectionPage = () => {
     }
   };
 
-  // 5. Renderização
   if (isLoading)
     return <div className="p-6">Carregando dados da correção...</div>;
   if (error) return <div className="p-6 text-red-500">{error}</div>;
@@ -158,10 +146,15 @@ const ExerciseListCorrectionPage = () => {
     (sum, grade) => sum + (parseFloat(grade.replace(",", ".")) || 0),
     0
   );
-  const totalPoints = exerciseList.exercises.reduce(
+  const totalPoints = exerciseList.exercises?.reduce(
     (sum, ex) => sum + ex.grade,
     0
   );
+
+  const totalStudentsCount = studentsAnswers.length;
+  const correctedStudentsCount = studentsAnswers.filter(
+    (student) => student.final_grade != null
+  ).length;
 
   return (
     <>
@@ -188,9 +181,9 @@ const ExerciseListCorrectionPage = () => {
         <CorrectionPanel
           exercise={currentExercise}
           questionIndex={currentQuestionIndex}
-          totalQuestions={exerciseList.exercises.length}
-          attempt={selectedStudent.attempts.find(
-            (a) => a.exercise_id === currentExercise._id
+          totalQuestions={exerciseList.exercises?.length || 0}
+          attempt={selectedStudent.attempts?.find(
+            (a: IExerciseListAttempt) => a.exercise_id === currentExercise._id
           )}
           grade={exerciseGrades[currentExercise._id] || "0"}
           isEditingMode={isEditingMode}
@@ -200,11 +193,13 @@ const ExerciseListCorrectionPage = () => {
         <SummarySidebar
           student={selectedStudent}
           currentTotalGrade={currentTotalGrade}
-          totalPoints={totalPoints}
+          totalPoints={totalPoints || 0}
           isEditingMode={isEditingMode}
           isSubmitting={isSubmitting}
           onEdit={() => setIsEditingMode(true)}
           onSubmit={handleSubmit}
+          totalStudentsCount={totalStudentsCount} 
+          correctedStudentsCount={correctedStudentsCount}
         />
       </div>
     </>

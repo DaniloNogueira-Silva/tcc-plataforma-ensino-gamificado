@@ -86,9 +86,6 @@ const QuestionRenderer = ({ exercise, studentAnswer }: Props) => {
                           >
                             {studentAnswerText}
                           </span>
-                          <span className="text-gray-500 text-sm">
-                            ({correctAnswerText})
-                          </span>
                           {isCorrect ? (
                             <Check className="text-green-600" />
                           ) : (

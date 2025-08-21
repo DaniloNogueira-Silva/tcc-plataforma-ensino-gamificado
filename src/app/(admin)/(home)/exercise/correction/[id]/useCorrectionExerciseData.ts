@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { HttpRequest } from "@/utils/http-request";
-import { IExerciseList } from "@/utils/interfaces/exercise_list.interface";
+import { IExercise } from "@/utils/interfaces/exercise.interface";
 import { StudentAnswer } from "@/utils/interfaces/correction.types";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 
-export const useCorrectionData = (listId: string | null) => {
+export const useIndividualExerciseData = (exerciseId: string | null) => {
   const [studentsAnswers, setStudentsAnswers] = useState<StudentAnswer[]>([]);
-  const [exerciseList, setExerciseList] = useState<IExerciseList | null>(null);
+  const [exercise, setExercise] = useState<IExercise | null>(null);
   const [lessonPlanInfo, setLessonPlanInfo] = useState<{
     id: string | null;
     name: string | null;
@@ -15,7 +15,7 @@ export const useCorrectionData = (listId: string | null) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!listId) {
+    if (!exerciseId) {
       setIsLoading(false);
       return;
     }
@@ -26,35 +26,24 @@ export const useCorrectionData = (listId: string | null) => {
       const httpRequest = new HttpRequest();
 
       try {
-        const [progresses, listData] = await Promise.all([
-          httpRequest.findStudentsAnswersByExerciseListId(listId),
-          httpRequest.getExerciseListById(listId),
+        const [answersData, exerciseData] = await Promise.all([
+          httpRequest.findAllStudentsByExerciseId(exerciseId),
+          httpRequest.getExerciseById(exerciseId),
         ]);
 
-        const studentsWithAttempts = await Promise.all(
-          progresses.map(async (prog: StudentAnswer) => {
-            const attempts =
-              await httpRequest.getExerciseListAttemptsByUserProgress(prog._id);
-            return { ...prog, attempts } as StudentAnswer;
-          })
-        );
-        setStudentsAnswers(studentsWithAttempts);
-
-        const exercises = await Promise.all(
-          listData.exercises_ids.map((id: string) =>
-            httpRequest.getExerciseById(id)
-          )
-        );
-        setExerciseList({ ...listData, exercises });
+        setStudentsAnswers(answersData);
+        setExercise(exerciseData);
 
         const associations = await httpRequest.getAssociationsByContent(
-          listId,
-          "exercise_list"
+          exerciseId,
+          "exercise"
         );
         if (associations && associations.length > 0) {
           const planId = associations[0].lesson_plan_id;
           const plans = await httpRequest.getLessonPlansByRole();
-          const foundPlan = plans.find((p: ILessonPlanByRole) => p.lessonplan._id === planId);
+          const foundPlan = plans.find(
+            (p: ILessonPlanByRole) => p.lessonplan._id === planId
+          );
           if (foundPlan) {
             setLessonPlanInfo({ id: planId, name: foundPlan.lessonplan.name });
           }
@@ -70,12 +59,12 @@ export const useCorrectionData = (listId: string | null) => {
     };
 
     fetchData();
-  }, [listId]);
+  }, [exerciseId]);
 
   return {
     studentsAnswers,
     setStudentsAnswers,
-    exerciseList,
+    exercise,
     lessonPlanInfo,
     isLoading,
     error,

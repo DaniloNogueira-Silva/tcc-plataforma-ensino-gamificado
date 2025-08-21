@@ -1,17 +1,20 @@
-import { StudentAnswer } from "@/app/(admin)/(home)/exercise_list/correction/[id]/page"; 
-
+import { StudentAnswer } from "@/utils/interfaces/correction.types";
 type Props = {
   student: StudentAnswer;
   isSelected: boolean;
   onClick: () => void;
+  isIndividual?: boolean;
 };
 
-const StudentListItem = ({ student, isSelected, onClick }: Props) => {
+const StudentListItem = ({
+  student,
+  isSelected,
+  onClick,
+}: Props) => {
   const isGraded = student.final_grade != null;
   const grade = isGraded
     ? student.final_grade!.toFixed(1).replace(".", ",")
     : "N/A";
-  const totalQuestions = student.attempts.length; 
 
   return (
     <div
@@ -26,9 +29,7 @@ const StudentListItem = ({ student, isSelected, onClick }: Props) => {
         <span className="font-semibold text-gray-800">
           {student.user_id.name}
         </span>
-        <span className="text-sm text-gray-500">
-          {totalQuestions}/{totalQuestions} questões
-        </span>
+
         {isGraded && (
           <span className="text-sm text-gray-600 font-medium">
             Nota: {grade}

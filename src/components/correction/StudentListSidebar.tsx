@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Search } from "lucide-react";
-import { StudentAnswer } from "@/app/(admin)/(home)/exercise_list/correction/[id]/page"; 
+import { StudentAnswer } from "@/utils/interfaces/correction.types";
 import StudentListItem from "./StudentListItem";
 
 type Props = {
   students: StudentAnswer[];
   selectedStudentIndex: number;
   onSelectStudent: (index: number) => void;
+  isIndividual?: boolean;
 };
 
 const StudentListSidebar = ({

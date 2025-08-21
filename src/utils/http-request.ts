@@ -17,6 +17,7 @@ import { IUserProgress } from "./interfaces/user-progress.interface";
 import { TokenPayload } from "@/app/(admin)/(home)/exercise/form/page";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import { ILessonPlanContent } from "./interfaces/lesson_plan_content";
 
 export class HttpRequest {
   async getToken(): Promise<string | undefined> {
@@ -1387,6 +1388,36 @@ export class HttpRequest {
     } catch (error) {
       console.error("Erro ao buscar avatar:", error);
       throw new Error("Ocorreu um erro ao buscar avatar" + error);
+    }
+  }
+
+  async createLessonPlanContent(
+    lesson_plan_id: string,
+    content_id: string,
+    content_type: string,
+    due_date?: Date
+  ): Promise<ILessonPlanContent | null> {
+    try {
+      const token = await this.getToken();
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/lesson-plan-contents`,
+        {
+          lesson_plan_id,
+          content_id,
+          content_type,
+          due_date,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao criar o conteudo do plano de aula:", error);
+      throw error;
     }
   }
 }

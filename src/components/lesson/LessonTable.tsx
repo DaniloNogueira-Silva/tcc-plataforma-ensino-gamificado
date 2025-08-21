@@ -41,13 +41,6 @@ export default function LessonTable() {
     fetchLessonsAndPlans();
   }, []);
 
-  function formatDate(dateString?: string | null): string {
-    if (!dateString) return "Sem data de entrega";
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "Sem data de entrega";
-    return date.toLocaleDateString("pt-BR");
-  }
-
   function getFileNameFromUrl(url?: string): string {
     if (!url) return "Nome de arquivo inválido";
 
@@ -123,12 +116,6 @@ export default function LessonTable() {
                 isHeader
                 className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400"
               >
-                Data de Entrega
-              </TableCell>
-              <TableCell
-                isHeader
-                className="px-5 py-3 font-medium text-start text-theme-xs text-gray-500 dark:text-gray-400"
-              >
                 Nota
               </TableCell>
               <TableCell
@@ -169,9 +156,6 @@ export default function LessonTable() {
               <TableRow key={lesson._id}>
                 <TableCell className="px-5 py-4 text-start text-gray-800 text-theme-sm dark:text-white/90 line-clamp-3 break-words max-w-md">
                   {lesson.name}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
-                  {formatDate(lesson.due_date)}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
                   {formatGrade(lesson.grade)}
