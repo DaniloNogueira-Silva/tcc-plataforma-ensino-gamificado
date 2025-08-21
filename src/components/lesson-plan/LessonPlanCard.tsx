@@ -1,6 +1,7 @@
 "use client";
 
 import { PencilIcon, Trash2Icon, UserPlusIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import Button from "../ui/button/Button";
 import { HttpRequest } from "@/utils/http-request";
@@ -9,7 +10,6 @@ import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import { Modal } from "../ui/modal";
 import ProgressBar from "../progress-bar/ProgressBar";
-import { useState, useEffect } from "react";
 
 type LessonPlanCardProps = {
   imgUrl: string;
@@ -162,6 +162,8 @@ const LessonPlanCard: React.FC<LessonPlanCardProps> = ({
                 <Image
                   src={selectedImage}
                   alt="Ícone selecionado"
+                  width={64}
+                  height={64}
                   className="w-16 h-16"
                 />
                 <p className="text-sm text-gray-500">{selectedImage}</p>
@@ -206,6 +208,8 @@ const LessonPlanCard: React.FC<LessonPlanCardProps> = ({
               <Image
                 src={image}
                 alt={`Imagem ${index + 1}`}
+                width={150}
+                height={150}
                 className="w-full h-auto border rounded-lg"
               />
             </div>
@@ -217,4 +221,3 @@ const LessonPlanCard: React.FC<LessonPlanCardProps> = ({
 };
 
 export default LessonPlanCard;
-

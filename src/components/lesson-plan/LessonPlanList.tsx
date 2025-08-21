@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import { HttpRequest } from "@/utils/http-request";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import LessonPlanCard from "./LessonPlanCard";
@@ -25,7 +26,7 @@ export default function LessonPlanList() {
         const iconPath = plan?.lessonplan?.icon;
         const imgUrl = iconPath
           ? `/images/brand/${iconPath}.svg`
-          : "/images/brand/brand-01.svg";
+          : "/images/brand/art.svg";
 
         return (
           <Link key={plan?.lessonplan?._id} href={`/lesson-plan/details/${plan.lessonplan._id}`}>

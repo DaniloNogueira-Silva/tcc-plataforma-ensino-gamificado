@@ -1,8 +1,8 @@
-import { StudentAnswer } from "@/utils/interfaces/correction.types";
-import StudentInfoCard from "./StudentInfoCard";
+import ActionButtons from "./ActionButtons";
 import CorrectionProgressCard from "./CorrectionProgressCard";
 import CurrentGradeCard from "./CurrentGradeCard";
-import ActionButtons from "./ActionButtons";
+import { StudentAnswer } from "@/utils/interfaces/correction.types";
+import StudentInfoCard from "./StudentInfoCard";
 
 type Props = {
   student: StudentAnswer;
@@ -62,7 +62,7 @@ const SummarySidebar = (props: Props) => {
               disabled={!props.isEditingMode}
             />
             <span className="text-gray-600">
-              / {totalPoints.toString().replace(".", ",")}
+              / {totalPoints?.toString().replace(".", ",")}
             </span>
           </div>
         </div>
