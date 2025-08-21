@@ -1,6 +1,7 @@
 "use client";
 
 import { PencilIcon, Trash2Icon, UserPlusIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import Button from "../ui/button/Button";
 import { HttpRequest } from "@/utils/http-request";
@@ -9,7 +10,6 @@ import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import { Modal } from "../ui/modal";
 import ProgressBar from "../progress-bar/ProgressBar";
-import { useState } from "react";
 
 type LessonPlanCardProps = {
   imgUrl: string;
@@ -31,6 +31,21 @@ const LessonPlanCard: React.FC<LessonPlanCardProps> = ({
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [name, setName] = useState(lessonPlanName);
   const [loading, setLoading] = useState(false);
+  const [isImageModalOpen, setImageModalOpen] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
+  const [selectedImage, setSelectedImage] = useState<string>(imgUrl);
+
+  useEffect(() => {
+    setImages([
+      "/images/brand/node.svg",
+      "/images/brand/math.svg",
+      "/images/brand/language.svg",
+      "/images/brand/history.svg",
+      "/images/brand/science.svg",
+      "/images/brand/geography.svg",
+      "/images/brand/art.svg",
+    ]);
+  }, []);
 
   const handleDelete = async () => {
     const httpRequest = new HttpRequest();
@@ -41,10 +56,18 @@ const LessonPlanCard: React.FC<LessonPlanCardProps> = ({
   const handleUpdate = async () => {
     setLoading(true);
     const httpRequest = new HttpRequest();
-    await httpRequest.updateLessonPlan(lessonPlanId, name);
+    const iconName = selectedImage
+      ? selectedImage.split("/").pop()?.split(".")[0]
+      : undefined;
+    await httpRequest.updateLessonPlan(lessonPlanId, name, iconName);
     setLoading(false);
     setEditModalOpen(false);
     onUpdateSuccess();
+  };
+
+  const handleImageSelect = (imagePath: string) => {
+    setSelectedImage(imagePath);
+    setImageModalOpen(false);
   };
 
   const handleInvite = async () => {
@@ -130,7 +153,31 @@ const LessonPlanCard: React.FC<LessonPlanCardProps> = ({
         <div className="space-y-5">
           <div>
             <Label>Nome</Label>
-            <Input onChange={(e) => setName(e.target.value)} />
+            <Input onChange={(e) => setName(e.target.value)} defaultValue={name} />
+          </div>
+          <div>
+            <Label>Ícone</Label>
+            {selectedImage ? (
+              <div>
+                <Image
+                  src={selectedImage}
+                  alt="Ícone selecionado"
+                  width={64}
+                  height={64}
+                  className="w-16 h-16"
+                />
+                <p className="text-sm text-gray-500">{selectedImage}</p>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">Nenhuma imagem selecionada</p>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setImageModalOpen(true)}
+            >
+              Selecionar ícone
+            </Button>
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-3">
@@ -142,9 +189,35 @@ const LessonPlanCard: React.FC<LessonPlanCardProps> = ({
           </Button>
         </div>
       </Modal>
+
+      <Modal
+        isOpen={isImageModalOpen}
+        onClose={() => setImageModalOpen(false)}
+        className="max-w-[584px] p-5 lg:p-10"
+      >
+        <h4 className="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">
+          Selecione uma imagem
+        </h4>
+        <div className="grid grid-cols-3 gap-4">
+          {images.map((image, index) => (
+            <div
+              key={index}
+              className="cursor-pointer"
+              onClick={() => handleImageSelect(image)}
+            >
+              <Image
+                src={image}
+                alt={`Imagem ${index + 1}`}
+                width={150}
+                height={150}
+                className="w-full h-auto border rounded-lg"
+              />
+            </div>
+          ))}
+        </div>
+      </Modal>
     </>
   );
 };
 
 export default LessonPlanCard;
-
