@@ -7,9 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/components/ui/button/Button";
 import { HelpCircle } from "lucide-react";
 import { HttpRequest } from "@/utils/http-request";
-import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import Label from "@/components/form/Label";
-import MultiSelect from "@/components/form/MultiSelect";
 import TextArea from "@/components/form/input/TextArea";
 import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { jwtDecode } from "jwt-decode";
@@ -41,7 +39,6 @@ const ExerciseFormPage = () => {
   );
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [lessonPlanIds, setLessonPlanIds] = useState<string[]>([]);
-  const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
 
   const [mcOptions, setMcOptions] = useState<string[]>(["", "", "", ""]);
   const [correctOptionIndex, setCorrectOptionIndex] = useState<number | null>(
@@ -54,11 +51,6 @@ const ExerciseFormPage = () => {
 
   const [saving, setSaving] = useState(false);
 
-  const options = lessonPlans.map((plan) => ({
-    value: plan.lessonplan._id,
-    text: plan.lessonplan.name,
-    selected: lessonPlanIds.includes(plan.lessonplan._id),
-  }));
 
   useEffect(() => {
     if (exerciseId) {
@@ -117,15 +109,6 @@ const ExerciseFormPage = () => {
       }
     }
   }, [initialData]);
-
-  useEffect(() => {
-    const fetchLessonPlans = async () => {
-      const httpRequest = new HttpRequest();
-      const plans = await httpRequest.getLessonPlansByRole();
-      setLessonPlans(plans);
-    };
-    fetchLessonPlans();
-  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -380,30 +363,7 @@ const ExerciseFormPage = () => {
           )}
         </div>
 
-       
-
         <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 mt-6">
-          <div className="col-span-1">
-            <div className="flex items-center gap-1 mb-1">
-              <span className="text-sm font-medium text-gray-800 dark:text-white">
-                Plano de Aula*
-              </span>
-              <Tooltip
-                position="right"
-                width="330px"
-                content="Isso define a qual plano de aula o exercício será atribuído. Pode ser não selecionar, se preferir não vincular a nenhum por enquanto."
-              >
-                <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
-              </Tooltip>
-            </div>
-            <MultiSelect
-              options={options}
-              defaultSelected={lessonPlanIds}
-              onChange={(selected) => setLessonPlanIds(selected)}
-              disabled={saving}
-            />
-          </div>
-
           <div className="col-span-1">
             <div className="flex items-center gap-1 mb-1">
               <span className="text-sm font-medium text-gray-800 dark:text-white">

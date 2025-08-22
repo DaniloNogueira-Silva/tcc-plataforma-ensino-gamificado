@@ -59,7 +59,8 @@ const ExerciseCorrectionPage = () => {
         final_grade: numericGrade,
       };
       setStudentsAnswers(updatedStudents);
-
+      console.log(updatedStudents);
+      console.log(studentsAnswers);
       setIsEditingMode(false);
       setShowSuccessNotification(true);
       setTimeout(() => setShowSuccessNotification(false), 3000);
@@ -81,10 +82,29 @@ const ExerciseCorrectionPage = () => {
   if (!exercise || !selectedStudent)
     return <div className="p-6">Nenhum aluno respondeu.</div>;
 
-
   const totalStudentsCount = studentsAnswers.length;
-  const correctedStudentsCount = studentsAnswers.filter(student => student.final_grade != null).length;
+  const correctedStudentsCount = studentsAnswers.filter(
+    (student) => student.final_grade != null
+  ).length;
 
+  const handleGradeChangeWithValidation = (value: string) => {
+    const maxGrade = exercise?.grade ?? 0;
+
+    if (value === "" || value === "," || value === ".") {
+      setGrade(value);
+      return;
+    }
+
+    const numericValue = parseFloat(value.replace(",", "."));
+
+    if (isNaN(numericValue)) {
+      return;
+    }
+
+    if (numericValue >= 0 && numericValue <= maxGrade) {
+      setGrade(value); 
+    }
+  };
   return (
     <>
       {showSuccessNotification && (
@@ -105,7 +125,7 @@ const ExerciseCorrectionPage = () => {
           />
           <IndividualCorrectionPanel
             exercise={exercise}
-            studentAnswer={selectedStudent.answer || ''}
+            studentAnswer={selectedStudent.answer || ""}
           />
           <SummarySidebar
             student={selectedStudent}
@@ -115,10 +135,10 @@ const ExerciseCorrectionPage = () => {
             isSubmitting={isSubmitting}
             onEdit={() => setIsEditingMode(true)}
             onSubmit={handleSubmit}
-            totalStudentsCount={totalStudentsCount}          
+            totalStudentsCount={totalStudentsCount}
             correctedStudentsCount={correctedStudentsCount}
             grade={grade}
-            onGradeChange={setGrade}
+            onGradeChange={handleGradeChangeWithValidation}
           />
         </div>
       </div>

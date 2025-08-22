@@ -68,10 +68,6 @@ const ExerciseListCorrectionPage = () => {
     }
   };
 
-  const handleGradeChange = (exerciseId: string, value: string) => {
-    setExerciseGrades((prev) => ({ ...prev, [exerciseId]: value }));
-  };
-
   const handleSubmit = async (goToNext = false) => {
     if (!exerciseList) return;
     setIsSubmitting(true);
@@ -156,6 +152,27 @@ const ExerciseListCorrectionPage = () => {
     (student) => student.final_grade != null
   ).length;
 
+  const handleGradeChangeWithValidation = (
+    exerciseId: string,
+    value: string
+  ) => {
+    const exercise = exerciseList?.exercises?.find(
+      (ex) => ex._id === exerciseId
+    );
+    const maxGrade = exercise?.grade ?? 0;
+
+    if (value === "" || value === "," || value === ".") {
+      setExerciseGrades((prev) => ({ ...prev, [exerciseId]: value }));
+      return;
+    }
+    const numericValue = parseFloat(value.replace(",", "."));
+    if (isNaN(numericValue)) return;
+
+    if (numericValue >= 0 && numericValue <= maxGrade) {
+      setExerciseGrades((prev) => ({ ...prev, [exerciseId]: value }));
+    }
+  };
+
   return (
     <>
       {showSuccessNotification && (
@@ -187,7 +204,7 @@ const ExerciseListCorrectionPage = () => {
           )}
           grade={exerciseGrades[currentExercise._id] || "0"}
           isEditingMode={isEditingMode}
-          onGradeChange={handleGradeChange}
+          onGradeChange={handleGradeChangeWithValidation}
           onNavigate={handleNavigateQuestion}
         />
         <SummarySidebar
@@ -198,7 +215,7 @@ const ExerciseListCorrectionPage = () => {
           isSubmitting={isSubmitting}
           onEdit={() => setIsEditingMode(true)}
           onSubmit={handleSubmit}
-          totalStudentsCount={totalStudentsCount} 
+          totalStudentsCount={totalStudentsCount}
           correctedStudentsCount={correctedStudentsCount}
         />
       </div>

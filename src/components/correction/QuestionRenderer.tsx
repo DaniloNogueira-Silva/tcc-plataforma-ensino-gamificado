@@ -7,7 +7,7 @@ type Props = {
 };
 
 const QuestionRenderer = ({ exercise, studentAnswer }: Props) => {
-  const { type, answer: correctAnswer } = exercise;
+  const { type, answer: correctAnswerIndex } = exercise;
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 flex-grow">
@@ -22,24 +22,28 @@ const QuestionRenderer = ({ exercise, studentAnswer }: Props) => {
                 <div className="space-y-3">
                   {exercise.multiple_choice_options?.map(
                     (optionText, index) => {
-                      const isSelectedByStudent =
-                        String(index) === studentAnswer;
-                      const isCorrectAnswer = String(index) === correctAnswer;
-                      const baseStyle =
+                      const isSelectedByStudent = optionText === studentAnswer;
+                      const isCorrectAnswer =
+                        String(index) === correctAnswerIndex;
+
+                      let styleClasses =
                         "flex items-center justify-between p-4 rounded-lg border";
-                      let stateStyle = "bg-gray-50";
-                      if (isSelectedByStudent && isCorrectAnswer)
-                        stateStyle = "bg-green-50 border-green-300";
-                      else if (isSelectedByStudent && !isCorrectAnswer)
-                        stateStyle = "bg-red-50 border-red-300";
-                      else if (isCorrectAnswer)
-                        stateStyle = "bg-blue-50 border-blue-300";
+
+                      if (isSelectedByStudent && isCorrectAnswer) {
+                        styleClasses +=
+                          " bg-green-50 border-green-400 text-green-800";
+                      } else if (isSelectedByStudent && !isCorrectAnswer) {
+                        styleClasses +=
+                          " bg-red-50 border-red-400 text-red-800";
+                      } else if (isCorrectAnswer) {
+                        styleClasses += " bg-white border-green-500";
+                      } else {
+                        styleClasses += " bg-gray-50 border-gray-200";
+                      }
+
                       return (
-                        <div
-                          key={index}
-                          className={`${baseStyle} ${stateStyle}`}
-                        >
-                          <p className="text-gray-800">{optionText}</p>
+                        <div key={index} className={styleClasses}>
+                          <p>{optionText}</p>
                           <div className="flex items-center space-x-3">
                             {isSelectedByStudent && !isCorrectAnswer && (
                               <X size={20} className="text-red-500" />

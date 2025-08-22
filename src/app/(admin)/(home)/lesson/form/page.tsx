@@ -236,25 +236,6 @@ const LessonForm = () => {
               <option value="school_work">Trabalho</option>
             </select>
           </div>
-
-          <div className="col-span-1">
-            <span className="text-sm font-medium text-gray-800 dark:text-white">
-              Plano de Aula*
-            </span>
-            <Tooltip
-              position="right"
-              width="330px"
-              content="Isso define a qual plano de aula o exercício será atribuído. Pode ser não selecionar, se preferir não vincular a nenhum por enquanto."
-            >
-              <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
-            </Tooltip>
-            <MultiSelect
-              options={options}
-              defaultSelected={lessonPlanIds}
-              onChange={(selected) => setLessonPlanIds(selected)}
-              disabled={saving}
-            />
-          </div>
         </div>
 
         <div className="flex items-center justify-end w-full gap-3 mt-6">

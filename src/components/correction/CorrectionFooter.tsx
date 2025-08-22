@@ -19,13 +19,7 @@ const CorrectionFooter = ({
   isFirst,
   isLast,
 }: Props) => {
-  const handleBlur = (maxGrade: number) => {
-    let numericValue = parseFloat(grade.replace(",", "."));
-    if (isNaN(numericValue)) return;
-    if (numericValue < 0) numericValue = 0;
-    if (numericValue > maxGrade) numericValue = maxGrade;
-    onGradeChange(exercise._id, numericValue.toString().replace(".", ","));
-  };
+  
 
   return (
     <div className="mt-auto pt-6 flex justify-between items-center">
@@ -41,7 +35,6 @@ const CorrectionFooter = ({
           type="text"
           value={grade}
           onChange={(e) => onGradeChange(exercise._id, e.target.value)}
-          onBlur={() => handleBlur(exercise.grade)}
           className="w-20 p-2 border border-gray-300 rounded-md text-center disabled:bg-gray-100 disabled:cursor-not-allowed"
           disabled={!isEditingMode}
         />

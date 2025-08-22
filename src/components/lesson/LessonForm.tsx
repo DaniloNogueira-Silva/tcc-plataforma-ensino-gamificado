@@ -9,10 +9,7 @@ import Label from "@/components/form/Label";
 import { Modal } from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
 import { jwtDecode } from "jwt-decode";
-import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import { ILesson } from "@/utils/interfaces/lesson.interface";
-import { Tooltip } from "../ui/tooltip/Tooltip";
-import { HelpCircle } from "lucide-react";
 
 interface TokenPayload {
   _id: string;
@@ -42,7 +39,6 @@ const LessonForm = ({
   const [file, setFile] = useState<File | null>(null);
   const [type, setType] = useState("");
   const [grade, setGrade] = useState(0);
-  const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
   const [selectedLessonPlan, setSelectedLessonPlan] = useState("");
   const [loading, setLoading] = useState(false);
   const [teacherId, setTeacherId] = useState<string | null>(null);
@@ -61,14 +57,6 @@ const LessonForm = ({
       setGrade(initialData.grade || 0);
       setSelectedLessonPlan(initialData.lesson_plan_id || "");
     }
-
-    const fetchLessonPlans = async () => {
-      const httpRequest = new HttpRequest();
-      const plans = await httpRequest.getLessonPlansByRole();
-      setLessonPlans(plans);
-    };
-
-    fetchLessonPlans();
   }, [initialData]);
 
   useEffect(() => {
@@ -233,32 +221,6 @@ const LessonForm = ({
               defaultValue={grade}
               onChange={(e) => setGrade(Number(e.target.value))}
             />
-          </div>
-
-          <div className="col-span-1">
-            <span className="text-sm font-medium text-gray-800 dark:text-white">
-              Plano de Aula*
-            </span>
-            <Tooltip
-              position="right"
-              width="330px"
-              content="Isso define a qual plano de aula o exercício será atribuído. Pode ser não selecionar, se preferir não vincular a nenhum por enquanto."
-            >
-              <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
-            </Tooltip>
-            <select
-              id="lesson_plan_id"
-              value={selectedLessonPlan}
-              onChange={(e) => setSelectedLessonPlan(e.target.value)}
-              className="mb-3 w-full rounded-md border border-gray-300 p-2 dark:bg-navy-700 dark:text-white"
-            >
-              <option value="">Selecione um plano de aula</option>
-              {lessonPlans.map((plan) => (
-                <option key={plan.lessonplan._id} value={plan.lessonplan._id}>
-                  {plan.lessonplan.name}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
 

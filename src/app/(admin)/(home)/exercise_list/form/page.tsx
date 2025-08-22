@@ -23,7 +23,6 @@ const ExerciseListForm = () => {
   const router = useRouter();
 
   const [name, setName] = useState("");
-  const [type, setType] = useState("");
   const [content, setContent] = useState("");
 
   const [exercises, setExercises] = useState<IExercise[]>([]);
@@ -67,12 +66,6 @@ const ExerciseListForm = () => {
     selected: exercisesIds.includes(ex._id),
   }));
 
-  const lessonPlanOptions = lessonPlans.map((plan) => ({
-    value: plan.lessonplan._id,
-    text: plan.lessonplan.name,
-    selected: lessonPlanIds.includes(plan.lessonplan._id),
-  }));
-
   const handleClose = () => {
     router.push("/exercise");
   };
@@ -94,7 +87,7 @@ const ExerciseListForm = () => {
         teacherId,
         exercisesIds,
         lessonPlanIds.length ? lessonPlanIds : undefined,
-        type
+        'exercise_list'
       );
 
       if (created?._id) {
@@ -125,16 +118,6 @@ const ExerciseListForm = () => {
             />
           </div>
 
-          <div className="col-span-1">
-            <Label>Tipo*</Label>
-            <Input
-              type="text"
-              placeholder="Tipo da lista"
-              defaultValue={type}
-              onChange={(e) => setType(e.target.value)}
-            />
-          </div>
-
           <div className="col-span-2">
             <Label>Conteúdo</Label>
             <TextArea
@@ -151,16 +134,6 @@ const ExerciseListForm = () => {
               options={exerciseOptions}
               defaultSelected={exercisesIds}
               onChange={(selected) => setExercisesIds(selected)}
-              disabled={saving}
-            />
-          </div>
-
-          <div className="col-span-1">
-            <Label>Plano de Aula</Label>
-            <MultiSelect
-              options={lessonPlanOptions}
-              defaultSelected={lessonPlanIds}
-              onChange={(selected) => setLessonPlanIds(selected)}
               disabled={saving}
             />
           </div>
