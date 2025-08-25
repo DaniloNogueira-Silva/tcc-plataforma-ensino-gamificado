@@ -26,43 +26,58 @@ export const useCorrectionData = (listId: string | null) => {
       const httpRequest = new HttpRequest();
 
       try {
-        const [progresses, listData] = await Promise.all([
-          httpRequest.findStudentsAnswersByExerciseListId(listId),
-          httpRequest.getExerciseListById(listId),
-        ]);
-
-        const studentsWithAttempts = await Promise.all(
-          progresses.map(async (prog: StudentAnswer) => {
-            const attempts =
-              await httpRequest.getExerciseListAttemptsByUserProgress(prog._id);
-            return { ...prog, attempts } as StudentAnswer;
-          })
-        );
-        setStudentsAnswers(studentsWithAttempts);
-
-        const exercises = await Promise.all(
-          listData.exercises_ids.map((id: string) =>
-            httpRequest.getExerciseById(id)
-          )
-        );
-        setExerciseList({ ...listData, exercises });
-
         const associations = await httpRequest.getAssociationsByContent(
           listId,
           "exercise_list"
         );
-        if (associations && associations.length > 0) {
-          const planId = associations[0].lesson_plan_id;
-          const plans = await httpRequest.getLessonPlansByRole();
-          const foundPlan = plans.find((p: ILessonPlanByRole) => p.lessonplan._id === planId);
-          if (foundPlan) {
-            setLessonPlanInfo({ id: planId, name: foundPlan.lessonplan.name });
-          }
+
+        if (!associations || associations.length === 0) {
+          throw new Error(
+            "Não foi possível encontrar um plano de aula associado a esta lista de exercícios."
+          );
         }
-      } catch (err) {
+
+        const planId = associations[0].lesson_plan_id;
+
+        const [progresses, listData, allPlans] = await Promise.all([
+          httpRequest.findStudentsAnswersByExerciseListId(listId, planId), 
+          httpRequest.getExerciseListById(listId),
+          httpRequest.getLessonPlansByRole(),
+        ]);
+
+        const [studentsWithAttempts, exercises] = await Promise.all([
+          Promise.all(
+            progresses.map(async (prog: StudentAnswer) => {
+              const attempts =
+                await httpRequest.getExerciseListAttemptsByUserProgress(
+                  prog._id
+                );
+              return { ...prog, attempts } as StudentAnswer;
+            })
+          ),
+          Promise.all(
+            listData.exercises_ids.map((id: string) =>
+              httpRequest.getExerciseById(id)
+            )
+          ),
+        ]);
+
+        setStudentsAnswers(studentsWithAttempts);
+        setExerciseList({ ...listData, exercises });
+
+        const foundPlan = allPlans.find(
+          (p: ILessonPlanByRole) => p.lessonplan._id === planId
+        );
+        if (foundPlan) {
+          setLessonPlanInfo({ id: planId, name: foundPlan.lessonplan.name });
+        } else {
+          setLessonPlanInfo({ id: planId, name: "Plano de Aula desconhecido" });
+        }
+      } catch (err: any) {
         console.error("Erro ao buscar dados da correção:", err);
         setError(
-          "Não foi possível carregar os dados. Tente recarregar a página."
+          err.message ||
+            "Não foi possível carregar os dados. Tente recarregar a página."
         );
       } finally {
         setIsLoading(false);

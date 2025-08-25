@@ -11,6 +11,7 @@ import { HttpRequest } from "@/utils/http-request";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import { jwtDecode } from "jwt-decode";
+import { ClipboardType, FileText, ListChecks } from "lucide-react"; // Ícones importados
 
 interface TokenPayload {
   _id: string;
@@ -87,7 +88,7 @@ const ExerciseListForm = () => {
         teacherId,
         exercisesIds,
         lessonPlanIds.length ? lessonPlanIds : undefined,
-        'exercise_list'
+        "exercise_list"
       );
 
       if (created?._id) {
@@ -109,7 +110,12 @@ const ExerciseListForm = () => {
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
           <div className="col-span-1">
-            <Label>Nome*</Label>
+            <Label>
+              <div className="flex items-center gap-2">
+                <ClipboardType className="w-4 h-4" />
+                <span>Nome*</span>
+              </div>
+            </Label>
             <Input
               type="text"
               placeholder="Digite o nome da lista"
@@ -119,7 +125,12 @@ const ExerciseListForm = () => {
           </div>
 
           <div className="col-span-2">
-            <Label>Conteúdo</Label>
+            <Label>
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                <span>Conteúdo</span>
+              </div>
+            </Label>
             <TextArea
               placeholder="Digite o conteúdo da lista"
               value={content}
@@ -129,7 +140,12 @@ const ExerciseListForm = () => {
           </div>
 
           <div className="col-span-1">
-            <Label>Exercícios*</Label>
+            <Label>
+              <div className="flex items-center gap-2">
+                <ListChecks className="w-4 h-4" />
+                <span>Exercícios*</span>
+              </div>
+            </Label>
             <MultiSelect
               options={exerciseOptions}
               defaultSelected={exercisesIds}

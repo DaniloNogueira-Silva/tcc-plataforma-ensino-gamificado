@@ -73,16 +73,19 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
   useEffect(() => {
     const fetchCounts = async () => {
       const httpRequest = new HttpRequest();
-
+      console.log(lessonPlanId);
       if (lessonPlanId) {
         const students = await httpRequest.findAllStudentsByLessonPlanId(
           lessonPlanId
         );
-
+        console.log(lessonPlanId);
         setTotalStudents(students.length);
 
         const submissions: { user_id: { _id: string; name: string } }[] =
-          await httpRequest.findAllStudentsByExerciseId(exerciseId);
+          await httpRequest.findAllStudentsByExerciseId(
+            exerciseId,
+            lessonPlanId
+          );
 
         const deliveredNames = submissions.map((sub) => sub.user_id.name);
         const deliveredIds = submissions.map((sub) => sub.user_id._id);
@@ -105,8 +108,8 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
 
   const href =
     userType === "STUDENT"
-      ? `/exercise/realize/${exerciseId}`
-      : `/exercise/correction/${exerciseId}`;
+      ? `/exercise/realize/${exerciseId}?lessonPlanId=${lessonPlanId}`
+      : `/exercise/correction/${exerciseId}?lessonPlanId=${lessonPlanId}`;
 
   const typeLabels: Record<string, string> = {
     open: "Aberta",

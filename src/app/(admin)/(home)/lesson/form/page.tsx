@@ -10,7 +10,14 @@ import { jwtDecode } from "jwt-decode";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import { ILesson } from "@/utils/interfaces/lesson.interface";
 import { Tooltip } from "@/components/ui/tooltip/Tooltip";
-import { HelpCircle } from "lucide-react";
+import {
+  HelpCircle,
+  ClipboardType,
+  FileText,
+  UploadCloud,
+  Link,
+  Presentation,
+} from "lucide-react"; // Ícones importados
 import { useRouter, useSearchParams } from "next/navigation";
 import TextArea from "@/components/form/input/TextArea";
 import MultiSelect from "@/components/form/MultiSelect";
@@ -135,7 +142,7 @@ const LessonForm = () => {
 
       let createdLesson;
       if (initialData?._id) {
-        createdLesson = await httpRequest.updateLessonAndLessonPlans(
+        createdLesson = await httpRequest.updateLesson(
           initialData._id,
           name,
           dueDate,
@@ -180,7 +187,12 @@ const LessonForm = () => {
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
           <div className="col-span-1">
-            <Label>Nome*</Label>
+            <Label>
+              <div className="flex items-center gap-2">
+                <ClipboardType className="w-4 h-4" />
+                <span>Nome*</span>
+              </div>
+            </Label>
             <Input
               type="text"
               placeholder="Digite o nome da aula"
@@ -190,7 +202,12 @@ const LessonForm = () => {
           </div>
 
           <div className="col-span-1">
-            <Label>Conteúdo*</Label>
+            <Label>
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                <span>Conteúdo*</span>
+              </div>
+            </Label>
             <TextArea
               placeholder="Digite o conteúdo da aula"
               value={content}
@@ -200,9 +217,19 @@ const LessonForm = () => {
           </div>
 
           <div className="col-span-1">
-            <Label>Upload de Arquivo</Label>
+            <Label>
+              <div className="flex items-center gap-2">
+                <UploadCloud className="w-4 h-4" />
+                <span>Upload de Arquivo</span>
+              </div>
+            </Label>
             <FileInput onChange={(e) => setFile(e.target.files?.[0] || null)} />
-            <Label className="mt-2">Links (um por linha)</Label>
+            <Label className="mt-2">
+              <div className="flex items-center gap-2">
+                <Link className="w-4 h-4" />
+                <span>Links (um por linha)</span>
+              </div>
+            </Label>
             <TextArea
               placeholder="Digite links relacionados à aula"
               value={links}
@@ -213,16 +240,19 @@ const LessonForm = () => {
           </div>
 
           <div>
-            <span className="text-sm font-medium text-gray-800 dark:text-white">
-              Tipo de aula*
-            </span>
-            <Tooltip
-              position="right"
-              width="330px"
-              content="Se o objetivo da aula for somente mostrar o conteúdo selecione leitura, caso seja intruções para um trabalho selecione trabalho"
-            >
-              <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
-            </Tooltip>
+            <div className="flex items-center gap-2 mb-1">
+              <Presentation className="w-4 h-4" />
+              <span className="text-sm font-medium text-gray-800 dark:text-white">
+                Tipo de aula*
+              </span>
+              <Tooltip
+                position="right"
+                width="330px"
+                content="Se o objetivo da aula for somente mostrar o conteúdo selecione leitura, caso seja intruções para um trabalho selecione trabalho"
+              >
+                <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
+              </Tooltip>
+            </div>
             <select
               value={type}
               onChange={(e) => setType(e.target.value)}

@@ -329,10 +329,10 @@ export class HttpRequest {
           name,
           due_date,
           content,
-          file,
-          links,
           type,
           grade,
+          file,
+          links,
           lesson_plan_ids,
         },
         {
@@ -499,12 +499,12 @@ export class HttpRequest {
     }
   }
 
-  async findAllStudentsByLessonId(lessonId: string) {
+  async findAllStudentsByLessonId(lessonId: string, lessonPlanId: string) {
     try {
       const token = await this.getToken();
 
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-progress/lesson/${lessonId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-progress/lesson/${lessonId}/lesson-plan/${lessonPlanId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -624,7 +624,7 @@ export class HttpRequest {
     }
   }
 
-  async updateExerciseAndLessonPlans(
+  async updateExercise(
     id: string,
     statement?: string,
     type?: string,
@@ -850,12 +850,12 @@ export class HttpRequest {
     }
   }
 
-  async findAllStudentsByExerciseListId(exercise_list_id: string) {
+  async findAllStudentsByExerciseListId(exercise_list_id: string, lessonPlanId: string) {
     try {
       const token = await this.getToken();
 
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-progress/exercise_list/${exercise_list_id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-progress/exercise_list/${exercise_list_id}/lesson-plan/${lessonPlanId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -918,12 +918,15 @@ export class HttpRequest {
     }
   }
 
-  async findStudentsAnswersByExerciseListId(exercise_list_id: string) {
+  async findStudentsAnswersByExerciseListId(
+    exercise_list_id: string,
+    lessonPlanId: string
+  ) {
     try {
       const token = await this.getToken();
 
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-progress/exercise_list_answers/${exercise_list_id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-progress/exercise_list_answers/${exercise_list_id}/lesson-plan/${lessonPlanId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -1061,12 +1064,12 @@ export class HttpRequest {
     }
   }
 
-  async findAllStudentsByExerciseId(exerciseId: string) {
+  async findAllStudentsByExerciseId(exerciseId: string, lessonPlanId: string) {
     try {
       const token = await this.getToken();
 
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-progress/exercise/${exerciseId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-progress/exercise/${exerciseId}/lesson-plan/${lessonPlanId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

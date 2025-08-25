@@ -1,11 +1,19 @@
 "use client";
 
 import { IExercise, Options } from "@/utils/interfaces/exercise.interface";
+import {
+  BarChart,
+  FileText,
+  GraduationCap,
+  HelpCircle,
+  List,
+  ListChecks,
+  ToggleRight,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import Button from "@/components/ui/button/Button";
-import { HelpCircle } from "lucide-react";
 import { HttpRequest } from "@/utils/http-request";
 import Label from "@/components/form/Label";
 import TextArea from "@/components/form/input/TextArea";
@@ -50,7 +58,6 @@ const ExerciseFormPage = () => {
   ]);
 
   const [saving, setSaving] = useState(false);
-
 
   useEffect(() => {
     if (exerciseId) {
@@ -157,7 +164,7 @@ const ExerciseFormPage = () => {
       let createdExercise;
 
       if (exerciseId) {
-        createdExercise = await httpRequest.updateExerciseAndLessonPlans(
+        createdExercise = await httpRequest.updateExercise(
           exerciseId,
           statement,
           type,
@@ -205,7 +212,12 @@ const ExerciseFormPage = () => {
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
           <div className="col-span-1">
-            <Label>Enunciado*</Label>
+            <Label>
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                <span>Enunciado*</span>
+              </div>
+            </Label>
             <TextArea
               placeholder="Digite o enunciado da questão"
               value={statement}
@@ -215,7 +227,12 @@ const ExerciseFormPage = () => {
           </div>
 
           <div className="col-span-1">
-            <Label>Tipo de Questão*</Label>
+            <Label>
+              <div className="flex items-center gap-2">
+                <List className="w-4 h-4" />
+                <span>Tipo de Questão*</span>
+              </div>
+            </Label>
             <select
               id="type"
               value={type}
@@ -234,7 +251,12 @@ const ExerciseFormPage = () => {
 
           {type === "multiple_choice" && (
             <div className="col-span-2">
-              <Label>Alternativas*</Label>
+              <Label>
+                <div className="flex items-center gap-2">
+                  <ListChecks className="w-4 h-4" />
+                  <span>Alternativas*</span>
+                </div>
+              </Label>
               <div className="grid grid-cols-2 gap-4 mb-3">
                 {mcOptions.map((option, index) => (
                   <div
@@ -307,7 +329,12 @@ const ExerciseFormPage = () => {
 
           {type === "true_false" && (
             <div className="col-span-2">
-              <Label>Afirmações Verdadeiro/Falso*</Label>
+              <Label>
+                <div className="flex items-center gap-2">
+                  <ToggleRight className="w-4 h-4" />
+                  <span>Afirmações Verdadeiro/Falso*</span>
+                </div>
+              </Label>
               <div className="grid grid-cols-2 gap-4 mb-3">
                 {tfOptions.map((opt, index) => (
                   <div key={index} className="mb-2 flex flex-col">
@@ -365,7 +392,8 @@ const ExerciseFormPage = () => {
 
         <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 mt-6">
           <div className="col-span-1">
-            <div className="flex items-center gap-1 mb-1">
+            <div className="flex items-center gap-2 mb-1">
+              <BarChart className="w-4 h-4" />
               <span className="text-sm font-medium text-gray-800 dark:text-white">
                 Dificuldade*
               </span>
@@ -384,7 +412,8 @@ const ExerciseFormPage = () => {
           </div>
 
           <div className="col-span-1">
-            <div className="flex items-center gap-1 mb-1">
+            <div className="flex items-center gap-2 mb-1">
+              <GraduationCap className="w-4 h-4" />
               <span className="text-sm font-medium text-gray-800 dark:text-white">
                 Nota*
               </span>

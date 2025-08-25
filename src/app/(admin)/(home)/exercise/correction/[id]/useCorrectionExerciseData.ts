@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { HttpRequest } from "@/utils/http-request";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
-import { StudentAnswer } from "@/utils/interfaces/correction.types";
+import { StudentAnswer } from "@/utils/interfaces/correction.types"; 
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 
-export const useIndividualExerciseData = (exerciseId: string | null) => {
+export const useIndividualExerciseData = (
+  exerciseId: string | null,
+  lessonPlanIdFromUrl: string | null
+) => {
   const [studentsAnswers, setStudentsAnswers] = useState<StudentAnswer[]>([]);
   const [exercise, setExercise] = useState<IExercise | null>(null);
   const [lessonPlanInfo, setLessonPlanInfo] = useState<{
@@ -26,40 +29,53 @@ export const useIndividualExerciseData = (exerciseId: string | null) => {
       const httpRequest = new HttpRequest();
 
       try {
-        const [answersData, exerciseData] = await Promise.all([
-          httpRequest.findAllStudentsByExerciseId(exerciseId),
+        let finalPlanId = lessonPlanIdFromUrl;
+
+        if (!finalPlanId) {
+          const associations = await httpRequest.getAssociationsByContent(
+            exerciseId,
+            "exercise"
+          );
+          if (associations && associations.length > 0) {
+            finalPlanId = associations[0].lesson_plan_id;
+          }
+        }
+
+        if (!finalPlanId) {
+          throw new Error(
+            "Este exercício não está associado a nenhum plano de aula."
+          );
+        }
+
+        const [answersData, exerciseData, allPlans] = await Promise.all([
+          httpRequest.findAllStudentsByExerciseId(exerciseId, finalPlanId),
           httpRequest.getExerciseById(exerciseId),
+          httpRequest.getLessonPlansByRole(),
         ]);
 
         setStudentsAnswers(answersData);
         setExercise(exerciseData);
 
-        const associations = await httpRequest.getAssociationsByContent(
-          exerciseId,
-          "exercise"
+        const foundPlan = allPlans.find(
+          (p: ILessonPlanByRole) => p.lessonplan._id === finalPlanId
         );
-        if (associations && associations.length > 0) {
-          const planId = associations[0].lesson_plan_id;
-          const plans = await httpRequest.getLessonPlansByRole();
-          const foundPlan = plans.find(
-            (p: ILessonPlanByRole) => p.lessonplan._id === planId
-          );
-          if (foundPlan) {
-            setLessonPlanInfo({ id: planId, name: foundPlan.lessonplan.name });
-          }
+
+        if (foundPlan) {
+          setLessonPlanInfo({
+            id: finalPlanId,
+            name: foundPlan.lessonplan.name,
+          });
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Erro ao buscar dados da correção:", err);
-        setError(
-          "Não foi possível carregar os dados. Tente recarregar a página."
-        );
+        setError(err.message || "Não foi possível carregar os dados.");
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [exerciseId]);
+  }, [exerciseId, lessonPlanIdFromUrl]); 
 
   return {
     studentsAnswers,

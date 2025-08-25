@@ -70,7 +70,7 @@ const ExerciseListRealizePage = () => {
           const token = await httpRequest.getToken();
           const decoded = token ? jwtDecode<TokenPayload>(token) : null;
           for (const ex of exerciseList.exercises || []) {
-            const data = await httpRequest.findAllStudentsByExerciseId(ex._id);
+            const data = await httpRequest.findAllStudentsByExerciseId(ex._id, lessonPlanId as string);
             const userAnswer = data.find(
               (item: { user_id: { _id: string }; answer: string }) =>
                 decoded && item.user_id._id === decoded._id

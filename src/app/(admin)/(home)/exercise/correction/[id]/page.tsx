@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useIndividualExerciseData } from "./useCorrectionExerciseData";
 import { HttpRequest } from "@/utils/http-request";
 import Notification from "@/components/ui/notification/Notification";
@@ -11,6 +11,8 @@ import SummarySidebar from "@/components/correction/SummarySidebar";
 import IndividualCorrectionPanel from "@/components/correction/IndividualCorrectionPanel";
 const ExerciseCorrectionPage = () => {
   const params = useParams();
+  const searchParams = useSearchParams();
+  const lessonPlanIdFromUrl = searchParams.get("lessonPlanId");
   const exerciseId = params.id as string;
 
   const {
@@ -20,7 +22,7 @@ const ExerciseCorrectionPage = () => {
     lessonPlanInfo,
     isLoading,
     error,
-  } = useIndividualExerciseData(exerciseId);
+  } = useIndividualExerciseData(exerciseId, lessonPlanIdFromUrl);
 
   const [selectedStudentIndex, setSelectedStudentIndex] = useState(0);
   const [grade, setGrade] = useState("0");

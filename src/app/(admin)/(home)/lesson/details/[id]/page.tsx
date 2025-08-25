@@ -108,7 +108,7 @@ const LessonDetailsPage = () => {
         const httpRequest = new HttpRequest();
         try {
           const students: { _id: string; name: string }[] =
-            await httpRequest.findAllStudentsByLessonId(lessonId);
+            await httpRequest.findAllStudentsByLessonId(lessonId, lessonPlanId as string);
           const delivered: { name: string; filePath: string }[] = [];
           console.log(students);
           for (const s of students) {

@@ -84,7 +84,7 @@ const LessonCard: React.FC<LessonCardProps> = ({
         }
 
         try {
-          const submissions = await http.findAllStudentsByLessonId(lessonId);
+          const submissions = await http.findAllStudentsByLessonId(lessonId, lessonPlanId);
           setDeliveredStudents(normalizeUsers(submissions));
         } catch (e) {
           setDeliveredStudents([]);

@@ -64,7 +64,8 @@ const ExerciseDetailsPage = () => {
 
         if (result && result.completed) {
           const data = await httpRequest.findAllStudentsByExerciseId(
-            exerciseId
+            exerciseId,
+            lessonPlanId as string
           );
           setSubmitted(true);
           const userAnswer = data.find(
