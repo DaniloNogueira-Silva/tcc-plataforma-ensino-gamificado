@@ -62,7 +62,6 @@ const LessonCard: React.FC<LessonCardProps> = ({
             me._id,
             "LESSON"
           );
-          console.log(progress);
           const exists = !!progress;
           setHasEverCompleted(exists);
           setChecked(exists);

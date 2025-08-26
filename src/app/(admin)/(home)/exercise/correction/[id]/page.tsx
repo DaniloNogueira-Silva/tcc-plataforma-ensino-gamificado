@@ -61,8 +61,6 @@ const ExerciseCorrectionPage = () => {
         final_grade: numericGrade,
       };
       setStudentsAnswers(updatedStudents);
-      console.log(updatedStudents);
-      console.log(studentsAnswers);
       setIsEditingMode(false);
       setShowSuccessNotification(true);
       setTimeout(() => setShowSuccessNotification(false), 3000);

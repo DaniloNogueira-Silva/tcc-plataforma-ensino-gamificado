@@ -4,9 +4,10 @@ export interface ILesson {
   content: string;
   points: number;
   due_date: string;
-  file?: string | null;
+  file?: string[];
   links?: string[];
   type: string;
   grade: number;
   lesson_plan_ids: string[];
+  teacher_id: string;
 }

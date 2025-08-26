@@ -12,8 +12,7 @@ export default function FullScreenModal() {
     closeModal: closeFullscreenModal,
   } = useModal();
   const handleSave = () => {
-    // Handle save logic here
-    console.log("Saving changes...");
+
     closeFullscreenModal();
   };
   return (

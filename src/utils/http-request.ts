@@ -61,6 +61,23 @@ export class HttpRequest {
     }
   }
 
+  async getUserById(id: string): Promise<IUser> {
+    try {
+      const token = await this.getToken();
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getUserByRole(): Promise<IUser> {
     try {
       const token = await this.getToken();
@@ -1235,7 +1252,6 @@ export class HttpRequest {
           },
         }
       );
-      console.log(response);
       return response.data;
     } catch (error) {
       console.error("Erro ao buscar avatar:", error);

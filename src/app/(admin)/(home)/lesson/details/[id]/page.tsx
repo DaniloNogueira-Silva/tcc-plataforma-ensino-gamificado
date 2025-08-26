@@ -4,16 +4,33 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { HttpRequest } from "@/utils/http-request";
 import { ILesson } from "@/utils/interfaces/lesson.interface";
-import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
-import LessonPlanBreadcrumb from "@/components/ui/breadcrumb/LessonPlanBreadcrumb";
+import { IUser } from "@/utils/interfaces/user.interface";
 import FileInput from "@/components/form/input/FileInput";
 import { TokenPayload } from "../../../exercise/form/page";
 import { jwtDecode } from "jwt-decode";
+import { FileDown, Play } from "lucide-react";
+import LessonPlanBreadcrumb from "@/components/ui/breadcrumb/LessonPlanBreadCrumb";
+import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
+
+const getFileNameFromUrl = (url: string): string => {
+  if (!url) return "Arquivo";
+  try {
+    const decodedUrl = decodeURIComponent(url);
+    const fileNameWithPrefix = decodedUrl.substring(
+      decodedUrl.lastIndexOf("/") + 1
+    );
+    return fileNameWithPrefix.replace(/^\d+-/, "");
+  } catch (error) {
+    console.error("URL inválida:", url, error);
+    return "Arquivo";
+  }
+};
 
 const LessonDetailsPage = () => {
   const params = useParams();
   const lessonId = params.id as string;
   const [lesson, setLesson] = useState<ILesson | null>(null);
+  const [teacherName, setTeacherName] = useState<string | null>(null);
   const [lessonPlanId, setLessonPlanId] = useState<string | null>(null);
   const [lessonPlanName, setLessonPlanName] = useState<string | null>(null);
   const [studentFile, setStudentFile] = useState<File | null>(null);
@@ -34,7 +51,7 @@ const LessonDetailsPage = () => {
     try {
       const httpRequest = new HttpRequest();
       const token = localStorage.getItem("token");
-      const decoded = jwtDecode<TokenPayload>(token);
+      const decoded = jwtDecode<TokenPayload>(token!);
       try {
         const progress = await httpRequest.findOneByLessonAndUser(
           lessonId,
@@ -48,8 +65,7 @@ const LessonDetailsPage = () => {
           return;
         }
       } catch {}
-      const data = await httpRequest.submitLessonWork(lessonId, studentFile);
-      console.log(data);
+      await httpRequest.submitLessonWork(lessonId, studentFile);
       setUploadMessage("Arquivo enviado com sucesso!");
       setStudentFile(null);
       setHasSubmitted(true);
@@ -73,10 +89,14 @@ const LessonDetailsPage = () => {
         );
         if (associations && associations.length > 0) {
           const planId = associations[0].lesson_plan_id;
+
           setLessonPlanId(planId);
+
           const plans: ILessonPlanByRole[] =
             await httpRequest.getLessonPlansByRole();
+
           const found = plans.find((p) => p.lessonplan._id === planId);
+
           if (found) {
             setLessonPlanName(found.lessonplan.name);
           }
@@ -85,9 +105,25 @@ const LessonDetailsPage = () => {
         console.error("Erro ao buscar plano de aula:", error);
       }
     }
-
     fetchLesson();
   }, [lessonId]);
+
+  useEffect(() => {
+    const fetchTeacherName = async () => {
+      if (lesson && lesson.teacher_id) {
+        try {
+          const httpRequest = new HttpRequest();
+          const teacher: IUser = await httpRequest.getUserById(lesson.teacher_id);
+          setTeacherName(teacher.name);
+        } catch (error) {
+          console.error("Erro ao buscar nome do professor:", error);
+          setTeacherName("Não encontrado");
+        }
+      }
+    };
+
+    fetchTeacherName();
+  }, [lesson]);
 
   useEffect(() => {
     const fetchUserType = async () => {
@@ -108,9 +144,11 @@ const LessonDetailsPage = () => {
         const httpRequest = new HttpRequest();
         try {
           const students: { _id: string; name: string }[] =
-            await httpRequest.findAllStudentsByLessonId(lessonId, lessonPlanId as string);
+            await httpRequest.findAllStudentsByLessonId(
+              lessonId,
+              lessonPlanId as string
+            );
           const delivered: { name: string; filePath: string }[] = [];
-          console.log(students);
           for (const s of students) {
             try {
               const progress = await httpRequest.getSubmittedWork(
@@ -129,15 +167,18 @@ const LessonDetailsPage = () => {
       }
     };
     fetchSubmittedWorks();
-  }, [userType, lessonId, lesson]);
+  }, [userType, lessonId, lesson, lessonPlanId]);
 
   useEffect(() => {
     const checkSubmission = async () => {
       if (userType === "STUDENT" && lesson?.type === "school_work") {
         const httpRequest = new HttpRequest();
+        const token = localStorage.getItem("token");
+        const decoded = jwtDecode<TokenPayload>(token!);
         try {
           const progress = await httpRequest.findOneByLessonAndUser(
             lessonId,
+            decoded._id,
             "SCHOOL_WORK"
           );
           if (progress && progress.file_path) {
@@ -151,191 +192,186 @@ const LessonDetailsPage = () => {
     checkSubmission();
   }, [userType, lessonId, lesson]);
 
-  function getFileNameFromUrl(url?: string): string {
-    if (!url) return "Arquivo";
-    try {
-      const decodedUrl = decodeURIComponent(url);
-      const fileNameWithTimestamp = decodedUrl.substring(
-        decodedUrl.lastIndexOf("/") + 1
-      );
-      return fileNameWithTimestamp.replace(/^\d+-/, "");
-    } catch (error) {
-      console.error("URL do arquivo inválida:", url, error);
-      return "Arquivo";
-    }
-  }
-
   if (!lesson) return <div className="text-center p-10">Carregando...</div>;
 
-  const formattedDate = lesson.due_date
-    ? new Date(lesson.due_date).toLocaleDateString("pt-BR")
-    : null;
-
-  const cleanLinks = (lesson.links ?? [])
-    .map((l) => (l ?? "").trim())
-    .filter(Boolean);
+  const hasResources =
+    (lesson.file && lesson.file.length > 0) ||
+    (lesson.links && lesson.links.length > 0);
 
   return (
-    <div className="px-4 sm:px-8 md:px-20 lg:px-40 flex flex-1 justify-center py-5">
-      <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
+    <div className="bg-gray-50 font-sans p-4 sm:p-6 md:p-8">
+      <main className="max-w-4xl mx-auto">
+         {" "}
         <LessonPlanBreadcrumb
           lessonPlanId={lessonPlanId}
           lessonPlanName={lessonPlanName}
           currentName={lesson.name}
         />
-        <div className="flex flex-wrap justify-between gap-3 p-4">
-          <div className="flex min-w-72 flex-col gap-3">
-            <h1 className="text-[#0e141b] tracking-light text-[32px] font-bold leading-tight line-clamp-3">
-              {lesson.name}
-            </h1>
-            {formattedDate && lesson.type !== "reading" && (
-              <p className="text-[#4e7097] text-sm font-normal leading-normal">
-                Data de entrega: {formattedDate}
-              </p>
-            )}
+        <header>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            {lesson.name}
+          </h1>
+          <div className="flex items-center flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500 border-t pt-4">
+            <span>
+              👤 {teacherName ? `Prof. ${teacherName}` : "Carregando..."}
+            </span>
+            <span>
+              {lesson.type === "school_work"
+                ? "📚 Trabalho"
+                : "📚 Aula Teórica"}
+            </span>
           </div>
-        </div>
-        <h2 className="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
-          Descrição
-        </h2>
-        <p className="text-[#0e141b] text-base font-normal leading-normal pb-3 pt-1 px-4 whitespace-pre-wrap break-words">
-          {lesson.content}
-        </p>
-
-        {((lesson.file && lesson.file.length > 0) || cleanLinks.length > 0) && (
-          <div className="px-4 pt-5">
-            <h2 className="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3">
-              Recursos
+        </header>
+        <article className="mt-8 bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-gray-200">
+          <div
+            className="prose max-w-none"
+            dangerouslySetInnerHTML={{ __html: lesson.content || "" }}
+          />
+        </article>
+        {hasResources && (
+          <section className="mt-8 bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-800 mb-5">
+              Recursos da Aula
             </h2>
             <div className="space-y-3">
-              {lesson.file &&
-                lesson.file.length > 0 &&
-                lesson.file.map((fileUrl) => (
-                  <div
-                    key={fileUrl}
-                    className="flex items-center gap-4 bg-slate-50 p-3 rounded-lg justify-between"
-                  >
-                    <div className="flex items-center gap-4 overflow-hidden">
-                      <div className="text-[#0e141b] flex items-center justify-center rounded-lg bg-[#e7edf3] shrink-0 size-12">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24px"
-                          height="24px"
-                          fill="currentColor"
-                          viewBox="0 0 256 256"
-                        >
-                          <path d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Z" />
-                        </svg>
-                      </div>
-                      <div className="flex flex-col justify-center overflow-hidden">
-                        <p className="text-[#0e141b] text-base font-medium leading-normal truncate">
-                          {getFileNameFromUrl(fileUrl)}
-                        </p>
-                        <p className="text-[#4e7097] text-sm font-normal leading-normal">
-                          Arquivo para download
-                        </p>
-                      </div>
-                    </div>
-                    <div className="shrink-0">
-                      <a
-                        href={fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        download
-                        className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-4 bg-[#e7edf3] text-[#0e141b] text-sm font-medium leading-normal transition-colors hover:bg-slate-200"
+              {lesson.file?.map((fileUrl, index) => (
+                <div
+                  key={`file-${index}`}
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border border-gray-200 rounded-lg"
+                >
+                  <div className="flex items-center gap-4 min-w-0">
+                    <FileDown
+                      size={24}
+                      className="text-gray-700 flex-shrink-0"
+                    />
+                    <div className="overflow-hidden">
+                      <h4
+                        className="font-semibold text-gray-800 truncate"
+                        title={getFileNameFromUrl(fileUrl)}
                       >
-                        <span className="truncate">Baixar</span>
-                      </a>
+                        {getFileNameFromUrl(fileUrl)}
+                      </h4>
+                      <p className="text-sm text-gray-500">
+                        Arquivo para download
+                      </p>
                     </div>
                   </div>
-                ))}
-
-              {cleanLinks.length > 0 && (
-                <ul className="list-disc list-inside space-y-2 pt-2">
-                  {cleanLinks.map((link, idx) => (
-                    <li key={idx}>
-                      <a
-                        href={link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 break-words transition-colors"
-                      >
-                        {link}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        )}
-
-        {lesson.type === "school_work" &&
-          userType === "STUDENT" &&
-          (hasSubmitted ? (
-            <p className="text-sm text-[#6a7581] px-4 pt-5">
-              Você já enviou este trabalho.
-            </p>
-          ) : (
-            <form
-              onSubmit={handleUpload}
-              className="flex flex-col gap-3 px-4 pt-5"
-            >
-              <h2 className="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3">
-                Enviar Trabalho
-              </h2>
-              <FileInput onChange={handleFileChange} />
-              {uploadMessage && (
-                <p
-                  className={`text-sm ${
-                    uploadMessage.includes("sucesso")
-                      ? "text-green-600"
-                      : "text-red-600"
-                  }`}
-                >
-                  {uploadMessage}
-                </p>
-              )}
-              <button
-                type="submit"
-                disabled={!studentFile}
-                className="flex h-10 w-fit items-center justify-center rounded-lg bg-blue-600 px-6 text-sm font-medium text-white transition-opacity disabled:opacity-50 hover:bg-blue-700"
-              >
-                Enviar
-              </button>
-            </form>
-          ))}
-
-        {lesson.type === "school_work" && userType === "TEACHER" && (
-          <div className="px-4 pt-5">
-            <h2 className="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3">
-              Trabalhos Enviados
-            </h2>
-            {submittedWorks.length > 0 ? (
-              <ul className="space-y-2">
-                {submittedWorks.map((s) => (
-                  <li
-                    key={s.filePath}
-                    className="flex items-center justify-between bg-slate-50 p-3 rounded-lg"
+                  <a
+                    href={fileUrl}
+                    download
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto flex-shrink-0 text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
                   >
-                    <span className="text-[#0e141b]">{s.name}</span>
-                    <a
-                      href={s.filePath}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-4 bg-[#e7edf3] text-[#0e141b] text-sm font-medium leading-normal"
-                    >
-                      Baixar
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-[#6a7581]">Nenhum trabalho enviado.</p>
-            )}
-          </div>
+                    Baixar
+                  </a>
+                </div>
+              ))}
+
+              {lesson.links?.map((videoLink, index) => (
+                <div
+                  key={`link-${index}`}
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border border-gray-200 rounded-lg"
+                >
+                  <div className="flex items-center gap-4 min-w-0">
+                    <Play size={24} className="text-gray-700 flex-shrink-0" />
+                    <div className="overflow-hidden">
+                      <h4 className="font-semibold text-gray-800">
+                        Vídeo Complementar
+                      </h4>
+                      <p
+                        className="text-sm text-gray-500 truncate"
+                        title={videoLink}
+                      >
+                        {videoLink}
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href={videoLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto flex-shrink-0 text-center bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-6 border border-gray-300 rounded-lg shadow-sm transition-colors"
+                  >
+                    Assistir
+                  </a>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
-      </div>
+        {lesson.type === "school_work" && (
+          <section className="mt-8 bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-gray-200">
+            {userType === "STUDENT" ? (
+              hasSubmitted ? (
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    Enviar Trabalho
+                  </h2>
+                  <p className="mt-4 text-green-700 bg-green-50 p-4 rounded-lg">
+                    Você já enviou este trabalho.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleUpload} className="space-y-4">
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    Enviar Trabalho
+                  </h2>
+                  <FileInput onChange={handleFileChange} />
+                  {uploadMessage && (
+                    <p
+                      className={`text-sm ${
+                        uploadMessage.includes("sucesso")
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {uploadMessage}
+                    </p>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={!studentFile}
+                    className="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700"
+                  >
+                    Enviar
+                  </button>
+                </form>
+              )
+            ) : userType === "TEACHER" ? (
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">
+                  Trabalhos Enviados
+                </h2>
+                {submittedWorks.length > 0 ? (
+                  <ul className="mt-4 space-y-3">
+                    {submittedWorks.map((s) => (
+                      <li
+                        key={s.filePath}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <span className="text-gray-800">{s.name}</span>
+                        <a
+                          href={s.filePath}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg text-sm"
+                        >
+                          Baixar
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-4 text-gray-500">
+                    Nenhum trabalho enviado ainda.
+                  </p>
+                )}
+              </div>
+            ) : null}
+          </section>
+        )}
+      </main>
     </div>
   );
 };
