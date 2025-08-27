@@ -4,13 +4,12 @@ import { Editor } from "@tinymce/tinymce-react";
 const LessonEditor = ({ value, onChange }) => {
   return (
     <Editor
-      apiKey="d2aps4bpv6af7eanl13t0uv4pbwzmgyfleocul7rn1k6915d"
+      apiKey={process.env.NEXT_PUBLIC_TINY_SECRET_KEY}
       value={value || "<p>Escreva o conteúdo da questão aqui.</p>"}
       init={{
-        height: 400, // Aumentei um pouco a altura
+        height: 400, 
         menubar: false,
 
-        // 1. Adicione os plugins para as novas funcionalidades
         plugins: [
           "autolink",
           "lists",
@@ -21,13 +20,9 @@ const LessonEditor = ({ value, onChange }) => {
           "fullscreen",
         ],
 
-        // 2. Monte a barra de ferramentas como preferir
         toolbar:
-          // Linha 1: Desfazer/Refazer, Estilos de bloco, Negrito/Itálico/Sublinhado
           "undo redo |  blocks | fontselect fontsizeselect | bold italic underline | " +
-          // Linha 2: Alinhamento, Listas, Cores
           "alignleft aligncenter alignright alignjustify | bullist numlist | forecolor backcolor | " +
-          // Linha 3: Inserir elementos e ferramentas
           "table | removeformat",
 
         content_style:
