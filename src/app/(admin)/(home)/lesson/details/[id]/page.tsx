@@ -113,7 +113,9 @@ const LessonDetailsPage = () => {
       if (lesson && lesson.teacher_id) {
         try {
           const httpRequest = new HttpRequest();
-          const teacher: IUser = await httpRequest.getUserById(lesson.teacher_id);
+          const teacher: IUser = await httpRequest.getUserById(
+            lesson.teacher_id
+          );
           setTeacherName(teacher.name);
         } catch (error) {
           console.error("Erro ao buscar nome do professor:", error);
@@ -224,7 +226,7 @@ const LessonDetailsPage = () => {
         </header>
         <article className="mt-8 bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-gray-200">
           <div
-            className="prose max-w-none"
+            className="content-render max-w-none" 
             dangerouslySetInnerHTML={{ __html: lesson.content || "" }}
           />
         </article>

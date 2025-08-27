@@ -1,26 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { jwtDecode } from "jwt-decode";
+import { ClipboardType, FileText, UploadCloud } from "lucide-react";
+
 import { HttpRequest } from "@/utils/http-request";
+import { ILesson } from "@/utils/interfaces/lesson.interface";
+import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
+
 import Input from "@/components/form/input/InputField";
 import FileInput from "@/components/form/input/FileInput";
+import TextArea from "@/components/form/input/TextArea";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
-import { jwtDecode } from "jwt-decode";
-import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
-import { ILesson } from "@/utils/interfaces/lesson.interface";
-import { Tooltip } from "@/components/ui/tooltip/Tooltip";
-import {
-  HelpCircle,
-  ClipboardType,
-  FileText,
-  UploadCloud,
-  Link,
-  Presentation,
-} from "lucide-react"; // Ícones importados
-import { useRouter, useSearchParams } from "next/navigation";
-import TextArea from "@/components/form/input/TextArea";
-import MultiSelect from "@/components/form/MultiSelect";
+import LessonEditor from "@/components/lesson/LessonEditor";
 
 interface TokenPayload {
   _id: string;
@@ -49,12 +43,6 @@ const LessonForm = () => {
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const options = lessonPlans.map((plan) => ({
-    value: plan.lessonplan._id,
-    text: plan.lessonplan.name,
-    selected: lessonPlanIds.includes(plan.lessonplan._id),
-  }));
-
   useEffect(() => {
     if (lessonId) {
       setLoading(true);
@@ -65,11 +53,11 @@ const LessonForm = () => {
           lessonId,
           "lesson"
         );
-        const lessonPlanIds = associations.map(
+        const ids = associations.map(
           (a: { lesson_plan_id: string }) => a.lesson_plan_id
         );
         setInitialData(lesson);
-        setLessonPlanIds(lessonPlanIds);
+        setLessonPlanIds(ids);
         setLoading(false);
       };
       fetchLesson();
@@ -95,7 +83,6 @@ const LessonForm = () => {
       const plans = await httpRequest.getLessonPlansByRole();
       setLessonPlans(plans);
     };
-
     fetchLessonPlans();
   }, [initialData]);
 
@@ -113,9 +100,7 @@ const LessonForm = () => {
     }
   }, []);
 
-  const handleClose = () => {
-    router.push("/lesson");
-  };
+  const handleClose = () => router.push("/lesson");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -160,15 +145,13 @@ const LessonForm = () => {
           content,
           type,
           grade,
-          teacherId,
+          teacherId!,
           fileUrl,
           linksArray,
           lessonPlanIds.length ? lessonPlanIds : undefined
         );
       }
-      if (createdLesson?._id) {
-        router.push("/lesson");
-      }
+      if (createdLesson?._id) router.push("/lesson");
     } catch (error) {
       console.error("Erro ao salvar aula:", error);
     } finally {
@@ -179,96 +162,104 @@ const LessonForm = () => {
   if (loading) return <p>Carregando exercício...</p>;
 
   return (
-    <div>
-      <h4 className="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">
+    <div className="space-y-6">
+      <h4 className="text-lg font-medium text-gray-800 dark:text-white/90">
         {initialData?._id ? "Editar Aula" : "Criar Nova Aula"}
       </h4>
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
-          <div className="col-span-1">
-            <Label>
-              <div className="flex items-center gap-2">
-                <ClipboardType className="w-4 h-4" />
-                <span>Nome*</span>
-              </div>
-            </Label>
-            <Input
-              type="text"
-              placeholder="Digite o nome da aula"
-              defaultValue={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* GRID 2 COLUNAS (ESQ empilhada / DIR editor) */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* COLUNA ESQUERDA */}
+          <div className="space-y-6 lg:col-span-1">
+            {/* Informações Básicas */}
+            <div className="p-6 bg-white rounded-lg shadow-md dark:bg-navy-800">
+              <Label>
+                <div className="flex items-center gap-2 mb-2 text-lg font-medium">
+                  <ClipboardType className="w-5 h-5" />
+                  <span>Informações Básicas</span>
+                </div>
+              </Label>
+              <div className="space-y-4">
+                <div>
+                  <Label>Nome da Aula*</Label>
+                  <Input
+                    type="text"
+                    placeholder="Digite o nome da aula"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
 
-          <div className="col-span-1">
-            <Label>
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                <span>Conteúdo*</span>
+                <div>
+                  <Label>Tipo de Aula*</Label>
+                  <select
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
+                    required
+                    className="w-full rounded-md border border-gray-300 p-2 text-gray-900 dark:bg-navy-700 dark:text-white"
+                  >
+                    <option value="" disabled>
+                      Selecione o tipo de aula
+                    </option>
+                    <option value="lesson">Aula</option>
+                    <option value="school_work">Trabalho</option>
+                  </select>
+                </div>
               </div>
-            </Label>
-            <TextArea
-              placeholder="Digite o conteúdo da aula"
-              value={content}
-              onChange={(e) => setContent(e)}
-              rows={3}
-            />
-          </div>
-
-          <div className="col-span-1">
-            <Label>
-              <div className="flex items-center gap-2">
-                <UploadCloud className="w-4 h-4" />
-                <span>Upload de Arquivo</span>
-              </div>
-            </Label>
-            <FileInput onChange={(e) => setFile(e.target.files?.[0] || null)} />
-            <Label className="mt-2">
-              <div className="flex items-center gap-2">
-                <Link className="w-4 h-4" />
-                <span>Links (um por linha)</span>
-              </div>
-            </Label>
-            <TextArea
-              placeholder="Digite links relacionados à aula"
-              value={links}
-              onChange={(e) => setLinks(e)}
-              rows={3}
-              required={false}
-            />
-          </div>
-
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Presentation className="w-4 h-4" />
-              <span className="text-sm font-medium text-gray-800 dark:text-white">
-                Tipo de aula*
-              </span>
-              <Tooltip
-                position="right"
-                width="330px"
-                content="Se o objetivo da aula for somente mostrar o conteúdo selecione leitura, caso seja intruções para um trabalho selecione trabalho"
-              >
-                <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
-              </Tooltip>
             </div>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              required
-              className="w-full rounded-md border border-gray-300 p-2 text-gray-900 dark:bg-navy-700 dark:text-white"
-            >
-              <option value="" disabled>
-                Selecione o tipo de aula
-              </option>
-              <option value="lesson">Aula</option>
-              <option value="school_work">Trabalho</option>
-            </select>
+
+            {/* Upload de Arquivo */}
+            <div className="p-6 bg-white rounded-lg shadow-md dark:bg-navy-800">
+              <Label>
+                <div className="flex items-center gap-2 mb-2 text-lg font-medium">
+                  <UploadCloud className="w-5 h-5" />
+                  <span>Upload de Arquivo</span>
+                </div>
+              </Label>
+              <FileInput
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+              />
+            </div>
+
+            {/* Links Relacionados */}
+            <div className="p-6 bg-white rounded-lg shadow-md dark:bg-navy-800">
+              <Label>
+                <div className="mb-2 text-lg font-medium">
+                  Links Relacionados
+                </div>
+              </Label>
+              <TextArea
+                placeholder="Links (um por linha)"
+                value={links}
+                onChange={(v) => setLinks(v)}
+                rows={4}
+                required={false}
+              />
+            </div>
+          </div>
+
+          {/* COLUNA DIREITA - EDITOR */}
+          <div className="lg:col-span-2">
+            <div className="p-6 bg-white rounded-lg shadow-md dark:bg-navy-800">
+              <Label>
+                <div className="flex items-center gap-2 mb-2 text-lg font-medium">
+                  <FileText className="w-5 h-5" />
+                  <span>Conteúdo da Aula*</span>
+                </div>
+              </Label>
+
+              <div className="min-h-[520px]">
+                <LessonEditor
+                  value={content}
+                  onChange={(html) => setContent(html)}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-end w-full gap-3 mt-6">
+        <div className="flex items-center justify-end w-full gap-3">
           <Button size="sm" variant="outline" onClick={handleClose}>
             Fechar
           </Button>

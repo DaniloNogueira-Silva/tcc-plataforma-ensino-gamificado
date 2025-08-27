@@ -83,7 +83,10 @@ const LessonCard: React.FC<LessonCardProps> = ({
         }
 
         try {
-          const submissions = await http.findAllStudentsByLessonId(lessonId, lessonPlanId);
+          const submissions = await http.findAllStudentsByLessonId(
+            lessonId,
+            lessonPlanId
+          );
           setDeliveredStudents(normalizeUsers(submissions));
         } catch (e) {
           setDeliveredStudents([]);
@@ -124,6 +127,10 @@ const LessonCard: React.FC<LessonCardProps> = ({
     school_work: "Trabalho",
   };
 
+  const stripHtml = (html: string) => {
+    if (!html) return "";
+    return html.replace(/<[^>]*>?/gm, "");
+  };
   return (
     <>
       <div className="relative group cursor-pointer" onClick={handleCardClick}>
@@ -136,7 +143,7 @@ const LessonCard: React.FC<LessonCardProps> = ({
               {name}
             </p>
             <p className="text-[#6a7581] text-sm font-normal leading-normal break-words line-clamp-3">
-              {content}
+              {stripHtml(content)} 
             </p>
           </div>
 
