@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { HttpRequest } from "@/utils/http-request";
 import { ILesson } from "@/utils/interfaces/lesson.interface";
@@ -41,6 +41,8 @@ const LessonDetailsPage = () => {
   >([]);
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
+  const httpRequest = useMemo(() => new HttpRequest(), []);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setStudentFile(e.target.files?.[0] || null);
   };
@@ -49,7 +51,6 @@ const LessonDetailsPage = () => {
     e.preventDefault();
     if (!studentFile) return;
     try {
-      const httpRequest = new HttpRequest();
       const token = localStorage.getItem("token");
       const decoded = jwtDecode<TokenPayload>(token!);
       try {
@@ -78,7 +79,6 @@ const LessonDetailsPage = () => {
   useEffect(() => {
     async function fetchLesson() {
       if (!lessonId) return;
-      const httpRequest = new HttpRequest();
       const data = await httpRequest.getLessonById(lessonId);
       setLesson(data);
 
@@ -89,14 +89,10 @@ const LessonDetailsPage = () => {
         );
         if (associations && associations.length > 0) {
           const planId = associations[0].lesson_plan_id;
-
           setLessonPlanId(planId);
-
           const plans: ILessonPlanByRole[] =
             await httpRequest.getLessonPlansByRole();
-
           const found = plans.find((p) => p.lessonplan._id === planId);
-
           if (found) {
             setLessonPlanName(found.lessonplan.name);
           }
@@ -106,13 +102,12 @@ const LessonDetailsPage = () => {
       }
     }
     fetchLesson();
-  }, [lessonId]);
+  }, [lessonId, httpRequest]);
 
   useEffect(() => {
     const fetchTeacherName = async () => {
       if (lesson && lesson.teacher_id) {
         try {
-          const httpRequest = new HttpRequest();
           const teacher: IUser = await httpRequest.getUserById(
             lesson.teacher_id
           );
@@ -123,13 +118,11 @@ const LessonDetailsPage = () => {
         }
       }
     };
-
     fetchTeacherName();
-  }, [lesson]);
+  }, [lesson, httpRequest]);
 
   useEffect(() => {
     const fetchUserType = async () => {
-      const httpRequest = new HttpRequest();
       try {
         const user = await httpRequest.getUserByRole();
         setUserType(user.role);
@@ -138,12 +131,11 @@ const LessonDetailsPage = () => {
       }
     };
     fetchUserType();
-  }, []);
+  }, [httpRequest]);
 
   useEffect(() => {
     const fetchSubmittedWorks = async () => {
       if (userType === "TEACHER" && lesson?.type === "school_work") {
-        const httpRequest = new HttpRequest();
         try {
           const students: { _id: string; name: string }[] =
             await httpRequest.findAllStudentsByLessonId(
@@ -157,8 +149,8 @@ const LessonDetailsPage = () => {
                 lessonId,
                 s._id
               );
-              if (progress && progress.url) {
-                delivered.push({ name: s.name, filePath: progress.url });
+              if (progress && progress.file_path) {
+                delivered.push({ name: s.name, filePath: progress.file_path });
               }
             } catch {}
           }
@@ -169,12 +161,11 @@ const LessonDetailsPage = () => {
       }
     };
     fetchSubmittedWorks();
-  }, [userType, lessonId, lesson, lessonPlanId]);
+  }, [userType, lessonId, lesson, lessonPlanId, httpRequest]);
 
   useEffect(() => {
     const checkSubmission = async () => {
       if (userType === "STUDENT" && lesson?.type === "school_work") {
-        const httpRequest = new HttpRequest();
         const token = localStorage.getItem("token");
         const decoded = jwtDecode<TokenPayload>(token!);
         try {
@@ -192,7 +183,7 @@ const LessonDetailsPage = () => {
       }
     };
     checkSubmission();
-  }, [userType, lessonId, lesson]);
+  }, [userType, lessonId, lesson, httpRequest]);
 
   if (!lesson) return <div className="text-center p-10">Carregando...</div>;
 
@@ -226,7 +217,7 @@ const LessonDetailsPage = () => {
         </header>
         <article className="mt-8 bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-gray-200">
           <div
-            className="content-render max-w-none" 
+            className="content-render max-w-none"
             dangerouslySetInnerHTML={{ __html: lesson.content || "" }}
           />
         </article>

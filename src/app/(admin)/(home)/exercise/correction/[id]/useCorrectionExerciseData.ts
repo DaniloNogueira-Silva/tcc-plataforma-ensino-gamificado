@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { HttpRequest } from "@/utils/http-request";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
-import { StudentAnswer } from "@/utils/interfaces/correction.types"; 
+import { StudentAnswer } from "@/utils/interfaces/correction.types";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 
 export const useIndividualExerciseData = (
@@ -66,16 +66,22 @@ export const useIndividualExerciseData = (
             name: foundPlan.lessonplan.name,
           });
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        let errorMessage = "Não foi possível carregar os dados.";
+
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        }
+
         console.error("Erro ao buscar dados da correção:", err);
-        setError(err.message || "Não foi possível carregar os dados.");
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [exerciseId, lessonPlanIdFromUrl]); 
+  }, [exerciseId, lessonPlanIdFromUrl]);
 
   return {
     studentsAnswers,

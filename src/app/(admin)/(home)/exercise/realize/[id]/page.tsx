@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { HttpRequest } from "@/utils/http-request";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
 import Label from "@/components/form/Label";
@@ -9,7 +9,7 @@ import { useParams } from "next/navigation";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import { jwtDecode } from "jwt-decode";
 import { TokenPayload } from "../../form/page";
-import LessonPlanBreadcrumb from "@/components/ui/breadcrumb/LessonPlanBreadcrumb";
+import LessonPlanBreadcrumb from "@/components/ui/breadcrumb/LessonPlanBreadCrumb";
 
 const ExerciseDetailsPage = () => {
   const params = useParams();
@@ -22,10 +22,11 @@ const ExerciseDetailsPage = () => {
   }>({});
   const [submitted, setSubmitted] = useState(false);
 
+  const httpRequest = useMemo(() => new HttpRequest(), []);
+
   useEffect(() => {
     const fetchExerciseDetails = async () => {
       if (!exerciseId) return;
-      const httpRequest = new HttpRequest();
       const response = await httpRequest.getExerciseById(exerciseId);
 
       setExercise(response);
@@ -51,12 +52,11 @@ const ExerciseDetailsPage = () => {
     };
 
     fetchExerciseDetails();
-  }, [exerciseId]);
+  }, [exerciseId, httpRequest]);
 
   useEffect(() => {
     const checkCompleted = async () => {
       if (!exerciseId) return;
-      const httpRequest = new HttpRequest();
       try {
         const result = await httpRequest.isExerciseCompleted(exerciseId);
         const token = await httpRequest.getToken();
@@ -95,12 +95,11 @@ const ExerciseDetailsPage = () => {
     };
 
     checkCompleted();
-  }, [exerciseId, exercise]);
+  }, [exerciseId, exercise, lessonPlanId, httpRequest]);
 
   const handleAnswerSubmission = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const httpRequest = new HttpRequest();
     let answerString = "";
 
     if (exercise?.type === "true_false") {
@@ -129,7 +128,6 @@ const ExerciseDetailsPage = () => {
   const formattedDate = exercise.due_date
     ? new Date(exercise.due_date).toLocaleDateString()
     : null;
-
   return (
     <div className="px-40 flex flex-1 justify-center py-5">
       <div className="layout-content-container flex flex-col max-w-[960px] flex-1">

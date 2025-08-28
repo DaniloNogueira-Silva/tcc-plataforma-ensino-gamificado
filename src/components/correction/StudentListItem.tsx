@@ -1,16 +1,12 @@
-import { StudentAnswer } from "@/utils/interfaces/correction.types";
+import { StudentAnswer } from "@/utils/interfaces/correction.types"; 
+
 type Props = {
   student: StudentAnswer;
   isSelected: boolean;
   onClick: () => void;
-  isIndividual?: boolean;
 };
 
-const StudentListItem = ({
-  student,
-  isSelected,
-  onClick,
-}: Props) => {
+const StudentListItem = ({ student, isSelected, onClick }: Props) => {
   const isGraded = student.final_grade != null;
   const grade = isGraded
     ? student.final_grade!.toFixed(1).replace(".", ",")

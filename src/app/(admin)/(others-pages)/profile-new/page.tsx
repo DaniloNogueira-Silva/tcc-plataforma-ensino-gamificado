@@ -12,7 +12,6 @@ export default function Profile() {
   const [user, setUser] = useState<IUserStats | null>(null);
 
   useEffect(() => {
-    // Fetch user data from the API
 
     async function fetchUser() {
       const httpRequest = new HttpRequest();

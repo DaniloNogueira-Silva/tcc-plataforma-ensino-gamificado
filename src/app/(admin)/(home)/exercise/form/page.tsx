@@ -10,7 +10,7 @@ import {
   ListChecks,
   ToggleRight,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import Button from "@/components/ui/button/Button";
@@ -59,11 +59,12 @@ const ExerciseFormPage = () => {
 
   const [saving, setSaving] = useState(false);
 
+  const httpRequest = useMemo(() => new HttpRequest(), []);
+
   useEffect(() => {
     if (exerciseId) {
       setLoading(true);
       const fetchData = async () => {
-        const httpRequest = new HttpRequest();
         const exercise = await httpRequest.getExerciseById(exerciseId);
         const associations = await httpRequest.getAssociationsByContent(
           exerciseId,
@@ -78,7 +79,7 @@ const ExerciseFormPage = () => {
       };
       fetchData();
     }
-  }, [exerciseId]);
+  }, [exerciseId, httpRequest]);
 
   useEffect(() => {
     if (initialData) {
@@ -160,7 +161,6 @@ const ExerciseFormPage = () => {
         finalAnswer = answer;
       }
 
-      const httpRequest = new HttpRequest();
       let createdExercise;
 
       if (exerciseId) {

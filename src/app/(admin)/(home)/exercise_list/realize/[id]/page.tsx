@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { HttpRequest } from "@/utils/http-request";
 import { IExerciseList } from "@/utils/interfaces/exercise_list.interface";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
@@ -10,7 +10,7 @@ import { useParams } from "next/navigation";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import { jwtDecode } from "jwt-decode";
 import { TokenPayload } from "../../../exercise/form/page";
-import LessonPlanBreadcrumb from "@/components/ui/breadcrumb/LessonPlanBreadcrumb";
+import LessonPlanBreadcrumb from "@/components/ui/breadcrumb/LessonPlanBreadCrumb";
 
 const ExerciseListRealizePage = () => {
   const params = useParams();
@@ -24,10 +24,11 @@ const ExerciseListRealizePage = () => {
   const [selectedAnswer, setSelectedAnswer] = useState<AnswerMap>({});
   const [submitted, setSubmitted] = useState(false);
 
+  const httpRequest = useMemo(() => new HttpRequest(), []);
+
   useEffect(() => {
     const fetchListDetails = async () => {
       if (!exercise_list_id) return;
-      const httpRequest = new HttpRequest();
       const list = await httpRequest.getExerciseListById(exercise_list_id);
       const exercises: IExercise[] = await Promise.all(
         list.exercises_ids.map((id: string) => httpRequest.getExerciseById(id))
@@ -55,12 +56,11 @@ const ExerciseListRealizePage = () => {
     };
 
     fetchListDetails();
-  }, [exercise_list_id]);
+  }, [exercise_list_id, httpRequest]);
 
   useEffect(() => {
     const checkCompleted = async () => {
       if (!exercise_list_id || !exerciseList) return;
-      const httpRequest = new HttpRequest();
       try {
         const result = await httpRequest.isExerciseListCompleted(
           exercise_list_id
@@ -70,7 +70,10 @@ const ExerciseListRealizePage = () => {
           const token = await httpRequest.getToken();
           const decoded = token ? jwtDecode<TokenPayload>(token) : null;
           for (const ex of exerciseList.exercises || []) {
-            const data = await httpRequest.findAllStudentsByExerciseId(ex._id, lessonPlanId as string);
+            const data = await httpRequest.findAllStudentsByExerciseId(
+              ex._id,
+              lessonPlanId as string
+            );
             const userAnswer = data.find(
               (item: { user_id: { _id: string }; answer: string }) =>
                 decoded && item.user_id._id === decoded._id
@@ -109,7 +112,7 @@ const ExerciseListRealizePage = () => {
     };
 
     checkCompleted();
-  }, [exercise_list_id, exerciseList]);
+  }, [exercise_list_id, exerciseList, lessonPlanId, httpRequest]);
 
   const handleAnswer = (exId: string, name: string, value: string) => {
     setSelectedAnswer((prev) => {
@@ -124,7 +127,6 @@ const ExerciseListRealizePage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!exerciseList) return;
-    const httpRequest = new HttpRequest();
     for (const exercise of exerciseList.exercises || []) {
       let answerString = "";
       if (exercise.type === "true_false" && exercise.true_false_options) {

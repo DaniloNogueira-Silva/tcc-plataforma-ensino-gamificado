@@ -69,7 +69,7 @@ const ExerciseListCorrectionPage = () => {
   };
 
   const handleSubmit = async (goToNext = false) => {
-    if (!exerciseList) return;
+    if (!exerciseList?.exercises) return;
     setIsSubmitting(true);
     const httpRequest = new HttpRequest();
     const currentStudent = studentsAnswers[selectedStudentIndex];
@@ -91,29 +91,33 @@ const ExerciseListCorrectionPage = () => {
         )
       );
 
-      const updatedStudents = [...studentsAnswers];
-      const studentToUpdate = updatedStudents[selectedStudentIndex];
-      const newAttempts = studentToUpdate.attempts.map(
-        (attempt: IExerciseListAttempt) => {
-          const submitted = gradesToSubmit.find(
-            (g) => g.attemptId === attempt._id
-          );
-          return submitted ? { ...attempt, grade: submitted.grade } : attempt;
-        }
-      );
-      const totalEarned = newAttempts.reduce(
-        (sum: number, att: IExerciseListAttempt) => sum + (att.grade || 0),
-        0
-      );
-      const totalPossible = exerciseList.exercises.reduce(
-        (sum, ex) => sum + ex.grade,
-        0
-      );
+      setStudentsAnswers((prevAnswers) => {
+        return prevAnswers.map((student, index) => {
+          if (index !== selectedStudentIndex) {
+            return student;
+          }
 
-      studentToUpdate.attempts = newAttempts;
-      studentToUpdate.final_grade =
-        totalPossible > 0 ? (totalEarned / totalPossible) * 10 : 0;
-      setStudentsAnswers(updatedStudents);
+          const newAttempts = (student.attempts || []).map((attempt) => {
+            const submitted = gradesToSubmit.find(
+              (g) => g.attemptId === attempt._id
+            );
+            return submitted ? { ...attempt, grade: submitted.grade } : attempt;
+          });
+
+          const totalEarned = newAttempts.reduce(
+            (sum, att) => sum + (att.grade || 0),
+            0
+          );
+
+          const newFinalGrade = totalEarned;
+
+          return {
+            ...student,
+            attempts: newAttempts,
+            final_grade: newFinalGrade,
+          };
+        });
+      });
 
       setIsEditingMode(false);
       setShowSuccessNotification(true);

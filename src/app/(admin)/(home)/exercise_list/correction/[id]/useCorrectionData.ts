@@ -40,7 +40,7 @@ export const useCorrectionData = (listId: string | null) => {
         const planId = associations[0].lesson_plan_id;
 
         const [progresses, listData, allPlans] = await Promise.all([
-          httpRequest.findStudentsAnswersByExerciseListId(listId, planId), 
+          httpRequest.findStudentsAnswersByExerciseListId(listId, planId),
           httpRequest.getExerciseListById(listId),
           httpRequest.getLessonPlansByRole(),
         ]);
@@ -73,12 +73,14 @@ export const useCorrectionData = (listId: string | null) => {
         } else {
           setLessonPlanInfo({ id: planId, name: "Plano de Aula desconhecido" });
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        let errorMessage = "Não foi possível carregar os dados.";
+
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        }
         console.error("Erro ao buscar dados da correção:", err);
-        setError(
-          err.message ||
-            "Não foi possível carregar os dados. Tente recarregar a página."
-        );
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }

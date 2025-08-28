@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
@@ -11,7 +11,7 @@ import { HttpRequest } from "@/utils/http-request";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import { jwtDecode } from "jwt-decode";
-import { ClipboardType, FileText, ListChecks } from "lucide-react"; // Ícones importados
+import { ClipboardType, FileText, ListChecks } from "lucide-react";
 
 interface TokenPayload {
   _id: string;
@@ -27,13 +27,13 @@ const ExerciseListForm = () => {
   const [content, setContent] = useState("");
 
   const [exercises, setExercises] = useState<IExercise[]>([]);
-  const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
+  const [, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
   const [exercisesIds, setExercisesIds] = useState<string[]>([]);
-  const [lessonPlanIds, setLessonPlanIds] = useState<string[]>([]);
+  const [lessonPlanIds] = useState<string[]>([]);
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const httpRequest = new HttpRequest();
+  const httpRequest = useMemo(() => new HttpRequest(), []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,7 +45,7 @@ const ExerciseListForm = () => {
       setLessonPlans(foundLessonPlans);
     };
     fetchData();
-  }, []);
+  }, [httpRequest]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {

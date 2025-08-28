@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import { ClipboardType, FileText, UploadCloud } from "lucide-react";
@@ -39,15 +39,16 @@ const LessonForm = () => {
   const [type, setType] = useState("");
   const [grade, setGrade] = useState(0);
   const [lessonPlanIds, setLessonPlanIds] = useState<string[]>([]);
-  const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
+  const [, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const httpRequest = useMemo(() => new HttpRequest(), []);
 
   useEffect(() => {
     if (lessonId) {
       setLoading(true);
       const fetchLesson = async () => {
-        const httpRequest = new HttpRequest();
         const lesson = await httpRequest.getLessonById(lessonId);
         const associations = await httpRequest.getAssociationsByContent(
           lessonId,
@@ -62,7 +63,7 @@ const LessonForm = () => {
       };
       fetchLesson();
     }
-  }, [lessonId]);
+  }, [lessonId, httpRequest]);
 
   useEffect(() => {
     if (initialData) {
@@ -79,12 +80,11 @@ const LessonForm = () => {
     }
 
     const fetchLessonPlans = async () => {
-      const httpRequest = new HttpRequest();
       const plans = await httpRequest.getLessonPlansByRole();
       setLessonPlans(plans);
     };
     fetchLessonPlans();
-  }, [initialData]);
+  }, [initialData, httpRequest]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -112,11 +112,10 @@ const LessonForm = () => {
     }
 
     try {
-      const httpRequest = new HttpRequest();
       let fileUrl = initialData?.file;
       if (file) {
         const upload = await httpRequest.uploadFile(file);
-        fileUrl = upload.publicUrl;
+        fileUrl = [upload.publicUrl];
       }
       const linksArray = links
         ? links
@@ -132,10 +131,10 @@ const LessonForm = () => {
           name,
           dueDate,
           content,
+          fileUrl?.[0], 
+          linksArray,
           type,
           grade,
-          fileUrl,
-          linksArray,
           lessonPlanIds.length ? lessonPlanIds : undefined
         );
       } else {
@@ -146,7 +145,7 @@ const LessonForm = () => {
           type,
           grade,
           teacherId!,
-          fileUrl,
+          fileUrl?.[0], 
           linksArray,
           lessonPlanIds.length ? lessonPlanIds : undefined
         );
@@ -168,11 +167,8 @@ const LessonForm = () => {
       </h4>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* GRID 2 COLUNAS (ESQ empilhada / DIR editor) */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* COLUNA ESQUERDA */}
           <div className="space-y-6 lg:col-span-1">
-            {/* Informações Básicas */}
             <div className="p-6 bg-white rounded-lg shadow-md dark:bg-navy-800">
               <Label>
                 <div className="flex items-center gap-2 mb-2 text-lg font-medium">
@@ -209,7 +205,6 @@ const LessonForm = () => {
               </div>
             </div>
 
-            {/* Upload de Arquivo */}
             <div className="p-6 bg-white rounded-lg shadow-md dark:bg-navy-800">
               <Label>
                 <div className="flex items-center gap-2 mb-2 text-lg font-medium">
@@ -222,7 +217,6 @@ const LessonForm = () => {
               />
             </div>
 
-            {/* Links Relacionados */}
             <div className="p-6 bg-white rounded-lg shadow-md dark:bg-navy-800">
               <Label>
                 <div className="mb-2 text-lg font-medium">
@@ -239,7 +233,6 @@ const LessonForm = () => {
             </div>
           </div>
 
-          {/* COLUNA DIREITA - EDITOR */}
           <div className="lg:col-span-2">
             <div className="p-6 bg-white rounded-lg shadow-md dark:bg-navy-800">
               <Label>
@@ -252,7 +245,7 @@ const LessonForm = () => {
               <div className="min-h-[520px]">
                 <LessonEditor
                   value={content}
-                  onChange={(html) => setContent(html)}
+                  onChange={(html: string) => setContent(html)}
                 />
               </div>
             </div>

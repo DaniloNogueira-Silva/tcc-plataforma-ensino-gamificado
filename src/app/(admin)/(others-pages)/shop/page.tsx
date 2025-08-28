@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 
 import Button from "@/components/ui/button/Button";
 import { HttpRequest } from "@/utils/http-request";
@@ -53,7 +54,9 @@ export default function ShopPage() {
             </option>
           ))}
         </select>
-        <div className="ml-auto font-medium">Moedas: {character?.coins ?? 0}</div>
+        <div className="ml-auto font-medium">
+          Moedas: {character?.coins ?? 0}
+        </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {filteredItems.map((item) => {
@@ -61,17 +64,21 @@ export default function ShopPage() {
           return (
             <div
               key={item._id}
-              className={`border p-4 rounded-lg flex flex-col items-center ${alreadyBought ? "opacity-50" : ""}`}
+              className={`border p-4 rounded-lg flex flex-col items-center ${
+                alreadyBought ? "opacity-50" : ""
+              }`}
             >
-              <img
+              <Image
                 src={`/images/avatar_components/${item.label}.png`}
                 alt={item.name}
-                className="w-32 h-32 object-contain"
+                width={128} 
+                height={128} 
+                className="object-contain" 
               />
               <h3 className="mt-2 font-medium">{item.name}</h3>
               <p className="text-sm mb-2">{item.price} moedas</p>
               {alreadyBought ? (
-                <span className="text-xs text-gray-500">Já comprado</span>
+                <span className="text-xs text-gray-500">Comprado</span>
               ) : (
                 <Button onClick={() => handleBuy(item._id)} className="mt-auto">
                   Comprar

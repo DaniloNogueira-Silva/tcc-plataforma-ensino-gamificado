@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import LessonList from "@/components/lesson/LessonList";
 import ExerciseList from "@/components/exercise/ExerciseList";
 import ListOfExerciseList from "@/components/exercise-list/ListOfExerciseList";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Modal } from "@/components/ui/modal";
 import { HttpRequest } from "@/utils/http-request";
 import { ILesson } from "@/utils/interfaces/lesson.interface";
@@ -39,7 +39,8 @@ export default function DetailsPage() {
   const [activeTab, setActiveTab] = useState<
     "lessons" | "exercises" | "ranking"
   >("lessons");
-  const httpRequest = new HttpRequest();
+
+  const httpRequest = useMemo(() => new HttpRequest(), []);
 
   useEffect(() => {
     const fetchRole = async () => {
@@ -48,7 +49,7 @@ export default function DetailsPage() {
     };
 
     fetchRole();
-  }, []);
+  }, [httpRequest]);
 
   if (!lessonPlanId) {
     return <div>Carregando...</div>;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { HttpRequest } from "@/utils/http-request";
 import useAuth from "@/hooks/useAuth";
 import Button from "@/components/ui/button/Button";
@@ -11,32 +11,28 @@ interface TokenPayload {
   _id: string;
 }
 
-export default function InvitePage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function InvitePage({ params }: { params: { id: string } }) {
   useAuth();
   const router = useRouter();
   const { id } = params;
   const [planName, setPlanName] = useState<string>("");
 
+  const httpRequest = useMemo(() => new HttpRequest(), []);
+
   useEffect(() => {
     const fetchPlan = async () => {
-      const httpRequest = new HttpRequest();
       const plan = await httpRequest.getLessonPlanById(id);
       setPlanName(plan?.name || "");
     };
     if (id) {
       fetchPlan();
     }
-  }, [id]);
+  }, [id, httpRequest]);
 
   const handleJoin = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
     const decoded = jwtDecode<TokenPayload>(token);
-    const httpRequest = new HttpRequest();
     await httpRequest.inviteUserToLessonPlan(id, decoded._id);
     router.push(`/lesson-plan/details/${id}`);
   };
@@ -48,4 +44,3 @@ export default function InvitePage({
     </div>
   );
 }
-
