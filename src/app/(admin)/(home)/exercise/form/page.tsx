@@ -204,66 +204,66 @@ const ExerciseFormPage = () => {
   if (loading) return <p>Carregando exercício...</p>;
 
   return (
-    <div>
-      <h4 className="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">
-        {exerciseId ? "Editar Exercício" : "Criar Novo Exercício"}
-      </h4>
-
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
-          <div className="col-span-1">
-            <Label>
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                <span>Enunciado*</span>
-              </div>
-            </Label>
-            <TextArea
-              placeholder="Digite o enunciado da questão"
-              value={statement}
-              onChange={(e) => setStatement(e)}
-              rows={3}
-            />
-          </div>
-
-          <div className="col-span-1">
-            <Label>
-              <div className="flex items-center gap-2">
-                <List className="w-4 h-4" />
-                <span>Tipo de Questão*</span>
-              </div>
-            </Label>
-            <select
-              id="type"
-              value={type}
-              onChange={(e) =>
-                setType(
-                  e.target.value as "open" | "multiple_choice" | "true_false"
-                )
-              }
-              className="mb-3 w-full rounded-md border border-gray-300 p-2 dark:bg-navy-700 dark:text-white"
-            >
-              <option value="open">Questão Aberta</option>
-              <option value="multiple_choice">Múltipla Escolha</option>
-              <option value="true_false">Verdadeiro ou Falso</option>
-            </select>
-          </div>
-
-          {type === "multiple_choice" && (
-            <div className="col-span-2">
+    <div className="flex flex-col gap-6">
+      <div className="rounded-lg bg-white p-6 shadow-md dark:bg-navy-800">
+        <h4 className="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">
+          {exerciseId ? "Editar Exercício" : "Criar Novo Exercício"}
+        </h4>
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+            <div className="col-span-1">
               <Label>
                 <div className="flex items-center gap-2">
-                  <ListChecks className="w-4 h-4" />
+                  <FileText className="h-4 w-4" />
+                  <span>Enunciado*</span>
+                </div>
+              </Label>
+              <TextArea
+                placeholder="Digite o enunciado da questão"
+                value={statement}
+                onChange={(e) => setStatement(e)}
+                rows={3}
+              />
+            </div>
+
+            <div className="col-span-1">
+              <Label>
+                <div className="flex items-center gap-2">
+                  <List className="h-4 w-4" />
+                  <span>Tipo de Questão*</span>
+                </div>
+              </Label>
+              <select
+                id="type"
+                value={type}
+                onChange={(e) =>
+                  setType(
+                    e.target.value as "open" | "multiple_choice" | "true_false"
+                  )
+                }
+                className="mb-3 w-full rounded-md border border-gray-300 p-2 dark:bg-navy-700 dark:text-white"
+              >
+                <option value="open">Questão Aberta</option>
+                <option value="multiple_choice">Múltipla Escolha</option>
+                <option value="true_false">Verdadeiro ou Falso</option>
+              </select>
+            </div>
+          </div>
+          {type === "multiple_choice" && (
+            <div className="mt-6">
+              <Label>
+                <div className="flex items-center gap-2">
+                  <ListChecks className="h-4 w-4" />
                   <span>Alternativas*</span>
                 </div>
               </Label>
-              <div className="grid grid-cols-2 gap-4 mb-3">
+              <div className="mb-3 grid grid-cols-2 gap-4">
                 {mcOptions.map((option, index) => (
                   <div
                     key={index}
                     className="mb-3 flex flex-col rounded-md border p-3 shadow-sm dark:border-white/10"
                   >
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="mb-2 flex items-center gap-2">
                       <input
                         type="radio"
                         id={`option-${index}`}
@@ -328,14 +328,14 @@ const ExerciseFormPage = () => {
           )}
 
           {type === "true_false" && (
-            <div className="col-span-2">
+            <div className="mt-6">
               <Label>
                 <div className="flex items-center gap-2">
-                  <ToggleRight className="w-4 h-4" />
+                  <ToggleRight className="h-4 w-4" />
                   <span>Afirmações Verdadeiro/Falso*</span>
                 </div>
               </Label>
-              <div className="grid grid-cols-2 gap-4 mb-3">
+              <div className="mb-3 grid grid-cols-2 gap-4">
                 {tfOptions.map((opt, index) => (
                   <div key={index} className="mb-2 flex flex-col">
                     <TextArea
@@ -388,68 +388,67 @@ const ExerciseFormPage = () => {
               </Button>
             </div>
           )}
-        </div>
-
-        <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 mt-6">
-          <div className="col-span-1">
-            <div className="flex items-center gap-2 mb-1">
-              <BarChart className="w-4 h-4" />
-              <span className="text-sm font-medium text-gray-800 dark:text-white">
-                Dificuldade*
-              </span>
-            </div>
-            <select
-              value={difficulty}
-              onChange={(e) =>
-                setDifficulty(e.target.value as "easy" | "medium" | "hard")
-              }
-              className="mb-3 w-full rounded-md border border-gray-300 p-2 dark:bg-navy-700 dark:text-white"
-            >
-              <option value="easy">Fácil</option>
-              <option value="medium">Médio</option>
-              <option value="hard">Difícil</option>
-            </select>
-          </div>
-
-          <div className="col-span-1">
-            <div className="flex items-center gap-2 mb-1">
-              <GraduationCap className="w-4 h-4" />
-              <span className="text-sm font-medium text-gray-800 dark:text-white">
-                Nota*
-              </span>
-              <Tooltip
-                position="right"
-                width="330px"
-                content="Defina a nota atribuída a este exercício. Caso não tenha, deixe 0."
+          <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+            <div className="col-span-1">
+              <div className="mb-1 flex items-center gap-2">
+                <BarChart className="h-4 w-4" />
+                <span className="text-sm font-medium text-gray-800 dark:text-white">
+                  Dificuldade*
+                </span>
+              </div>
+              <select
+                value={difficulty}
+                onChange={(e) =>
+                  setDifficulty(e.target.value as "easy" | "medium" | "hard")
+                }
+                className="mb-3 w-full rounded-md border border-gray-300 p-2 dark:bg-navy-700 dark:text-white"
               >
-                <HelpCircle className="w-4 h-4 text-blue-600 cursor-help" />
-              </Tooltip>
+                <option value="easy">Fácil</option>
+                <option value="medium">Médio</option>
+                <option value="hard">Difícil</option>
+              </select>
             </div>
-            <input
-              type="number"
-              value={grade}
-              onChange={(e) => setGrade(Number(e.target.value))}
-              className="w-full rounded-md border border-gray-300 p-2 dark:bg-navy-700 dark:text-white"
-              placeholder="Digite a nota"
-              min={0}
-              required
-            />
-          </div>
-        </div>
 
-        <div className="flex items-center justify-end w-full gap-3 mt-6">
-          <Button size="sm" variant="outline" onClick={handleClose}>
-            Fechar
-          </Button>
-          <Button size="sm" type="submit" disabled={saving}>
-            {saving
-              ? "Salvando..."
-              : exerciseId
-              ? "Editar Exercício"
-              : "Criar Exercício"}
-          </Button>
-        </div>
-      </form>
+            <div className="col-span-1">
+              <div className="mb-1 flex items-center gap-2">
+                <GraduationCap className="h-4 w-4" />
+                <span className="text-sm font-medium text-gray-800 dark:text-white">
+                  Nota*
+                </span>
+                <Tooltip
+                  position="right"
+                  width="330px"
+                  content="Defina a nota atribuída a este exercício. Caso não tenha, deixe 0."
+                >
+                  <HelpCircle className="h-4 w-4 cursor-help text-blue-600" />
+                </Tooltip>
+              </div>
+              <input
+                type="number"
+                value={grade}
+                onChange={(e) => setGrade(Number(e.target.value))}
+                className="w-full rounded-md border border-gray-300 p-2 dark:bg-navy-700 dark:text-white"
+                placeholder="Digite a nota"
+                min={0}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="mt-6 flex w-full items-center justify-end gap-3">
+            <Button size="sm" variant="outline" onClick={handleClose}>
+              Fechar
+            </Button>
+            <Button size="sm" type="submit" disabled={saving}>
+              {saving
+                ? "Salvando..."
+                : exerciseId
+                ? "Editar Exercício"
+                : "Criar Exercício"}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

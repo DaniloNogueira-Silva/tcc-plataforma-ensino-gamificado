@@ -59,14 +59,16 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
         <div className="relative flex flex-col items-center">
           <div onClick={toggleDropdown} className="w-full">
             <div className="mb-2 flex h-11 rounded-lg border border-gray-300 py-1.5 pl-3 pr-3 shadow-theme-xs outline-hidden transition focus:border-brand-300 focus:shadow-focus-ring dark:border-gray-700 dark:bg-gray-900 dark:focus:border-brand-300">
-              <div className="flex flex-wrap flex-auto gap-2">
+              <div className="flex flex-wrap flex-auto gap-2 overflow-hidden">
                 {selectedValuesText.length > 0 ? (
                   selectedValuesText.map((text, index) => (
                     <div
                       key={index}
                       className="group flex items-center justify-center rounded-full border-[0.7px] border-transparent bg-gray-100 py-1 pl-2.5 pr-2 text-sm text-gray-800 hover:border-gray-200 dark:bg-gray-800 dark:text-white/90 dark:hover:border-gray-800"
                     >
-                      <span className="flex-initial max-w-full">{text}</span>
+                      <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
+                        {text}
+                      </span>
                       <div className="flex flex-row-reverse flex-auto">
                         <div
                           onClick={() =>

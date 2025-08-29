@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Label from "@/components/form/Label";
-import MultiSelect from "@/components/form/MultiSelect";
 import Button from "@/components/ui/button/Button";
 import { HttpRequest } from "@/utils/http-request";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import { jwtDecode } from "jwt-decode";
-import { ClipboardType, FileText, ListChecks } from "lucide-react";
+import { ClipboardType, FileText } from "lucide-react";
+
+import ExerciseSelector from "@/components/exercise/ExerciseSelector";
 
 interface TokenPayload {
   _id: string;
@@ -61,12 +62,6 @@ const ExerciseListForm = () => {
     }
   }, []);
 
-  const exerciseOptions = exercises.map((ex) => ({
-    value: ex._id,
-    text: ex.statement,
-    selected: exercisesIds.includes(ex._id),
-  }));
-
   const handleClose = () => {
     router.push("/exercise");
   };
@@ -102,54 +97,55 @@ const ExerciseListForm = () => {
   };
 
   return (
-    <div>
+    <div className="bg-gray p-6 rounded-lg">
       <h4 className="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">
         Criar Lista de Exercício
       </h4>
 
       <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
-          <div className="col-span-1">
-            <Label>
-              <div className="flex items-center gap-2">
-                <ClipboardType className="w-4 h-4" />
-                <span>Nome*</span>
-              </div>
-            </Label>
-            <Input
-              type="text"
-              placeholder="Digite o nome da lista"
-              defaultValue={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
+          <div className="col-span-1 bg-white p-6 rounded-lg shadow-md mr-6">
+            <h5 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+              Informações Básicas
+            </h5>
+            <div className="mb-5">
+              <Label>
+                <div className="flex items-center gap-2">
+                  <ClipboardType className="w-4 h-4" />
+                  <span>Nome*</span>
+                </div>
+              </Label>
+              <Input
+                type="text"
+                placeholder="Digite o nome da lista"
+                defaultValue={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  <span>Conteúdo</span>
+                </div>
+              </Label>
+              <TextArea
+                placeholder="Digite o conteúdo da lista"
+                value={content}
+                onChange={(e) => setContent(e)}
+                rows={3}
+              />
+            </div>
           </div>
 
-          <div className="col-span-2">
-            <Label>
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                <span>Conteúdo</span>
-              </div>
-            </Label>
-            <TextArea
-              placeholder="Digite o conteúdo da lista"
-              value={content}
-              onChange={(e) => setContent(e)}
-              rows={3}
-            />
-          </div>
-
-          <div className="col-span-1">
-            <Label>
-              <div className="flex items-center gap-2">
-                <ListChecks className="w-4 h-4" />
-                <span>Exercícios*</span>
-              </div>
-            </Label>
-            <MultiSelect
-              options={exerciseOptions}
-              defaultSelected={exercisesIds}
-              onChange={(selected) => setExercisesIds(selected)}
+          <div className="col-span-1 bg-white p-6 rounded-lg shadow-md pl-6">
+            <h5 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+              Exercícios*
+            </h5>
+            <ExerciseSelector
+              exercises={exercises}
+              selectedExercises={exercisesIds}
+              onSelect={setExercisesIds}
               disabled={saving}
             />
           </div>

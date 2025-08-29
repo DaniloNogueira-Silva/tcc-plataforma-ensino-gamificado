@@ -23,7 +23,7 @@ const ExerciseListRealizePage = () => {
   };
   const [selectedAnswer, setSelectedAnswer] = useState<AnswerMap>({});
   const [submitted, setSubmitted] = useState(false);
-
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const httpRequest = useMemo(() => new HttpRequest(), []);
 
   useEffect(() => {
@@ -124,9 +124,21 @@ const ExerciseListRealizePage = () => {
     });
   };
 
+  const handleNavigateQuestion = (direction: "next" | "prev") => {
+    if (!exerciseList?.exercises) return;
+    if (direction === "next") {
+      setCurrentQuestionIndex((prev) =>
+        Math.min(prev + 1, exerciseList.exercises.length - 1)
+      );
+    } else {
+      setCurrentQuestionIndex((prev) => Math.max(prev - 1, 0));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!exerciseList) return;
+
     for (const exercise of exerciseList.exercises || []) {
       let answerString = "";
       if (exercise.type === "true_false" && exercise.true_false_options) {
@@ -155,6 +167,8 @@ const ExerciseListRealizePage = () => {
   const formattedDate = exerciseList.due_date
     ? new Date(exerciseList.due_date).toLocaleDateString()
     : null;
+  const totalQuestions = exerciseList.exercises?.length || 0;
+  const currentExercise = exerciseList.exercises?.[currentQuestionIndex];
 
   return (
     <div className="px-40 flex flex-1 justify-center py-5">
@@ -177,21 +191,30 @@ const ExerciseListRealizePage = () => {
           </div>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6 px-4">
-          {exerciseList.exercises?.map((exercise) => (
-            <div key={exercise._id}>
+          <div className="bg-white border border-gray-200 rounded-lg p-5 flex justify-between items-center">
+            <span className="font-semibold text-gray-600">
+              Questão {currentQuestionIndex + 1} de {totalQuestions}
+            </span>
+          </div>
+          {currentExercise && (
+            <div key={currentExercise._id}>
               <h2 className="text-lg font-bold text-gray-800 dark:text-white/90">
-                {exercise.statement}
+                {currentExercise.statement}
               </h2>
-              {exercise.type === "open" && (
+              {currentExercise.type === "open" && (
                 <div className="mt-2">
                   <TextArea
                     value={
-                      typeof selectedAnswer[exercise._id] === "string"
-                        ? (selectedAnswer[exercise._id] as string)
+                      typeof selectedAnswer[currentExercise._id] === "string"
+                        ? (selectedAnswer[currentExercise._id] as string)
                         : ""
                     }
                     onChange={(value) =>
-                      handleAnswer(exercise._id, exercise._id, value)
+                      handleAnswer(
+                        currentExercise._id,
+                        currentExercise._id,
+                        value
+                      )
                     }
                     className="w-full h-40 mt-2 p-4 border border-gray-300 rounded-md"
                     placeholder="Digite sua resposta aqui"
@@ -200,127 +223,157 @@ const ExerciseListRealizePage = () => {
                   />
                 </div>
               )}
-              {exercise.type === "multiple_choice" && (
+              {currentExercise.type === "multiple_choice" && (
                 <div className="mt-2 space-y-4">
-                  {exercise.multiple_choice_options?.map((option, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center space-x-3 border-b border-gray-300 pb-3"
-                    >
-                      <input
-                        type="radio"
-                        id={`${exercise._id}-opt-${index}`}
-                        name={exercise._id}
-                        value={option}
-                        checked={
-                          typeof selectedAnswer[exercise._id] === "string" &&
-                          selectedAnswer[exercise._id] === option
-                        }
-                        onChange={(e) =>
-                          handleAnswer(
-                            exercise._id,
-                            exercise._id,
-                            e.target.value
-                          )
-                        }
-                        className="h-5 w-5 text-blue-500 border-gray-300 rounded"
-                        required
-                        disabled={submitted}
-                      />
-                      <Label
-                        htmlFor={`${exercise._id}-opt-${index}`}
-                        className="text-xl text-gray-700"
+                  {currentExercise.multiple_choice_options?.map(
+                    (option, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center space-x-3 border-b border-gray-300 pb-3"
                       >
-                        {option}
-                      </Label>
-                    </div>
-                  ))}
+                        <input
+                          type="radio"
+                          id={`${currentExercise._id}-opt-${index}`}
+                          name={currentExercise._id}
+                          value={option}
+                          checked={
+                            typeof selectedAnswer[currentExercise._id] ===
+                              "string" &&
+                            selectedAnswer[currentExercise._id] === option
+                          }
+                          onChange={(e) =>
+                            handleAnswer(
+                              currentExercise._id,
+                              currentExercise._id,
+                              e.target.value
+                            )
+                          }
+                          className="h-5 w-5 text-blue-500 border-gray-300 rounded"
+                          required
+                          disabled={submitted}
+                        />
+                        <Label
+                          htmlFor={`${currentExercise._id}-opt-${index}`}
+                          className="text-xl text-gray-700"
+                        >
+                          {option}
+                        </Label>
+                      </div>
+                    )
+                  )}
                 </div>
               )}
-              {exercise.type === "true_false" &&
-                exercise.true_false_options && (
+              {currentExercise.type === "true_false" &&
+                currentExercise.true_false_options && (
                   <div className="mt-2">
-                    {exercise.true_false_options.map((alternative, idx) => {
-                      const key = alternative._id || String(idx);
-                      return (
-                        <div key={key} className="mt-4">
-                          <p className="text-lg font-medium text-gray-800 dark:text-white/90">
-                            {alternative.statement}
-                          </p>
-                          <div className="flex items-center space-x-6 mt-4">
-                            <input
-                              type="radio"
-                              id={`true-${key}`}
-                              name={`${exercise._id}-${key}`}
-                              value="true"
-                              checked={
-                                typeof selectedAnswer[exercise._id] !==
-                                  "string" &&
-                                (
-                                  selectedAnswer[exercise._id] as
-                                    | Record<string, string>
-                                    | undefined
-                                )?.[key] === "true"
-                              }
-                              onChange={() =>
-                                handleAnswer(exercise._id, key, "true")
-                              }
-                              className="h-5 w-5 text-blue-500 border-gray-300 rounded"
-                              required
-                              disabled={submitted}
-                            />
-                            <label
-                              htmlFor={`true-${key}`}
-                              className="text-lg font-light text-gray-800 dark:text-white/90"
-                            >
-                              Verdadeiro
-                            </label>
-                            <input
-                              type="radio"
-                              id={`false-${key}`}
-                              name={`${exercise._id}-${key}`}
-                              value="false"
-                              checked={
-                                typeof selectedAnswer[exercise._id] !==
-                                  "string" &&
-                                (
-                                  selectedAnswer[exercise._id] as
-                                    | Record<string, string>
-                                    | undefined
-                                )?.[key] === "false"
-                              }
-                              onChange={() =>
-                                handleAnswer(exercise._id, key, "false")
-                              }
-                              className="h-5 w-5 text-blue-500 border-gray-300 rounded"
-                              required
-                              disabled={submitted}
-                            />
-                            <label
-                              htmlFor={`false-${key}`}
-                              className="text-lg font-light text-gray-800 dark:text-white/90"
-                            >
-                              Falso
-                            </label>
+                    {currentExercise.true_false_options.map(
+                      (alternative, idx) => {
+                        const key = alternative._id || String(idx);
+                        return (
+                          <div key={key} className="mt-4">
+                            <p className="text-lg font-medium text-gray-800 dark:text-white/90">
+                              {alternative.statement}
+                            </p>
+                            <div className="flex items-center space-x-6 mt-4">
+                              <input
+                                type="radio"
+                                id={`true-${key}`}
+                                name={`${currentExercise._id}-${key}`}
+                                value="true"
+                                checked={
+                                  typeof selectedAnswer[currentExercise._id] !==
+                                    "string" &&
+                                  (
+                                    selectedAnswer[currentExercise._id] as
+                                      | Record<string, string>
+                                      | undefined
+                                  )?.[key] === "true"
+                                }
+                                onChange={() =>
+                                  handleAnswer(currentExercise._id, key, "true")
+                                }
+                                className="h-5 w-5 text-blue-500 border-gray-300 rounded"
+                                required
+                                disabled={submitted}
+                              />
+                              <label
+                                htmlFor={`true-${key}`}
+                                className="text-lg font-light text-gray-800 dark:text-white/90"
+                              >
+                                Verdadeiro
+                              </label>
+                              <input
+                                type="radio"
+                                id={`false-${key}`}
+                                name={`${currentExercise._id}-${key}`}
+                                value="false"
+                                checked={
+                                  typeof selectedAnswer[currentExercise._id] !==
+                                    "string" &&
+                                  (
+                                    selectedAnswer[currentExercise._id] as
+                                      | Record<string, string>
+                                      | undefined
+                                  )?.[key] === "false"
+                                }
+                                onChange={() =>
+                                  handleAnswer(
+                                    currentExercise._id,
+                                    key,
+                                    "false"
+                                  )
+                                }
+                                className="h-5 w-5 text-blue-500 border-gray-300 rounded"
+                                required
+                                disabled={submitted}
+                              />
+                              <label
+                                htmlFor={`false-${key}`}
+                                className="text-lg font-light text-gray-800 dark:text-white/90"
+                              >
+                                Falso
+                              </label>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      }
+                    )}
                   </div>
                 )}
             </div>
-          ))}
-          <button
-            type="submit"
-            disabled={submitted}
-            className={`w-full py-3 text-white font-semibold rounded-md shadow-md ${
-              submitted
-                ? "bg-green-600 cursor-not-allowed"
-                : "bg-blue-500 hover:bg-blue-600"
-            }`}
-          >
-            {submitted ? "Respostas Enviadas" : "Confirmar Respostas"}
-          </button>
+          )}
+          <div className="flex justify-between mt-6">
+            <button
+              type="button"
+              onClick={() => handleNavigateQuestion("prev")}
+              disabled={currentQuestionIndex === 0 || submitted}
+              className="px-6 py-2 bg-white border border-gray-300 rounded-lg font-semibold text-gray-700 disabled:opacity-50"
+            >
+              Anterior
+            </button>
+            {currentQuestionIndex === totalQuestions - 1 ? (
+              <button
+                type="submit"
+                disabled={submitted}
+                className={`px-6 py-2 text-white font-semibold rounded-lg shadow-md ${
+                  submitted
+                    ? "bg-green-600 cursor-not-allowed"
+                    : "bg-blue-500 hover:bg-blue-600"
+                }`}
+              >
+                {submitted ? "Respostas Enviadas" : "Confirmar Respostas"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleNavigateQuestion("next")}
+                disabled={submitted}
+                className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold disabled:opacity-50"
+              >
+                Próxima
+              </button>
+            )}
+          </div>
         </form>
       </div>
     </div>

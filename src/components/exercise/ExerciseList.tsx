@@ -32,7 +32,6 @@ export default function ExerciseList({ lessonPlanId }: ExerciseListProps) {
           key={i}
           exerciseId={exercise._id}
           statement={exercise.statement}
-          dueDate={exercise.due_date}
           lessonPlanId={lessonPlanId}
           type={exercise.type}
         />

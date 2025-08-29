@@ -175,6 +175,8 @@ export default function DetailsPage() {
           <DatePicker
             id="item-due-date-picker"
             onChange={(_, dateStr) => setDueDate(new Date(dateStr))}
+            showTimeSelect={true}
+            position="above"
           />
         </div>
 
