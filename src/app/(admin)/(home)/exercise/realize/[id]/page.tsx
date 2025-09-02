@@ -21,7 +21,7 @@ const ExerciseDetailsPage = () => {
     [key: string]: string;
   }>({});
   const [submitted, setSubmitted] = useState(false);
-
+  const [finalGrade, setFinalGrade] = useState<number | null>(null);
   const httpRequest = useMemo(() => new HttpRequest(), []);
 
   useEffect(() => {
@@ -87,6 +87,9 @@ const ExerciseDetailsPage = () => {
             } else {
               setSelectedAnswer({ [exerciseId]: userAnswer.answer });
             }
+            if (userAnswer.final_grade != null) {
+              setFinalGrade(userAnswer.final_grade);
+            }
           }
         }
       } catch (err) {
@@ -118,7 +121,11 @@ const ExerciseDetailsPage = () => {
       answerString = selectedAnswer[exerciseId];
     }
 
-    await httpRequest.submitAnswer(exerciseId, answerString);
+    const result = await httpRequest.submitAnswer(exerciseId, answerString);
+
+    if (result.final_grade != null) {
+      setFinalGrade(result.final_grade);
+    }
 
     setSubmitted(true);
   };
@@ -289,6 +296,11 @@ const ExerciseDetailsPage = () => {
           >
             {submitted ? "Resposta Enviada" : "Confirmar Resposta"}
           </button>
+          {finalGrade != null && (
+            <p className="mt-4 text-green-700">
+              Nota automática: {finalGrade.toFixed(1).replace(".", ",")}
+            </p>
+          )}
         </form>
       </div>
     </div>

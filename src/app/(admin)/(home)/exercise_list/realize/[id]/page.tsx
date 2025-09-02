@@ -154,11 +154,12 @@ const ExerciseListRealizePage = () => {
         answerString = selectedAnswer[exercise._id] as string;
       }
       await httpRequest.submitExerciseListAnswers(
-        exercise._id,
         exercise_list_id,
+        exercise._id,
         answerString
       );
     }
+    await httpRequest.markExerciseListCompleted(exercise_list_id);
     setSubmitted(true);
   };
 

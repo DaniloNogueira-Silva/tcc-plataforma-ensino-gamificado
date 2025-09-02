@@ -43,7 +43,6 @@ const SummarySidebar = (props: Props) => {
         currentTotalGrade={currentTotalGrade}
         totalPoints={totalPoints}
       />
-
       {props.onGradeChange && (
         <div className="p-4 border border-gray-200 rounded-lg">
           <label

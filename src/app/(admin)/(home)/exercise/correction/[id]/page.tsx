@@ -48,17 +48,18 @@ const ExerciseCorrectionPage = () => {
     const numericGrade = parseFloat(grade.replace(",", ".")) || 0;
 
     try {
-      await httpRequest.teacherCorretion(
+      const result = await httpRequest.teacherCorretion(
         exerciseId,
         studentAnswer.user_id._id,
-        numericGrade,
-        exercise.grade
+        numericGrade
       );
 
       const updatedStudents = [...studentsAnswers];
       updatedStudents[selectedStudentIndex] = {
         ...studentAnswer,
-        final_grade: numericGrade,
+        final_grade: result.final_grade,
+        points: result.points,
+        coins: result.coins,
       };
       setStudentsAnswers(updatedStudents);
       setIsEditingMode(false);
@@ -102,7 +103,7 @@ const ExerciseCorrectionPage = () => {
     }
 
     if (numericValue >= 0 && numericValue <= maxGrade) {
-      setGrade(value); 
+      setGrade(value);
     }
   };
   return (

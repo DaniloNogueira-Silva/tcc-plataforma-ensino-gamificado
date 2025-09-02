@@ -1,4 +1,4 @@
-import { StudentAnswer } from "@/app/(admin)/(home)/exercise_list/correction/[id]/page";
+import { StudentAnswer } from "@/utils/interfaces/correction.types";
 import { UserCircle } from "lucide-react";
 
 type Props = {

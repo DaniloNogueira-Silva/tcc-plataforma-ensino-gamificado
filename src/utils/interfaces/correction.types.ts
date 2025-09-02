@@ -4,9 +4,11 @@ export type StudentAnswer = {
   _id: string;
   user_id: { _id: string; name: string };
   final_grade?: number;
-  
-  answer?: string; 
-  attempts?: IExerciseListAttempt[]; 
+  points?: number;
+  coins?: number;
+
+  answer?: string;
+  attempts?: IExerciseListAttempt[];
 };
 
 export interface ExerciseGradeMap {

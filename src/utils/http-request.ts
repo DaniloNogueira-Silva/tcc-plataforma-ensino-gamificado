@@ -705,11 +705,14 @@ export class HttpRequest {
     }
   }
 
-  async submitAnswer(exerciseId: string, answer: string) {
+  async submitAnswer(
+    exerciseId: string,
+    answer: string
+  ): Promise<IUserProgress> {
     try {
       const token = await this.getToken();
 
-      await axios.post(
+      const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercises/${exerciseId}/submitAnswer`,
         { answer },
         {
@@ -719,7 +722,7 @@ export class HttpRequest {
         }
       );
 
-      return;
+      return response.data;
     } catch (error) {
       console.error(
         "Erro ao coletar resposta do exercício de multipla escolha:",
@@ -735,9 +738,13 @@ export class HttpRequest {
   async teacherCorretion(
     exercise_id: string,
     user_id: string,
-    final_grade: number,
-    points: number
-  ): Promise<any> {
+    grade: number
+  ): Promise<{
+    userProgressId: string;
+    final_grade: number;
+    points: number;
+    coins: number;
+  }> {
     try {
       const token = await this.getToken();
 
@@ -745,8 +752,7 @@ export class HttpRequest {
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercises/${exercise_id}/teacher-correction`,
         {
           user_id,
-          final_grade,
-          points,
+          final_grade: grade, 
         },
         {
           headers: {
@@ -867,7 +873,10 @@ export class HttpRequest {
     }
   }
 
-  async findAllStudentsByExerciseListId(exercise_list_id: string, lessonPlanId: string) {
+  async findAllStudentsByExerciseListId(
+    exercise_list_id: string,
+    lessonPlanId: string
+  ) {
     try {
       const token = await this.getToken();
 
@@ -1014,8 +1023,8 @@ export class HttpRequest {
             Authorization: `Bearer ${token}`,
           },
           params: {
-            exercise_id,
             exercise_list_id,
+            exercise_id,
           },
         }
       );
@@ -1029,6 +1038,31 @@ export class HttpRequest {
       throw new Error(
         "Ocorreu um erro ao coletar resposta do exercício de multipla escolha: " +
           error
+      );
+    }
+  }
+
+  async markExerciseListCompleted(
+    exerciseListId: string
+  ): Promise<IUserProgress> {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercise_lists/${exerciseListId}/mark-completed`,
+        null,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao concluir lista de exercícios:", error);
+      throw new Error(
+        "Ocorreu um erro ao concluir lista de exercícios: " + error
       );
     }
   }
