@@ -75,63 +75,52 @@ const ExerciseListCorrectionPage = () => {
     const currentStudent = studentsAnswers[selectedStudentIndex];
 
     const gradesToSubmit = Object.entries(exerciseGrades)
-      .map(([exerciseId, gradeStr]) => {
-        const attempt = currentStudent.attempts?.find(
-          (a: IExerciseListAttempt) => a.exercise_id === exerciseId
-        );
-        const grade = parseFloat(gradeStr.replace(",", ".")) || 0;
-        return { attemptId: attempt?._id, grade };
-      })
-      .filter((item) => item.attemptId);
+        .map(([exerciseId, gradeStr]) => {
+            const attempt = currentStudent.attempts?.find(
+                (a: IExerciseListAttempt) => a.exercise_id === exerciseId
+            );
+            const grade = parseFloat(gradeStr.replace(",", ".")) || 0;
+            return { attemptId: attempt?._id, grade };
+        })
+        .filter((item) => item.attemptId);
 
     try {
-      await Promise.all(
-        gradesToSubmit.map(({ attemptId, grade }) =>
-          httpRequest.gradeExerciseListAttempt(attemptId!, grade)
-        )
-      );
+        await Promise.all(
+            gradesToSubmit.map(({ attemptId, grade }) =>
+                httpRequest.gradeExerciseListAttempt(attemptId!, grade)
+            )
+        );
 
-      setStudentsAnswers((prevAnswers) => {
-        return prevAnswers.map((student, index) => {
-          if (index !== selectedStudentIndex) {
-            return student;
-          }
+        const updatedStudentProgress = await httpRequest.getUserProgressById(
+            currentStudent._id
+        );
 
-          const newAttempts = (student.attempts || []).map((attempt) => {
-            const submitted = gradesToSubmit.find(
-              (g) => g.attemptId === attempt._id
-            );
-            return submitted ? { ...attempt, grade: submitted.grade } : attempt;
-          });
-
-          const totalEarned = newAttempts.reduce(
-            (sum, att) => sum + (att.grade || 0),
-            0
-          );
-
-          const newFinalGrade = totalEarned;
-
-          return {
-            ...student,
-            attempts: newAttempts,
-            final_grade: newFinalGrade,
-          };
+        setStudentsAnswers((prevAnswers) => {
+            return prevAnswers.map((student, index) => {
+                if (index === selectedStudentIndex) {
+                    return {
+                        ...student,
+                        final_grade: updatedStudentProgress.final_grade,
+                        attempts: updatedStudentProgress.attempts
+                    };
+                }
+                return student;
+            });
         });
-      });
 
-      setIsEditingMode(false);
-      setShowSuccessNotification(true);
-      setTimeout(() => setShowSuccessNotification(false), 3000);
+        setIsEditingMode(false);
+        setShowSuccessNotification(true);
+        setTimeout(() => setShowSuccessNotification(false), 3000);
 
-      if (goToNext && selectedStudentIndex < studentsAnswers.length - 1) {
-        setSelectedStudentIndex((prev) => prev + 1);
-      }
+        if (goToNext && selectedStudentIndex < studentsAnswers.length - 1) {
+            setSelectedStudentIndex((prev) => prev + 1);
+        }
     } catch (err) {
-      console.error("Erro ao salvar notas", err);
+        console.error("Erro ao salvar notas", err);
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
-  };
+};
 
   if (isLoading)
     return <div className="p-6">Carregando dados da correção...</div>;

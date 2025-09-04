@@ -6,6 +6,8 @@ import { useEffect, useState, useMemo } from "react";
 import { Modal } from "@/components/ui/modal";
 import { CheckLineIcon, CloseLineIcon, TimeIcon } from "@/icons";
 import { IUser } from "@/utils/interfaces/user.interface";
+import { ISubmission } from "@/utils/interfaces/ISubmission";
+import { ILessonPlanContent } from "@/utils/interfaces/lesson_plan_content";
 
 type UserRole = "STUDENT" | "TEACHER";
 type DeliveryStatus = {
@@ -20,7 +22,6 @@ type StudentStatus = {
   deadlinePassed: boolean;
 };
 
-// A prop 'lessonPlanContent' foi removida.
 type ExerciseCardProps = {
   exerciseId: string;
   statement: string;
@@ -44,12 +45,10 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
     null
   );
   const [showStudentsModal, setShowStudentsModal] = useState(false);
-  // 1. Novo estado para armazenar a data de entrega
   const [dueDate, setDueDate] = useState<string | null>(null);
 
   const httpRequest = useMemo(() => new HttpRequest(), []);
 
-  // 2. O 'useMemo' agora depende do estado 'dueDate'
   const formattedDueDate = useMemo(() => {
     if (!dueDate) return "Não definida";
     return new Date(dueDate)
@@ -74,7 +73,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
         ]);
 
         const relevantAssociation = associations.find(
-          (assoc: any) => assoc.lesson_plan_id === lessonPlanId
+          (assoc: ILessonPlanContent) => assoc.lesson_plan_id === lessonPlanId
         );
 
         if (relevantAssociation && relevantAssociation.due_date) {
@@ -89,12 +88,11 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
               httpRequest.findAllStudentsByLessonPlanId(lessonPlanId),
               httpRequest.findAllStudentsByExerciseId(exerciseId, lessonPlanId),
             ]);
-
             const deliveredIds = new Set(
-              submissions.map((sub: any) => sub.user_id._id)
+              submissions.map((sub: ISubmission) => sub.user_id._id)
             );
             const deliveredNames = submissions.map(
-              (sub: any) => sub.user_id.name
+              (sub: ISubmission) => sub.user_id.name
             );
 
             const notDeliveredNames = students

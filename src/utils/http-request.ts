@@ -752,7 +752,7 @@ export class HttpRequest {
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercises/${exercise_id}/teacher-correction`,
         {
           user_id,
-          final_grade: grade, 
+          final_grade: grade,
         },
         {
           headers: {
@@ -917,6 +917,26 @@ export class HttpRequest {
       throw new Error(
         "Ocorreu um erro ao buscar tentativas da lista: " + error
       );
+    }
+  }
+
+  async getUserProgressById(id: string) {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-progress/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar progresso do aluno:", error);
+      throw new Error("Ocorreu um erro ao buscar progresso do aluno: " + error);
     }
   }
 

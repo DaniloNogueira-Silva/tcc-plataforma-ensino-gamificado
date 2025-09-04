@@ -7,7 +7,10 @@ import { HttpRequest } from "@/utils/http-request";
 import { CheckLineIcon, CloseLineIcon, TimeIcon } from "@/icons";
 import { Modal } from "@/components/ui/modal";
 import { IUser } from "@/utils/interfaces/user.interface";
+import { ILessonPlanContent } from "@/utils/interfaces/lesson_plan_content";
+import { ISubmission } from "@/utils/interfaces/ISubmission";
 
+type UserRole = "STUDENT" | "TEACHER";
 interface ExerciseListCardProps {
   list: IExerciseList;
   lessonPlanId: string;
@@ -19,7 +22,7 @@ const ExerciseListCard: React.FC<ExerciseListCardProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userType, setUserType] = useState<"STUDENT" | "TEACHER" | null>(null);
+  const [userType, setUserType] = useState<UserRole | null>(null);
   const [dueDate, setDueDate] = useState<string | null>(null);
 
   const [deliveryStatus, setDeliveryStatus] = useState<{
@@ -62,52 +65,45 @@ const ExerciseListCard: React.FC<ExerciseListCardProps> = ({
         ]);
 
         const relevantAssociation = associations.find(
-          (assoc: any) => assoc.lesson_plan_id === lessonPlanId
+          (assoc: ILessonPlanContent) => assoc.lesson_plan_id === lessonPlanId
         );
         if (relevantAssociation && relevantAssociation.due_date) {
           setDueDate(relevantAssociation.due_date);
         }
+        const { role } = userData;
+        if (role === "STUDENT" || role === "TEACHER") {
+          setUserType(role);
 
-        const role = userData.role;
-        setUserType(role);
+          if (role === "TEACHER") {
+            const [students, submissions] = await Promise.all([
+              httpRequest.findAllStudentsByLessonPlanId(lessonPlanId),
+              httpRequest.findAllStudentsByExerciseListId(
+                list._id,
+                lessonPlanId
+              ),
+            ]);
+            const deliveredStudentsData: ISubmission[] = submissions;
+            const deliveredIds = new Set(
+              deliveredStudentsData.map((sub) => sub._id)
+            );
+            const deliveredNames = deliveredStudentsData.map((sub) => sub.name);
+            const notDeliveredNames = students
+              .filter((s: IUser) => !deliveredIds.has(s._id))
+              .map((s: IUser) => s.name);
 
-        if (role === "TEACHER") {
-          const [students, submissions] = await Promise.all([
-            httpRequest.findAllStudentsByLessonPlanId(lessonPlanId),
-            httpRequest.findAllStudentsByExerciseListId(list._id, lessonPlanId),
-          ]);
-
-          // **INÍCIO DA CORREÇÃO**
-          // 1. Filtra as submissões para garantir que 'user_id' existe.
-          const validSubmissions = submissions.filter(
-            (sub: any) => sub && sub.user_id
-          );
-
-          // 2. Mapeia os dados a partir da lista filtrada e segura.
-          const deliveredIds = new Set(
-            validSubmissions.map((sub: any) => sub.user_id._id)
-          );
-          const deliveredNames = validSubmissions.map(
-            (sub: any) => sub.user_id.name
-          );
-          // **FIM DA CORREÇÃO**
-
-          const notDeliveredNames = students
-            .filter((s: IUser) => !deliveredIds.has(s._id))
-            .map((s: IUser) => s.name);
-
-          setDeliveryStatus({
-            totalStudents: students.length,
-            deliveredStudents: deliveredNames.length,
-            studentsDeliveredList: deliveredNames,
-            studentsNotDeliveredList: notDeliveredNames,
-          });
-        } else if (role === "STUDENT") {
-          const result = await httpRequest.isExerciseListCompleted(list._id);
-          setStudentStatus({
-            completed: !!result.completed,
-            deadlinePassed: !!result.deadlinePassed,
-          });
+            setDeliveryStatus({
+              totalStudents: students.length,
+              deliveredStudents: deliveredNames.length,
+              studentsDeliveredList: deliveredNames,
+              studentsNotDeliveredList: notDeliveredNames,
+            });
+          } else if (role === "STUDENT") {
+            const result = await httpRequest.isExerciseListCompleted(list._id);
+            setStudentStatus({
+              completed: !!result.completed,
+              deadlinePassed: !!result.deadlinePassed,
+            });
+          }
         }
       } catch (err) {
         console.error("Falha ao buscar dados da lista de exercícios:", err);

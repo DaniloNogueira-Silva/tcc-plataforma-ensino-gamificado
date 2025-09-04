@@ -44,7 +44,7 @@ export const useCorrectionData = (listId: string | null) => {
           httpRequest.getExerciseListById(listId),
           httpRequest.getLessonPlansByRole(),
         ]);
-
+       
         const [studentsWithAttempts, exercises] = await Promise.all([
           Promise.all(
             progresses.map(async (prog: StudentAnswer) => {
@@ -61,7 +61,6 @@ export const useCorrectionData = (listId: string | null) => {
             )
           ),
         ]);
-
         setStudentsAnswers(studentsWithAttempts);
         setExerciseList({ ...listData, exercises });
 
