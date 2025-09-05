@@ -1,17 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
 import { HttpRequest } from "@/utils/http-request";
-import { IExercise } from "@/utils/interfaces/exercise.interface";
+import { IExercise, IExerciseList } from "@/utils/interfaces"; // Adicionado IExerciseList
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import { jwtDecode } from "jwt-decode";
 import { ClipboardType, FileText } from "lucide-react";
-
 import ExerciseSelector from "@/components/exercise/ExerciseSelector";
 
 interface TokenPayload {
@@ -23,30 +22,53 @@ interface TokenPayload {
 
 const ExerciseListForm = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const listId = searchParams.get("id");
 
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
-
   const [exercises, setExercises] = useState<IExercise[]>([]);
-  const [, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
+  const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
   const [exercisesIds, setExercisesIds] = useState<string[]>([]);
-  const [lessonPlanIds] = useState<string[]>([]);
+  const [lessonPlanIds, setLessonPlanIds] = useState<string[]>([]);
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const httpRequest = useMemo(() => new HttpRequest(), []);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       const [foundExercises, foundLessonPlans] = await Promise.all([
         httpRequest.getAllExercises(),
         httpRequest.getLessonPlansByRole(),
       ]);
       setExercises(foundExercises);
       setLessonPlans(foundLessonPlans);
+
+      if (listId) {
+        try {
+          const listToEdit: IExerciseList =
+            await httpRequest.getExerciseListById(listId);
+          setName(listToEdit.name);
+          setContent(listToEdit.content || "");
+
+          // <<-- CORREÇÃO 1: Usar 'exercises_ids' que vem da API -->>
+          // Isso fará com que os exercícios venham pré-selecionados na edição.
+          setExercisesIds(listToEdit.exercises_ids || []);
+
+          // Supondo que você tenha uma lógica para planos de aula associados
+          // setLessonPlanIds(listToEdit.lessonPlans || []);
+        } catch (error) {
+          console.error("Erro ao buscar lista para edição:", error);
+        }
+      }
+      setLoading(false);
     };
+
     fetchData();
-  }, [httpRequest]);
+  }, [httpRequest, listId]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -77,18 +99,28 @@ const ExerciseListForm = () => {
     }
 
     try {
-      const created = await httpRequest.createExerciseList(
-        name,
-        content,
-        teacherId,
-        exercisesIds,
-        lessonPlanIds.length ? lessonPlanIds : undefined,
-        "exercise_list"
-      );
-
-      if (created?._id) {
-        router.push("/exercise");
+      if (listId) {
+        // <<-- CORREÇÃO 2: Argumentos na ordem correta, incluindo o teacherId -->>
+        await httpRequest.updateExerciseListAndLessonPlans(
+          listId,
+          name,
+          content,
+          teacherId, // O ID do professor estava faltando e a ordem estava errada
+          exercisesIds,
+          lessonPlanIds
+        );
+      } else {
+        await httpRequest.createExerciseList(
+          name,
+          content,
+          teacherId,
+          exercisesIds,
+          lessonPlanIds.length ? lessonPlanIds : undefined,
+          "exercise_list"
+        );
       }
+
+      router.push("/exercise");
     } catch (error) {
       console.error("Erro ao salvar lista de exercícios:", error);
     } finally {
@@ -96,10 +128,14 @@ const ExerciseListForm = () => {
     }
   };
 
+  if (loading) {
+    return <div>Carregando...</div>;
+  }
+
   return (
     <div className="bg-gray p-6 rounded-lg">
       <h4 className="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">
-        Criar Lista de Exercício
+        {listId ? "Editar Lista de Exercício" : "Criar Lista de Exercício"}
       </h4>
 
       <form onSubmit={handleSubmit}>
@@ -120,6 +156,7 @@ const ExerciseListForm = () => {
                 placeholder="Digite o nome da lista"
                 defaultValue={name}
                 onChange={(e) => setName(e.target.value)}
+                required
               />
             </div>
             <div>
@@ -156,7 +193,11 @@ const ExerciseListForm = () => {
             Fechar
           </Button>
           <Button size="sm" type="submit" disabled={saving}>
-            {saving ? "Salvando..." : "Criar Lista"}
+            {saving
+              ? "Salvando..."
+              : listId
+              ? "Salvar Alterações"
+              : "Criar Lista"}
           </Button>
         </div>
       </form>

@@ -11,6 +11,7 @@ import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import { jwtDecode } from "jwt-decode";
 import { TokenPayload } from "../../../exercise/form/page";
 import LessonPlanBreadcrumb from "@/components/ui/breadcrumb/LessonPlanBreadCrumb";
+import Notification from "@/components/ui/notification/Notification";
 
 const ExerciseListRealizePage = () => {
   const params = useParams();
@@ -24,8 +25,18 @@ const ExerciseListRealizePage = () => {
   const [selectedAnswer, setSelectedAnswer] = useState<AnswerMap>({});
   const [submitted, setSubmitted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [notification, setNotification] = useState<{
+    variant: "success" | "info" | "warning" | "error";
+    title: string;
+  } | null>(null);
   const httpRequest = useMemo(() => new HttpRequest(), []);
 
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => setNotification(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
   useEffect(() => {
     const fetchListDetails = async () => {
       if (!exercise_list_id) return;
@@ -124,9 +135,32 @@ const ExerciseListRealizePage = () => {
     });
   };
 
+  const isQuestionAnswered = (exercise: IExercise) => {
+    const answer = selectedAnswer[exercise._id];
+    if (exercise.type === "multiple_choice") {
+      return typeof answer === "string" && answer.trim() !== "";
+    }
+    if (exercise.type === "true_false" && exercise.true_false_options) {
+      if (typeof answer !== "object") return false;
+      return exercise.true_false_options.every((alt, idx) => {
+        const key = alt._id || String(idx);
+        return (answer as Record<string, string>)[key] !== undefined;
+      });
+    }
+    return true;
+  };
+
   const handleNavigateQuestion = (direction: "next" | "prev") => {
     if (!exerciseList?.exercises) return;
     if (direction === "next") {
+      const current = exerciseList.exercises[currentQuestionIndex];
+      if (current && current.type !== "open" && !isQuestionAnswered(current)) {
+        setNotification({
+          variant: "warning",
+          title: "Por favor, responda a questão antes de prosseguir.",
+        });
+        return;
+      }
       setCurrentQuestionIndex((prev) =>
         Math.min(prev + 1, exerciseList.exercises.length - 1)
       );
@@ -140,6 +174,14 @@ const ExerciseListRealizePage = () => {
     if (!exerciseList) return;
 
     for (const exercise of exerciseList.exercises || []) {
+      if (exercise.type !== "open" && !isQuestionAnswered(exercise)) {
+        setNotification({
+          variant: "warning",
+          title: "Por favor, responda todas as questões antes de enviar.",
+        });
+
+        return;
+      }
       let answerString = "";
       if (exercise.type === "true_false" && exercise.true_false_options) {
         exercise.true_false_options.forEach((alt, idx) => {
@@ -151,7 +193,7 @@ const ExerciseListRealizePage = () => {
           else if (val === "false") answerString += "F";
         });
       } else {
-        answerString = selectedAnswer[exercise._id] as string;
+        answerString = (selectedAnswer[exercise._id] as string) || "";
       }
       await httpRequest.submitExerciseListAnswers(
         exercise_list_id,
@@ -173,6 +215,14 @@ const ExerciseListRealizePage = () => {
 
   return (
     <div className="px-40 flex flex-1 justify-center py-5">
+      {notification && (
+        <div className="fixed top-24 right-4 z-50">
+          <Notification
+            variant={notification.variant}
+            title={notification.title}
+          />
+        </div>
+      )}
       <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
         <LessonPlanBreadcrumb
           lessonPlanId={lessonPlanId}
@@ -199,7 +249,7 @@ const ExerciseListRealizePage = () => {
           </div>
           {currentExercise && (
             <div key={currentExercise._id}>
-              <h2 className="text-lg font-bold text-gray-800 dark:text-white/90">
+              <h2 className="text-lg font-bold text-gray-800 dark:text-white/90 whitespace-pre-wrap break-words text-justify">
                 {currentExercise.statement}
               </h2>
               {currentExercise.type === "open" && (
@@ -219,7 +269,6 @@ const ExerciseListRealizePage = () => {
                     }
                     className="w-full h-40 mt-2 p-4 border border-gray-300 rounded-md"
                     placeholder="Digite sua resposta aqui"
-                    required
                     disabled={submitted}
                   />
                 </div>

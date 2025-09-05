@@ -920,6 +920,28 @@ export class HttpRequest {
     }
   }
 
+  async removeExerciseList(id: string) {
+    try {
+      const token = await this.getToken();
+
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/exercise_lists/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao deletar uma lista de exercício:", error);
+      throw new Error(
+        "Ocorreu um erro ao deletar uma lista de exercício: " + error
+      );
+    }
+  }
+
   async getUserProgressById(id: string) {
     try {
       const token = await this.getToken();
