@@ -1,7 +1,14 @@
 "use client";
 
-import { PencilIcon, Trash2Icon, UserPlusIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+  MoreHorizontalIcon,
+  MoreVertical,
+  PenIcon,
+  PencilIcon,
+  Trash2Icon,
+  UserPlusIcon,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import Button from "../ui/button/Button";
 import { HttpRequest } from "@/utils/http-request";
@@ -29,11 +36,13 @@ const LessonPlanCard: React.FC<LessonPlanCardProps> = ({
   onUpdateSuccess,
 }) => {
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [name, setName] = useState(lessonPlanName);
-  const [loading, setLoading] = useState(false);
   const [isImageModalOpen, setImageModalOpen] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState(lessonPlanName);
   const [selectedImage, setSelectedImage] = useState<string>(imgUrl);
+  const [images, setImages] = useState<string[]>([]);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setImages([
@@ -47,18 +56,43 @@ const LessonPlanCard: React.FC<LessonPlanCardProps> = ({
     ]);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownRef]);
+
+  const handleDropdownClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDropdownOpen(prev => !prev);
+  };
+
+  const createActionHandler = (action: () => void) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    action();
+    setIsDropdownOpen(false);
+  };
+
   const handleDelete = async () => {
-    const httpRequest = new HttpRequest();
-    await httpRequest.removeLessonPlan(lessonPlanId);
-    onUpdateSuccess();
+    if (window.confirm("Tem certeza que deseja deletar este plano de aula?")) {
+      const httpRequest = new HttpRequest();
+      await httpRequest.removeLessonPlan(lessonPlanId);
+      onUpdateSuccess();
+    }
   };
 
   const handleUpdate = async () => {
     setLoading(true);
     const httpRequest = new HttpRequest();
-    const iconName = selectedImage
-      ? selectedImage.split("/").pop()?.split(".")[0]
-      : undefined;
+    const iconName = selectedImage.split("/").pop()?.split(".")[0];
     await httpRequest.updateLessonPlan(lessonPlanId, name, iconName);
     setLoading(false);
     setEditModalOpen(false);
@@ -73,83 +107,55 @@ const LessonPlanCard: React.FC<LessonPlanCardProps> = ({
   const handleInvite = async () => {
     const inviteLink = `${window.location.origin}/lesson-plan/invite/${lessonPlanId}`;
     await navigator.clipboard.writeText(inviteLink);
-    alert("Link copiado!");
+    alert("Link de convite copiado para a área de transferência!");
   };
 
   return (
     <>
-      <div className="relative group rounded-2xl border border-gray-200 bg-white px-6 pb-5 pt-6 overflow-hidden transition-shadow hover:shadow-md dark:border-gray-800 dark:bg-white/[0.03]">
-        <div className="flex items-center gap-3 mb-6 z-10 relative">
-          <div className="w-10 h-10">
-            <Image
-              width={40}
-              height={40}
-              className="w-full"
-              src={imgUrl}
-              alt={lessonPlanName}
-            />
+      <div className={`relative flex flex-col justify-between min-h-36 rounded-2xl border border-gray-200 bg-white px-6 pb-5 pt-6 overflow-hidden transition-shadow hover:shadow-md dark:border-gray-800 dark:bg-white/[0.03] ${isDropdownOpen ? 'z-10' : 'z-0'}`}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 flex-shrink-0">
+              <Image width={40} height={40} className="w-full" src={imgUrl} alt={lessonPlanName} />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">{lessonPlanName}</h3>
+              <span className="block text-gray-500 text-theme-xs dark:text-gray-400">{teacherName}</span>
+            </div>
           </div>
-          <div>
-            <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">
-              {lessonPlanName}
-            </h3>
-            <span className="block text-gray-500 text-theme-xs dark:text-gray-400">
-              {teacherName}
-            </span>
+
+          <div className="relative z-20" ref={dropdownRef}>
+            <button
+              onClick={handleDropdownClick}
+              className="p-1 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10"
+              aria-label="Opções"
+            >
+              <MoreHorizontalIcon size={20} />
+            </button>
+            {isDropdownOpen && (
+              <div className="absolute top-0 right-full  mr-0 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg border dark:border-gray-700 py-1">
+                <button onClick={createActionHandler(handleInvite)} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                  <UserPlusIcon size={16} /><span>Convidar</span>
+                </button>
+                <button onClick={createActionHandler(() => setEditModalOpen(true))} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                  <PenIcon size={16} /><span>Editar</span>
+                </button>
+                <button onClick={createActionHandler(handleDelete)} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10">
+                  <Trash2Icon size={16} /><span>Deletar</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="space-y-5 sm:max-w-[320px] w-full z-10 relative">
+        <div className="space-y-5 sm:max-w-[320px] w-full">
           <ProgressBar progress={progress} size="lg" label="inside" />
-        </div>
-
-        {/* overlay com botões */}
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4 z-20">
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleInvite();
-            }}
-            className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:bg-gray-200 transition"
-            title="Convidar"
-          >
-            <UserPlusIcon size={18} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setEditModalOpen(true);
-            }}
-            className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:bg-gray-200 transition"
-            title="Editar"
-          >
-            <PencilIcon size={18} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleDelete();
-            }}
-            className="w-10 h-10 rounded-full bg-white text-red-600 flex items-center justify-center hover:bg-red-100 transition"
-            title="Deletar"
-          >
-            <Trash2Icon size={18} />
-          </button>
         </div>
       </div>
 
-      {/* Modal de edição */}
-      <Modal
-        isOpen={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
-        className="max-w-[500px] p-5 lg:p-10"
-      >
-        <h4 className="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">
-          Editar plano de aula
-        </h4>
+      {/* Modais */}
+      <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} className="max-w-[500px] p-5 lg:p-10">
+        <h4 className="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">Editar plano de aula</h4>
         <div className="space-y-5">
           <div>
             <Label>Nome</Label>
@@ -157,61 +163,30 @@ const LessonPlanCard: React.FC<LessonPlanCardProps> = ({
           </div>
           <div>
             <Label>Ícone</Label>
-            {selectedImage ? (
-              <div>
-                <Image
-                  src={selectedImage}
-                  alt="Ícone selecionado"
-                  width={64}
-                  height={64}
-                  className="w-16 h-16"
-                />
-                <p className="text-sm text-gray-500">{selectedImage}</p>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500">Nenhuma imagem selecionada</p>
-            )}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setImageModalOpen(true)}
-            >
-              Selecionar ícone
-            </Button>
+            <div className="flex items-center gap-4">
+              {selectedImage && <Image src={selectedImage} alt="Ícone selecionado" width={48} height={48} className="w-12 h-12 rounded-md" />}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setImageModalOpen(true)}
+              >
+                Selecionar ícone
+              </Button>
+            </div>
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-3">
-          <Button variant="outline" onClick={() => setEditModalOpen(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={handleUpdate} disabled={loading}>
-            {loading ? "Salvando..." : "Salvar"}
-          </Button>
+          <Button variant="outline" onClick={() => setEditModalOpen(false)}>Cancelar</Button>
+          <Button onClick={handleUpdate} disabled={loading}>{loading ? "Salvando..." : "Salvar"}</Button>
         </div>
       </Modal>
 
-      <Modal
-        isOpen={isImageModalOpen}
-        onClose={() => setImageModalOpen(false)}
-        className="max-w-[584px] p-5 lg:p-10"
-      >
-        <h4 className="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">
-          Selecione uma imagem
-        </h4>
-        <div className="grid grid-cols-3 gap-4">
+      <Modal isOpen={isImageModalOpen} onClose={() => setImageModalOpen(false)} className="max-w-[584px] p-5 lg:p-10">
+        <h4 className="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">Selecione uma imagem</h4>
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
           {images.map((image, index) => (
-            <div
-              key={index}
-              className="cursor-pointer"
-              onClick={() => handleImageSelect(image)}
-            >
-              <Image
-                src={image}
-                alt={`Imagem ${index + 1}`}
-                width={150}
-                height={150}
-                className="w-full h-auto border rounded-lg"
-              />
+            <div key={index} className="cursor-pointer p-2 border rounded-lg hover:border-blue-500" onClick={() => handleImageSelect(image)}>
+              <Image src={image} alt={`Imagem ${index + 1}`} width={150} height={150} className="w-full h-auto" />
             </div>
           ))}
         </div>

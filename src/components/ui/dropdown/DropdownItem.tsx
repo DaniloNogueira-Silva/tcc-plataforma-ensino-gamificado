@@ -1,5 +1,5 @@
-import type React from "react";
 import Link from "next/link";
+import type React from "react";
 
 interface DropdownItemProps {
   tag?: "a" | "button";
@@ -26,6 +26,7 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
     if (tag === "button") {
       event.preventDefault();
     }
+    event.stopPropagation();
     if (onClick) onClick();
     if (onItemClick) onItemClick();
   };
