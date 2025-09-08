@@ -2,9 +2,7 @@
 
 import {
   MoreHorizontalIcon,
-  MoreVertical,
   PenIcon,
-  PencilIcon,
   Trash2Icon,
   UserPlusIcon,
 } from "lucide-react";

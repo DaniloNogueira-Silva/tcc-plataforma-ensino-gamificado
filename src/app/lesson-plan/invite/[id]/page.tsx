@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { HttpRequest } from "@/utils/http-request";
-import useAuth from "@/hooks/useAuth";
-import Button from "@/components/ui/button/Button";
 import { jwtDecode } from "jwt-decode";
 import { useParams, useRouter } from "next/navigation";
 
@@ -12,36 +10,27 @@ interface TokenPayload {
 }
 
 export default function InvitePage() {
-  useAuth();
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const [planName, setPlanName] = useState<string>("");
 
   const httpRequest = useMemo(() => new HttpRequest(), []);
 
   useEffect(() => {
-    const fetchPlan = async () => {
-      const plan = await httpRequest.getLessonPlanById(id);
-      setPlanName(plan?.name || "");
+    const joinLessonPlan = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.replace(`/signin?redirect=/lesson-plan/invite/${id}`);
+        return;
+      }
+      const decoded = jwtDecode<TokenPayload>(token);
+      await httpRequest.inviteUserToLessonPlan(id, decoded._id);
+      router.replace(`/lesson-plan/details/${id}`);
     };
     if (id) {
-      fetchPlan();
+      joinLessonPlan();
     }
-  }, [id, httpRequest]);
+  }, [id, httpRequest, router]);
 
-  const handleJoin = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    const decoded = jwtDecode<TokenPayload>(token);
-    await httpRequest.inviteUserToLessonPlan(id, decoded._id);
-    router.push(`/lesson-plan/details/${id}`);
-  };
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-      <h1 className="text-xl font-semibold">{planName}</h1>
-      <Button onClick={handleJoin}>Entrar</Button>
-    </div>
-  );
+  return null;
 }

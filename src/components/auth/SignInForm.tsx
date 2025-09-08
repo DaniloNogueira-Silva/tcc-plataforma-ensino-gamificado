@@ -7,12 +7,14 @@ import Label from "@/components/form/Label";
 import Link from "next/link";
 import Notification from "@/components/ui/notification/Notification";
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function SignInForm() {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect");
   const [notification, setNotification] = React.useState<{
     variant: "error" | "success";
     title: string;
@@ -31,7 +33,7 @@ export default function SignInForm() {
           variant: "success",
           title: "Login bem-sucedido! Redirecionando...",
         });
-        router.push("/lesson-plan");
+        router.push(redirect || "/lesson-plan");
       }
     } catch (error) {
       console.error("Login falhou:", error);
@@ -94,7 +96,11 @@ export default function SignInForm() {
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
                 Não possui uma conta? {""}
                 <Link
-                  href="/signup"
+                  href={
+                    redirect
+                      ? `/signup?redirect=${encodeURIComponent(redirect)}`
+                      : "/signup"
+                  }
                   className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
                 >
                   Criar conta
