@@ -48,7 +48,7 @@ export class HttpRequest {
     password: string,
     name: string,
     role: string
-  ): Promise<void> {
+  ): Promise<IUser | null> {
     try {
       return await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users`, {
         name,
@@ -56,8 +56,11 @@ export class HttpRequest {
         password,
         role,
       });
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error) {
+      console.error("Erro ao criar uma lista de exercício:", error);
+      throw new Error(
+        "Ocorreu um erro ao criar uma lista de exercício: " + error
+      );
     }
   }
 
@@ -203,7 +206,7 @@ export class HttpRequest {
   async inviteUserToLessonPlan(
     lesson_plan_id: string,
     user_id: string
-  ): Promise<any> {
+  ): Promise<void> {
     try {
       const token = await this.getToken();
       const response = await axios.post(

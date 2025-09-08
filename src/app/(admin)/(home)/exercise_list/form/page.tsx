@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
 import { HttpRequest } from "@/utils/http-request";
-import { IExercise, IExerciseList } from "@/utils/interfaces"; // Adicionado IExerciseList
+import { IExercise } from "@/utils/interfaces/exercise.interface";
+import { IExerciseList } from "@/utils/interfaces/exercise_list.interface";
 import { ILessonPlanByRole } from "@/utils/interfaces/lesson-plan.interface";
 import { jwtDecode } from "jwt-decode";
 import { ClipboardType, FileText } from "lucide-react";
@@ -20,7 +21,7 @@ interface TokenPayload {
   iat?: number;
 }
 
-const ExerciseListForm = () => {
+const ExerciseListFormContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const listId = searchParams.get("id");
@@ -28,9 +29,9 @@ const ExerciseListForm = () => {
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
   const [exercises, setExercises] = useState<IExercise[]>([]);
-  const [lessonPlans, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
+  const [, setLessonPlans] = useState<ILessonPlanByRole[]>([]);
   const [exercisesIds, setExercisesIds] = useState<string[]>([]);
-  const [lessonPlanIds, setLessonPlanIds] = useState<string[]>([]);
+  const [lessonPlanIds] = useState<string[]>([]);
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -54,12 +55,7 @@ const ExerciseListForm = () => {
           setName(listToEdit.name);
           setContent(listToEdit.content || "");
 
-          // <<-- CORREÇÃO 1: Usar 'exercises_ids' que vem da API -->>
-          // Isso fará com que os exercícios venham pré-selecionados na edição.
           setExercisesIds(listToEdit.exercises_ids || []);
-
-          // Supondo que você tenha uma lógica para planos de aula associados
-          // setLessonPlanIds(listToEdit.lessonPlans || []);
         } catch (error) {
           console.error("Erro ao buscar lista para edição:", error);
         }
@@ -100,12 +96,11 @@ const ExerciseListForm = () => {
 
     try {
       if (listId) {
-        // <<-- CORREÇÃO 2: Argumentos na ordem correta, incluindo o teacherId -->>
         await httpRequest.updateExerciseListAndLessonPlans(
           listId,
           name,
           content,
-          teacherId, // O ID do professor estava faltando e a ordem estava errada
+          teacherId,
           exercisesIds,
           lessonPlanIds
         );
@@ -204,5 +199,9 @@ const ExerciseListForm = () => {
     </div>
   );
 };
-
+const ExerciseListForm = () => (
+  <Suspense fallback={<div>Carregando...</div>}>
+    <ExerciseListFormContent />
+  </Suspense>
+);
 export default ExerciseListForm;

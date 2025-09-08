@@ -151,9 +151,10 @@ const ExerciseListRealizePage = () => {
   };
 
   const handleNavigateQuestion = (direction: "next" | "prev") => {
-    if (!exerciseList?.exercises) return;
+    const exercises = exerciseList?.exercises;
+    if (!exercises) return;
     if (direction === "next") {
-      const current = exerciseList.exercises[currentQuestionIndex];
+      const current = exercises[currentQuestionIndex];
       if (current && current.type !== "open" && !isQuestionAnswered(current)) {
         setNotification({
           variant: "warning",
@@ -162,7 +163,7 @@ const ExerciseListRealizePage = () => {
         return;
       }
       setCurrentQuestionIndex((prev) =>
-        Math.min(prev + 1, exerciseList.exercises.length - 1)
+        Math.min(prev + 1, exercises.length - 1)
       );
     } else {
       setCurrentQuestionIndex((prev) => Math.max(prev - 1, 0));

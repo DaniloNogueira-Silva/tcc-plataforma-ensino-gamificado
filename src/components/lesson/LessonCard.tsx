@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { HttpRequest } from "@/utils/http-request";
 
@@ -35,11 +35,20 @@ const LessonCard: React.FC<LessonCardProps> = ({
 
   const isWork = type === "school_work";
 
-  const normalizeUsers = (arr: any[]): SimpleUser[] =>
-    (arr ?? [])
-      .map((item: any) => item?.user_id ?? item)
-      .filter(Boolean)
-      .map((u: any) => ({ _id: String(u._id), name: String(u.name ?? "") }));
+  type MaybeUser = {
+    user_id?: SimpleUser | null;
+    _id?: string;
+    name?: string;
+  };
+
+  const normalizeUsers = useCallback(
+    (arr: MaybeUser[]): SimpleUser[] =>
+      (arr ?? [])
+        .map((item) => item.user_id ?? item)
+        .filter((u): u is SimpleUser => !!u && typeof u._id === "string")
+        .map((u) => ({ _id: String(u._id), name: String(u.name ?? "") })),
+    []
+  );
 
   const notDeliveredStudents = useMemo(
     () =>
@@ -96,7 +105,7 @@ const LessonCard: React.FC<LessonCardProps> = ({
     };
 
     load();
-  }, [lessonId, lessonPlanId, isWork]);
+  }, [lessonId, lessonPlanId, isWork, normalizeUsers]);
 
   const handleCardClick = () => router.push(`/lesson/details/${lessonId}`);
 
@@ -143,7 +152,7 @@ const LessonCard: React.FC<LessonCardProps> = ({
               {name}
             </p>
             <p className="text-[#6a7581] text-sm font-normal leading-normal break-words line-clamp-3">
-              {stripHtml(content)} 
+              {stripHtml(content)}
             </p>
           </div>
 

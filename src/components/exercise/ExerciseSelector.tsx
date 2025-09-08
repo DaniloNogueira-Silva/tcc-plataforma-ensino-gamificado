@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Input from "@/components/form/input/InputField";
 import Button from "@/components/ui/button/Button";
 

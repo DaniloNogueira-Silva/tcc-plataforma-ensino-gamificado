@@ -186,10 +186,13 @@ const LessonDetailsPage = () => {
   }, [userType, lessonId, lesson, httpRequest]);
 
   if (!lesson) return <div className="text-center p-10">Carregando...</div>;
-
+  const fileUrls = Array.isArray(lesson.file)
+    ? lesson.file
+    : lesson.file
+    ? [lesson.file]
+    : [];
   const hasResources =
-    (lesson.file && lesson.file.length > 0) ||
-    (lesson.links && lesson.links.length > 0);
+    fileUrls.length > 0 || (lesson.links && lesson.links.length > 0);
 
   return (
     <div className="bg-gray-50 font-sans p-4 sm:p-6 md:p-8">
@@ -227,7 +230,7 @@ const LessonDetailsPage = () => {
               Recursos da Aula
             </h2>
             <div className="space-y-3">
-              {lesson.file?.map((fileUrl, index) => (
+              {fileUrls.map((fileUrl, index) => (
                 <div
                   key={`file-${index}`}
                   className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border border-gray-200 rounded-lg"

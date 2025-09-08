@@ -6,9 +6,11 @@ export interface IExerciseList {
   content: string;
   teacher_id: string;
   exercises_ids: string[];
+  difficulty?: "easy" | "medium" | "hard";
   type?: string;
   lesson_plan_ids?: string[];
   due_date?: string;
   points?: number;
   exercises?: IExercise[];
+
 }

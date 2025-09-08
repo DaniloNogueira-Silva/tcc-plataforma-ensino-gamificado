@@ -125,7 +125,7 @@ export default function ExerciseListTable() {
                   {list.exercises_ids.length}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
-                  {difficultyLabels[list.difficulty] || "N/A"}
+                   {list.difficulty ? difficultyLabels[list.difficulty] : "N/A"}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-start text-gray-500 text-theme-sm dark:text-gray-400">
                   {getLessonPlanNamesByExerciseList(list._id)}

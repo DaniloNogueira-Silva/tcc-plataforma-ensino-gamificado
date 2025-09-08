@@ -5,16 +5,17 @@ import { HttpRequest } from "@/utils/http-request";
 import useAuth from "@/hooks/useAuth";
 import Button from "@/components/ui/button/Button";
 import { jwtDecode } from "jwt-decode";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 interface TokenPayload {
   _id: string;
 }
 
-export default function InvitePage({ params }: { params: { id: string } }) {
+export default function InvitePage() {
   useAuth();
   const router = useRouter();
-  const { id } = params;
+  const params = useParams();
+  const id = params.id as string;
   const [planName, setPlanName] = useState<string>("");
 
   const httpRequest = useMemo(() => new HttpRequest(), []);

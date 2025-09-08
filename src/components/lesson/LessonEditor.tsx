@@ -1,13 +1,16 @@
 import React from "react";
 import { Editor } from "@tinymce/tinymce-react";
-
-const LessonEditor = ({ value, onChange }) => {
+interface LessonEditorProps {
+  value?: string;
+  onChange?: (content: string) => void;
+}
+const LessonEditor = ({ value, onChange }: LessonEditorProps) => {
   return (
     <Editor
       apiKey={process.env.NEXT_PUBLIC_TINY_SECRET_KEY}
       value={value || "<p>Escreva o conteúdo da questão aqui.</p>"}
       init={{
-        height: 400, 
+        height: 400,
         menubar: false,
 
         plugins: [

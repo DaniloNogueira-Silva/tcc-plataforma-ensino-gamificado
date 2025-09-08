@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { HttpRequest } from "@/utils/http-request";
 import { IExercise } from "@/utils/interfaces/exercise.interface";
 import ExerciseCard from "./ExerciseCard";
@@ -12,18 +12,18 @@ interface ExerciseListProps {
 export default function ExerciseList({ lessonPlanId }: ExerciseListProps) {
   const [exercises, setExercises] = useState<IExercise[]>([]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     const httpRequest = new HttpRequest();
     const result = await httpRequest.getAllExerciseByLessonPlanId(lessonPlanId);
-    const sorted = result.sort((a, b) => b._id.localeCompare(a._id));
+    const sorted = result.sort((a: IExercise, b: IExercise) => b._id.localeCompare(a._id));
     setExercises(sorted);
-  };
+  }, [lessonPlanId]);
 
   useEffect(() => {
     if (lessonPlanId) {
       fetchData();
     }
-  }, [lessonPlanId]);
+  }, [lessonPlanId, fetchData]);
 
   return (
     <div className="space-y-4 px-4">

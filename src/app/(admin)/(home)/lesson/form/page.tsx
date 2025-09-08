@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { Suspense,  useEffect, useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import { ClipboardType, FileText, UploadCloud } from "lucide-react";
@@ -23,7 +23,7 @@ interface TokenPayload {
   iat?: number;
 }
 
-const LessonForm = () => {
+const LessonFormContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const lessonId = searchParams.get("id");
@@ -112,10 +112,10 @@ const LessonForm = () => {
     }
 
     try {
-      let fileUrl = initialData?.file;
+      let fileUrl: string | undefined = initialData?.file;
       if (file) {
         const upload = await httpRequest.uploadFile(file);
-        fileUrl = [upload.publicUrl];
+        fileUrl = upload.publicUrl;
       }
       const linksArray = links
         ? links
@@ -131,7 +131,7 @@ const LessonForm = () => {
           name,
           dueDate,
           content,
-          fileUrl?.[0], 
+          fileUrl?.[0],
           linksArray,
           type,
           grade,
@@ -145,7 +145,7 @@ const LessonForm = () => {
           type,
           grade,
           teacherId!,
-          fileUrl?.[0], 
+          fileUrl?.[0],
           linksArray,
           lessonPlanIds.length ? lessonPlanIds : undefined
         );
@@ -268,5 +268,11 @@ const LessonForm = () => {
     </div>
   );
 };
+
+const LessonForm = () => (
+  <Suspense fallback={<div>Carregando...</div>}>
+    <LessonFormContent />
+  </Suspense>
+);
 
 export default LessonForm;

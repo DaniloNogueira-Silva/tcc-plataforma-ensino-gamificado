@@ -10,7 +10,7 @@ import {
   ListChecks,
   ToggleRight,
 } from "lucide-react";
-import { useEffect, useState, useMemo } from "react";
+import { Suspense,useEffect, useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import Button from "@/components/ui/button/Button";
@@ -27,7 +27,7 @@ export interface TokenPayload {
   iat?: number;
 }
 
-const ExerciseFormPage = () => {
+const ExerciseFormContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const exerciseId = searchParams.get("id");
@@ -452,5 +452,11 @@ const ExerciseFormPage = () => {
     </div>
   );
 };
+const ExerciseFormPage = () => (
+  <Suspense fallback={<div>Carregando...</div>}>
+    <ExerciseFormContent />
+  </Suspense>
+);
+
 
 export default ExerciseFormPage;

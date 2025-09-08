@@ -2,7 +2,7 @@
 
 import { HttpRequest } from "@/utils/http-request";
 import { IRanking } from "@/utils/interfaces/ranking.interface";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const MedalIcon = ({ color }: { color: string }) => (
   <svg
@@ -27,7 +27,7 @@ export default function RankingList({ lessonPlanId }: RankingListProps) {
   const [ranking, setRanking] = useState<IRanking[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const httpRequest = new HttpRequest();
       const result = (await httpRequest.getRanking(lessonPlanId)).sort(
@@ -39,13 +39,13 @@ export default function RankingList({ lessonPlanId }: RankingListProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [lessonPlanId]);
 
   useEffect(() => {
     if (lessonPlanId) {
       fetchData();
     }
-  }, [lessonPlanId]);
+  }, [lessonPlanId, fetchData]);
 
   const getRankDetails = (index: number) => {
     switch (index) {
@@ -83,7 +83,9 @@ export default function RankingList({ lessonPlanId }: RankingListProps) {
   if (loading) {
     return (
       <div className="flex justify-center items-center p-10">
-        <p className="text-gray-500 dark:text-gray-400">Carregando ranking...</p>
+        <p className="text-gray-500 dark:text-gray-400">
+          Carregando ranking...
+        </p>
       </div>
     );
   }
@@ -130,9 +132,7 @@ export default function RankingList({ lessonPlanId }: RankingListProps) {
                     </p>
                   </div>
                 </div>
-                <p
-                  className={`text-lg font-extrabold tracking-tight ${color}`}
-                >
+                <p className={`text-lg font-extrabold tracking-tight ${color}`}>
                   {student.totalPoints} pts
                 </p>
               </div>

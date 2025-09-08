@@ -55,7 +55,7 @@ const LessonForm = ({
       setLinks((initialData.links || []).join("\n"));
       setType(initialData.type || "");
       setGrade(initialData.grade || 0);
-      setSelectedLessonPlan(initialData.lesson_plan_id || "");
+      setSelectedLessonPlan(initialData.lesson_plan_ids.join(", "));;
     }
   }, [initialData]);
 
