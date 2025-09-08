@@ -4,10 +4,10 @@ import { HttpRequest } from "@/utils/http-request";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Link from "next/link";
-import Notification from "@/components/ui/notification/Notification"; 
+import Notification from "@/components/ui/notification/Notification";
 import React from "react";
 import Select from "../form/Select";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function SignUpForm() {
   const [email, setEmail] = React.useState("");
@@ -19,6 +19,8 @@ export default function SignUpForm() {
     title: string;
   } | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect");
 
   const options = [
     { value: "TEACHER", label: "Professor" },
@@ -36,12 +38,13 @@ export default function SignUpForm() {
 
     try {
       await httpRequest.createUser(email, password, name, role);
+      await httpRequest.login(email, password);
 
       setNotification({
         variant: "success",
         title: "Usuário criado com sucesso! Redirecionando...",
       });
-      router.push("/signin");
+      router.push(redirect || "/lesson-plan");
 
     } catch (error) {
       console.error("Criação de usuário falhou:", error);
@@ -127,7 +130,11 @@ export default function SignUpForm() {
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
                 Já possui uma conta?
                 <Link
-                  href="/signin"
+                  href={
+                    redirect
+                      ? `/signin?redirect=${encodeURIComponent(redirect)}`
+                      : "/signin"
+                  }
                   className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
                 >
                   Entrar
