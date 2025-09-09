@@ -140,12 +140,16 @@ export default function UserAvatarCard() {
       <Image
         src={`/images/avatar_components/${arm}.png`}
         alt="left arm"
+        width={512}
+        height={512}
         className="absolute w-full h-full object-contain"
         style={{ top: "33%", left: "-5%", width: "62%" }}
       />
       <Image
         src={`/images/avatar_components/${arm}.png`}
         alt="right arm"
+        width={512}
+        height={512}
         className="absolute w-full h-full object-contain"
         style={{
           top: "33%",
@@ -157,12 +161,16 @@ export default function UserAvatarCard() {
       <Image
         src={`/images/avatar_components/${torso}.png`}
         alt="torso"
+        width={512}
+        height={512}
         className="absolute w-full h-full object-contain"
         style={{ top: "17%", right: "4.5%", width: "90%" }}
       />
       <Image
         src={`/images/avatar_components/${head}.png`}
         alt="head"
+        width={512}
+        height={512}
         className="absolute w-full h-full object-contain"
         style={{ top: "-30%", right: "25%", width: "50%" }}
       />
