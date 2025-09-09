@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useIndividualExerciseData } from "./useCorrectionExerciseData";
 import { HttpRequest } from "@/utils/http-request";
@@ -9,7 +9,8 @@ import LessonPlanBreadcrumb from "@/components/ui/breadcrumb/LessonPlanBreadCrum
 import StudentListSidebar from "@/components/correction/StudentListSidebar";
 import SummarySidebar from "@/components/correction/SummarySidebar";
 import IndividualCorrectionPanel from "@/components/correction/IndividualCorrectionPanel";
-const ExerciseCorrectionPage = () => {
+
+const ExerciseCorrectionPageContent = () => {
   const params = useParams();
   const searchParams = useSearchParams();
   const lessonPlanIdFromUrl = searchParams.get("lessonPlanId");
@@ -146,5 +147,11 @@ const ExerciseCorrectionPage = () => {
     </>
   );
 };
+
+const ExerciseCorrectionPage = () => (
+  <Suspense fallback={<div>Carregando...</div>}>
+    <ExerciseCorrectionPageContent />
+  </Suspense>
+);
 
 export default ExerciseCorrectionPage;
