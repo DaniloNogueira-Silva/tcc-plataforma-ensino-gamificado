@@ -147,7 +147,7 @@ const LessonPlanCard: React.FC<LessonPlanCardProps> = ({
         </div>
 
         <div className="space-y-5 sm:max-w-[320px] w-full">
-          <ProgressBar progress={progress} size="lg" label="inside" />
+          <ProgressBar progress={100} size="lg" label="inside" />
         </div>
       </div>
 
