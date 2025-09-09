@@ -9,7 +9,7 @@ interface UserInfoCardProps {
 
 export default function UserInfoCard({ user }: UserInfoCardProps) {
 
-  if(!user) return null
+  if (!user) return null
   const totalActivities = Number(user?.lessons_length + user?.exercises_length)
   return (
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-4">
@@ -36,7 +36,7 @@ export default function UserInfoCard({ user }: UserInfoCardProps) {
             <div>
               <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">Tipo de perfil</p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {user?.user.role || "—"}
+                {user?.user.role === "STUDENT" ? "Estudante" : "Professor"}
               </p>
             </div>
           </div>
