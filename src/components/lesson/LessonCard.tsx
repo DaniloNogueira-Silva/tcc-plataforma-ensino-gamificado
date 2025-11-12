@@ -151,9 +151,11 @@ const LessonCard: React.FC<LessonCardProps> = ({
             <p className="text-[#121416] text-base font-bold leading-tight break-words line-clamp-1">
               {name}
             </p>
-            <p className="text-[#6a7581] text-sm font-normal leading-normal break-words line-clamp-3">
-              {stripHtml(content)}
-            </p>
+            <div
+              className="text-[#6a7581] text-sm font-normal leading-normal break-words line-clamp-3"
+              // Esta é a maneira correta de usar, renderizando a string HTML
+              dangerouslySetInnerHTML={{ __html: content }}
+            />
           </div>
 
           {userType === "TEACHER" && isWork && (

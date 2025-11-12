@@ -38,11 +38,13 @@ export default function UserAvatarCard() {
         let torso: string[] = [];
         let head: string[] = [];
         let arm: string[] = [];
-
+        console.log(allItems);
+        console.log(userChar);
         if (userChar && userChar.items) {
           const purchased = allItems.filter((item) =>
             userChar.items?.includes(item._id)
           );
+          console.log(purchased);
           torso = purchased
             .filter((i) => i.label.includes("armor"))
             .map((i) => i.label);
@@ -50,9 +52,12 @@ export default function UserAvatarCard() {
             .filter((i) => i.label.includes("helmet"))
             .map((i) => i.label);
           arm = purchased
-            .filter((i) => i.label.includes("arm"))
+            .filter(
+              (i) => i.label.includes("arm") && !i.label.includes("armor")
+            )
             .map((i) => i.label);
 
+          console.log(torso, head, arm);
           setTorsoOptions(torso);
           setHeadOptions(head);
           setArmOptions(arm);
@@ -103,7 +108,7 @@ export default function UserAvatarCard() {
       head: headOptions[headIndex],
       arm: armOptions[armIndex],
     };
-
+    console.log(avatarToSave);
     try {
       let savedAvatar: IAvatar | null = null;
       if (!avatarFromApi) {
@@ -176,7 +181,6 @@ export default function UserAvatarCard() {
       />
     </div>
   );
-
   return (
     <>
       <div className="p-4 border border-gray-200 rounded-2xl dark:border-gray-800 w-full max-w-sm flex flex-col items-center gap-4">

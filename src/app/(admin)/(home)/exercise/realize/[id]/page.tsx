@@ -296,11 +296,6 @@ const ExerciseDetailsPage = () => {
           >
             {submitted ? "Resposta Enviada" : "Confirmar Resposta"}
           </button>
-          {finalGrade != null && (
-            <p className="mt-4 text-green-700">
-              Nota automática: {finalGrade.toFixed(1).replace(".", ",")}
-            </p>
-          )}
         </form>
       </div>
     </div>
